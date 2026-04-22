@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 /**
  * Onboarding state — persisted to localStorage so a pro can drop off at any
@@ -111,25 +111,27 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setData(read());
   }, []);
 
-  const patch = (next: Partial<OnboardingData>) =>
+  const patch = useCallback((next: Partial<OnboardingData>) => {
     setData((prev) => {
       const merged = { ...prev, ...next };
       write(merged);
       return merged;
     });
+  }, []);
 
-  const markFurthest = (step: number) =>
+  const markFurthest = useCallback((step: number) => {
     setData((prev) => {
       if ((prev.furthestStep ?? 1) >= step) return prev;
       const merged = { ...prev, furthestStep: step };
       write(merged);
       return merged;
     });
+  }, []);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     write(defaults);
     setData(defaults);
-  };
+  }, []);
 
   return <Ctx.Provider value={{ data, patch, markFurthest, clear }}>{children}</Ctx.Provider>;
 }
