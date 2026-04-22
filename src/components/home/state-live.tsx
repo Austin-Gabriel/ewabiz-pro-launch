@@ -199,7 +199,7 @@ function FocusCard({
         </div>
         <p
           style={{
-            fontFamily: HOME_SERIF,
+            fontFamily: UI,
             fontSize: 22,
             lineHeight: 1.25,
             letterSpacing: "-0.01em",
@@ -287,7 +287,7 @@ function FocusCard({
           <div className="mt-3 flex items-baseline gap-3">
             <span
               style={{
-                fontFamily: HOME_SERIF,
+                fontFamily: UI,
                 fontSize: 44,
                 fontWeight: 400,
                 color: text,
@@ -361,7 +361,7 @@ function FocusCard({
       </div>
       <p
         style={{
-          fontFamily: HOME_SERIF,
+          fontFamily: UI,
           fontSize: 24,
           lineHeight: 1.25,
           color: text,
@@ -464,7 +464,7 @@ function EarningCell({
       </div>
       <div
         style={{
-          fontFamily: HOME_SERIF,
+          fontFamily: UI,
           fontSize: 26,
           fontWeight: 400,
           color: text,
@@ -522,7 +522,7 @@ function PendingRequests({ requests }: { requests: BookingRequest[] }) {
                     <span style={{ fontFamily: HOME_SANS, fontSize: 14.5, color: text, fontWeight: 500 }}>
                       {r.clientName}
                     </span>
-                    <span style={{ fontFamily: HOME_SERIF, fontSize: 16, color: text, fontWeight: 400 }}>
+                    <span style={{ fontFamily: UI, fontSize: 16, color: text, fontWeight: 400 }}>
                       {formatUsd(r.priceUsd)}
                     </span>
                   </div>
@@ -535,8 +535,8 @@ function PendingRequests({ requests }: { requests: BookingRequest[] }) {
                   {r.message ? (
                     <p
                       style={{
-                        fontFamily: HOME_SERIF,
-                        fontStyle: "italic",
+                        fontFamily: UI,
+                        
                         fontSize: 13,
                         lineHeight: 1.45,
                         color: text,
@@ -630,7 +630,7 @@ function TodaySchedule({ bookings }: { bookings: Booking[] }) {
             border: `1px solid ${borderCol}`,
           }}
         >
-          <span style={{ fontFamily: HOME_SERIF, fontStyle: "italic", fontSize: 13.5, color: text, opacity: 0.6 }}>
+          <span style={{ fontFamily: UI,  fontSize: 13.5, color: text, opacity: 0.6 }}>
             That's the whole day. Beautiful.
           </span>
         </div>
@@ -647,7 +647,7 @@ function TodaySchedule({ bookings }: { bookings: Booking[] }) {
             >
               <div
                 style={{
-                  fontFamily: HOME_SERIF,
+                  fontFamily: UI,
                   fontSize: 18,
                   fontWeight: 400,
                   color: text,
@@ -708,7 +708,7 @@ function QuietDayNote({ nextOpenSlot }: { nextOpenSlot?: string }) {
       <div style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: text, opacity: 0.5, fontWeight: 700 }}>
         Today
       </div>
-      <p style={{ fontFamily: HOME_SERIF, fontStyle: "italic", fontSize: 16, color: text, opacity: 0.7, marginTop: 6 }}>
+      <p style={{ fontFamily: UI,  fontSize: 16, color: text, opacity: 0.7, marginTop: 6 }}>
         Empty calendar. Good light to clean the station.
       </p>
       {nextOpenSlot ? (
@@ -739,7 +739,7 @@ function Avatar({ initial, small }: { initial: string; small?: boolean }) {
         background: "linear-gradient(135deg, rgba(255,130,63,0.35) 0%, rgba(255,130,63,0.10) 100%)",
         border: `1px solid ${isDark ? "rgba(255,130,63,0.35)" : "rgba(255,130,63,0.40)"}`,
         color: isDark ? "#F0EBD8" : "#061C27",
-        fontFamily: HOME_SERIF,
+        fontFamily: UI,
         fontSize: small ? 12 : 15,
         fontWeight: 500,
       }}
