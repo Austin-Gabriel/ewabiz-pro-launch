@@ -18,7 +18,6 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as OnboardingReviewRouteImport } from './routes/onboarding.review'
 import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -66,11 +65,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingReviewRoute = OnboardingReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => OnboardingRoute,
-} as any)
 const OnboardingStepRoute = OnboardingStepRouteImport.update({
   id: '/$step',
   path: '/$step',
@@ -88,7 +82,6 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/onboarding/$step': typeof OnboardingStepRoute
-  '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,7 +94,6 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/onboarding/$step': typeof OnboardingStepRoute
-  '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,7 +107,6 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/onboarding/$step': typeof OnboardingStepRoute
-  '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,7 +121,6 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/onboarding/$step'
-    | '/onboarding/review'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -143,7 +133,6 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/onboarding/$step'
-    | '/onboarding/review'
   id:
     | '__root__'
     | '/'
@@ -156,7 +145,6 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/onboarding/$step'
-    | '/onboarding/review'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,13 +224,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/onboarding/review': {
-      id: '/onboarding/review'
-      path: '/review'
-      fullPath: '/onboarding/review'
-      preLoaderRoute: typeof OnboardingReviewRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
     '/onboarding/$step': {
       id: '/onboarding/$step'
       path: '/$step'
@@ -255,12 +236,10 @@ declare module '@tanstack/react-router' {
 
 interface OnboardingRouteChildren {
   OnboardingStepRoute: typeof OnboardingStepRoute
-  OnboardingReviewRoute: typeof OnboardingReviewRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingStepRoute: OnboardingStepRoute,
-  OnboardingReviewRoute: OnboardingReviewRoute,
 }
 
 const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
