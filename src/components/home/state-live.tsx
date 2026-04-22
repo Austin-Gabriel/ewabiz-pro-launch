@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
+import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
   type BookingRequest,
@@ -44,6 +45,28 @@ export function StateLive({
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-5 pt-1">
+      {/* Brand mark — splash-drop entrance. Small, top-left, never competes
+          with the greeting. The ring is a one-shot ripple at impact. */}
+      <div className="relative" style={{ height: 28, width: 28, marginTop: 2 }}>
+        <span
+          aria-hidden
+          className="ewa-splash-ring absolute"
+          style={{
+            top: "100%",
+            left: "50%",
+            width: 28,
+            height: 8,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(ellipse at center, rgba(255,130,63,0.55) 0%, rgba(255,130,63,0) 70%)",
+            animationDelay: "60ms",
+          }}
+        />
+        <div className="ewa-drop" style={{ animationDelay: "60ms" }}>
+          <EwaMark size={28} />
+        </div>
+      </div>
+
       {/* Date line */}
       <div
         className="ewa-fade"
@@ -55,7 +78,7 @@ export function StateLive({
           color: text,
           opacity: 0.42,
           fontWeight: 600,
-          marginTop: 4,
+          marginTop: 14,
         }}
       >
         {today}
