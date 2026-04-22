@@ -23,23 +23,22 @@ export function Step14Review({ onNext }: StepProps) {
     : "—";
 
   const sections = [
-    { step: 3, label: "Name", value: [data.firstName, data.lastName].filter(Boolean).join(" ") || "—" },
-    { step: 3, label: "Date of birth", value: data.dob ?? "—" },
-    { step: 1, label: "Phone", value: data.phone ?? "—" },
-    { step: 4, label: "About your craft", value: data.craft || "—" },
-    { step: 5, label: "Services", value: services || "—" },
-    { step: 6, label: "Experience", value: expLabel || "—" },
-    { step: 7, label: "Specializations", value: (data.specializations ?? []).join(", ") || "—" },
-    { step: 8, label: "Base address", value: data.addressLine || data.area?.label || "—" },
-    { step: 8, label: "Travel radius", value: data.area ? `${data.area.radiusMi} mi` : "—" },
-    { step: 9, label: "Availability", value: days },
-    { step: 10, label: "Service menu", value: `${data.menu?.length ?? 0} item${(data.menu?.length ?? 0) === 1 ? "" : "s"}` },
-    { step: 11, label: "Portfolio", value: `${data.portfolio?.length ?? 0} photo${(data.portfolio?.length ?? 0) === 1 ? "" : "s"}` },
+    { step: 1, label: "Name", value: [data.firstName, data.lastName].filter(Boolean).join(" ") || "—" },
+    { step: 1, label: "Date of birth", value: data.dob ?? "—" },
+    { step: 2, label: "About your craft", value: data.craft || "—" },
+    { step: 3, label: "Services", value: services || "—" },
+    { step: 4, label: "Experience", value: expLabel || "—" },
+    { step: 5, label: "Specializations", value: (data.specializations ?? []).join(", ") || "—" },
+    { step: 6, label: "Base address", value: data.addressLine || data.area?.label || "—" },
+    { step: 6, label: "Travel radius", value: data.area ? `${data.area.radiusMi} mi` : "—" },
+    { step: 7, label: "Availability", value: days },
+    { step: 8, label: "Service menu", value: `${data.menu?.length ?? 0} item${(data.menu?.length ?? 0) === 1 ? "" : "s"}` },
+    { step: 9, label: "Portfolio", value: `${data.portfolio?.length ?? 0} photo${(data.portfolio?.length ?? 0) === 1 ? "" : "s"}` },
   ];
 
   return (
     <StepShell
-      step={12}
+      step={10}
       title="Review and continue."
       subtitle="Looks good? Next we'll verify your identity."
       onContinue={onNext}

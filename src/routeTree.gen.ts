@@ -24,6 +24,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EnableFaceidRouteImport } from './routes/enable-faceid'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignupServicesRouteImport } from './routes/signup.services'
 import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
 import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
@@ -106,6 +107,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignupServicesRoute = SignupServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => SignupRoute,
+} as any)
 const OnboardingStepRoute = OnboardingStepRouteImport.update({
   id: '/$step',
   path: '/$step',
@@ -149,7 +155,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesByTo {
@@ -172,7 +179,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesById {
@@ -196,7 +204,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRouteTypes {
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/signup/services'
     | '/api/public/seed-demo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/signup/services'
     | '/api/public/seed-demo'
   id:
     | '__root__'
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/signup/services'
     | '/api/public/seed-demo'
   fileRoutesById: FileRoutesById
 }
@@ -291,7 +303,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
-  SignupRoute: typeof SignupRoute
+  SignupRoute: typeof SignupRouteWithChildren
   SplashRoute: typeof SplashRoute
   VerifyRoute: typeof VerifyRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -405,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signup/services': {
+      id: '/signup/services'
+      path: '/services'
+      fullPath: '/signup/services'
+      preLoaderRoute: typeof SignupServicesRouteImport
+      parentRoute: typeof SignupRoute
+    }
     '/onboarding/$step': {
       id: '/onboarding/$step'
       path: '/$step'
@@ -478,6 +497,17 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
   OnboardingRouteChildren,
 )
 
+interface SignupRouteChildren {
+  SignupServicesRoute: typeof SignupServicesRoute
+}
+
+const SignupRouteChildren: SignupRouteChildren = {
+  SignupServicesRoute: SignupServicesRoute,
+}
+
+const SignupRouteWithChildren =
+  SignupRoute._addFileChildren(SignupRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
@@ -490,7 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
-  SignupRoute: SignupRoute,
+  SignupRoute: SignupRouteWithChildren,
   SplashRoute: SplashRoute,
   VerifyRoute: VerifyRoute,
   WelcomeRoute: WelcomeRoute,

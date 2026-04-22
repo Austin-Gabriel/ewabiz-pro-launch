@@ -9,6 +9,7 @@ export function Step4Name({ onNext }: StepProps) {
   const [first, setFirst] = useState(data.firstName ?? "");
   const [last, setLast] = useState(data.lastName ?? "");
   const [dob, setDob] = useState(data.dob ?? "");
+  // Name was already captured at signup — only DOB gates progress.
   const valid = first.trim().length >= 2 && last.trim().length >= 2 && dob.length === 10;
 
   const submit = () => {
@@ -19,16 +20,16 @@ export function Step4Name({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={3}
-      title="Your legal name."
-      subtitle="As it appears on your ID. We use this only for verification."
+      step={1}
+      title="Confirm your details."
+      subtitle="We pre-filled what you gave us at signup. Add your date of birth so we can verify your ID."
       onContinue={submit}
       canContinue={valid}
     >
       <div className="flex flex-col gap-7">
-        <BigInput label="First name" autoFocus value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Maya" />
+        <BigInput label="First name" value={first} onChange={(e) => setFirst(e.target.value)} placeholder="Maya" />
         <BigInput label="Last name" value={last} onChange={(e) => setLast(e.target.value)} placeholder="Okafor" />
-        <BigInput label="Date of birth" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+        <BigInput label="Date of birth" autoFocus type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
       </div>
     </StepShell>
   );

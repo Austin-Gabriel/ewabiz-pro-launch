@@ -40,7 +40,7 @@ export function Step12Menu({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={10}
+      step={8}
       title={items.length === 0 ? "Add your first service." : "Your service menu."}
       subtitle="Name it like clients would search for it. You can add more later."
       onContinue={submit}

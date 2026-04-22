@@ -35,7 +35,7 @@ export function Step8Specializations({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={7}
+      step={5}
       title="What&apos;s your specialty?"
       subtitle="The techniques you&apos;re known for. This powers client matching."
       onContinue={submit}

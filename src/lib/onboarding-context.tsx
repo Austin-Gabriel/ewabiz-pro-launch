@@ -172,4 +172,7 @@ export const EXPERIENCE_OPTIONS: { value: NonNullable<OnboardingData["experience
   { value: "10plus", label: "10+ years" },
 ];
 
-export const TOTAL_STEPS = 12;
+// Phone & OTP & legal name are collected at signup, so the in-app onboarding
+// covers 10 questions: name+DOB review, craft, services, experience,
+// specializations, area, availability, menu, portfolio, review.
+export const TOTAL_STEPS = 10;
