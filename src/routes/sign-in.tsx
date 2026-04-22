@@ -12,9 +12,10 @@ export const Route = createFileRoute("/sign-in")({
       { name: "description", content: "Welcome back. One tap to your studio." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    faceid: search.faceid === "enrolled" ? ("enrolled" as const) : undefined,
-  }),
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { faceid?: "enrolled" } =>
+    search.faceid === "enrolled" ? { faceid: "enrolled" } : {},
   component: SignInPage,
 });
 
