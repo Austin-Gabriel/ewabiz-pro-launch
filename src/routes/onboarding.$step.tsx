@@ -26,8 +26,8 @@ function StepPage() {
 
   const goNext = () => {
     if (n >= TOTAL_STEPS) {
-      // Step 14 IS the review. CTA from review goes to KYC (Phase 2 — TBD).
-      navigate({ to: "/home" });
+      // Final review step → start Phase-2 KYC.
+      navigate({ to: "/kyc" });
     } else {
       navigate({ to: "/onboarding/$step", params: { step: String(n + 1) } });
     }
