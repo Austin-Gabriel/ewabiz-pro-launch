@@ -3,96 +3,52 @@ import { useState } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { PrimaryButton } from "@/components/auth-buttons";
 import { AuthInput } from "@/components/auth-input";
-import { useAuth } from "@/lib/auth-context";
-import { useOnboarding } from "@/lib/onboarding-context";
+import { setPendingSignup } from "@/lib/signup-pending";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       { title: "Join Ewà Biz" },
-      { name: "description", content: "Create your Ewà studio account." },
+      { name: "description", content: "Create your Ewà account." },
     ],
   }),
   component: SignUpPage,
 });
 
-const SERVICES: { slug: string; label: string }[] = [
-  { slug: "hair", label: "Hair Stylist" },
-  { slug: "nails", label: "Nail Tech" },
-  { slug: "makeup", label: "Makeup Artist" },
-  { slug: "lashes", label: "Lash Tech" },
-  { slug: "brows", label: "Brow Artist" },
-  { slug: "barber", label: "Barber" },
-];
-
 function SignUpPage() {
   const navigate = useNavigate();
   return (
-    <AuthShell topLabel="Create account" onBack={() => navigate({ to: "/login" })} quietSquiggles>
+    <AuthShell topLabel="Create account" onBack={() => navigate({ to: "/welcome" })} quietSquiggles>
       <SignUpBody />
     </AuthShell>
   );
 }
 
 function SignUpBody() {
-  const { text, borderCol } = useAuthTheme();
+  const { text } = useAuthTheme();
   const navigate = useNavigate();
-  const { signUpWithPassword } = useAuth();
-  const { patch, markFurthest } = useOnboarding();
 
   const [fullName, setFullName] = useState("");
-  const [studioName, setStudioName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [services, setServices] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const valid =
     fullName.trim().length >= 2 &&
     /\S+@\S+\.\S+/.test(email) &&
     password.length >= 6 &&
-    phone.replace(/\D/g, "").length >= 7 &&
-    services.length > 0;
+    phone.replace(/\D/g, "").length >= 7;
 
-  const toggle = (slug: string) =>
-    setServices((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
-
-  const submit = async () => {
-    if (!valid || busy) return;
-    setBusy(true);
-    setError(null);
-    const { error: err } = await signUpWithPassword({
+  const submit = () => {
+    if (!valid) return;
+    // Stash account fields and continue to the dedicated "I am a…" screen.
+    setPendingSignup({
+      fullName: fullName.trim(),
       email,
       password,
-      fullName: fullName.trim(),
       phone,
-      services,
     });
-    setBusy(false);
-    if (err) {
-      setError(err);
-      return;
-    }
-
-    // Pre-populate onboarding with what we already know so these steps aren't repeated.
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] ?? "";
-    const lastName = nameParts.slice(1).join(" ");
-    patch({
-      phone,
-      firstName,
-      lastName,
-      studioName: studioName.trim() || undefined,
-      furthestStep: 3,
-    });
-    markFurthest(3);
-
-    // Skip phone (step 1) and OTP (step 2) — jump straight to legal name + DOB.
-    navigate({ to: "/onboarding/$step", params: { step: "3" } });
+    navigate({ to: "/signup/services" });
   };
 
   return (
@@ -109,7 +65,7 @@ function SignUpBody() {
             margin: 0,
           }}
         >
-          Create your studio.
+          Create your account.
         </h1>
         <p
           style={{
@@ -121,7 +77,7 @@ function SignUpBody() {
             marginTop: 8,
           }}
         >
-          A few details to get you started.
+          A few details so we can text you bookings and pay you out.
         </p>
       </div>
 
@@ -132,13 +88,6 @@ function SignUpBody() {
           placeholder="Jamie Carter"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-        />
-        <AuthInput
-          label="Studio name"
-          autoComplete="organization"
-          placeholder="e.g. Maya's Beauty Studio (optional)"
-          value={studioName}
-          onChange={(e) => setStudioName(e.target.value)}
         />
         <AuthInput
           label="Email"
@@ -168,62 +117,11 @@ function SignUpBody() {
         />
       </div>
 
-      <div className="mt-6">
-        <span
-          style={{
-            fontFamily: SANS_STACK,
-            fontSize: 10,
-            letterSpacing: "1.6px",
-            textTransform: "uppercase",
-            fontWeight: 500,
-            color: text,
-            opacity: 0.5,
-          }}
-        >
-          I am a…
-        </span>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SERVICES.map((s) => {
-            const active = services.includes(s.slug);
-            return (
-              <button
-                key={s.slug}
-                type="button"
-                onClick={() => toggle(s.slug)}
-                style={{
-                  fontFamily: SANS_STACK,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  height: 36,
-                  padding: "0 14px",
-                  borderRadius: 9999,
-                  border: `1px solid ${active ? "#FF823F" : borderCol}`,
-                  backgroundColor: active ? "rgba(255,130,63,0.12)" : "transparent",
-                  color: active ? "#FF823F" : text,
-                  transition: "all 200ms ease",
-                }}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {error ? (
-        <p
-          className="mt-4 text-center"
-          style={{ fontFamily: SANS_STACK, fontSize: 12, color: "#FF6B5B" }}
-        >
-          {error}
-        </p>
-      ) : null}
-
       <div className="flex-1" />
 
       <div className="ewa-rise mt-8 flex flex-col gap-2" style={{ animationDelay: "320ms" }}>
-        <PrimaryButton onClick={submit} disabled={!valid || busy}>
-          {busy ? "Creating account…" : "Continue"}
+        <PrimaryButton onClick={submit} disabled={!valid}>
+          Continue
         </PrimaryButton>
         <p
           className="mt-2 text-center"
