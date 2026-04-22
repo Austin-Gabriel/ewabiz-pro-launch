@@ -20,7 +20,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }, [loading, state, navigate]);
 
   if (loading || state === "guest") {
-    return <AuthShell />;
+    return <AuthShell><div /></AuthShell>;
   }
   return <>{children}</>;
 }
