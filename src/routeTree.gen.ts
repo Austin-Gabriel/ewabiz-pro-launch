@@ -14,6 +14,7 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as KycRouteImport } from './routes/kyc'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
@@ -50,6 +51,11 @@ const SignInRoute = SignInRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KycRoute = KycRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
@@ -238,6 +250,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   JoinRoute: typeof JoinRoute
   KycRoute: typeof KycRouteWithChildren
+  LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   SignInRoute: typeof SignInRoute
   SplashRoute: typeof SplashRoute
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kyc': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   JoinRoute: JoinRoute,
   KycRoute: KycRouteWithChildren,
+  LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   SignInRoute: SignInRoute,
   SplashRoute: SplashRoute,
@@ -415,3 +436,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
