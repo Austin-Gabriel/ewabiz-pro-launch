@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { EwaMark } from "@/components/ewa-logo";
 import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
 import { AuthInput } from "@/components/auth-input";
 import { useAuth } from "@/lib/auth-context";
@@ -46,11 +45,7 @@ function SignInBody() {
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-6">
-      <div className="ewa-mark-in mt-4 flex items-center" style={{ paddingTop: "2vh" }}>
-        <EwaMark size={36} />
-      </div>
-
-      <div className="ewa-rise mt-8" style={{ animationDelay: "120ms" }}>
+      <div className="ewa-rise mt-10" style={{ animationDelay: "120ms" }}>
         <h1
           style={{
             fontFamily: SANS_STACK,
