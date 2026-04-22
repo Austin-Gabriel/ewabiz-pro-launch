@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { TOTAL_STEPS, getOnboardingSnapshot } from "@/lib/onboarding-context";
 import { StepRouter } from "@/components/onboarding/step-router";
 
-export const Route = createFileRoute("/onboarding/")({
+export const Route = createFileRoute("/onboarding/$step")({
   head: () => ({
     meta: [
       { title: "Set up your profile — Ewà Biz" },

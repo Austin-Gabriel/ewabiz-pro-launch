@@ -19,7 +19,7 @@ import { Route as HomeRouteImport } from './routes/home'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingReviewRouteImport } from './routes/onboarding.review'
-import { Route as OnboardingRouteImport } from './routes/onboarding.'
+import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -71,9 +71,9 @@ const OnboardingReviewRoute = OnboardingReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => OnboardingRoute,
 } as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/',
-  path: '/',
+const OnboardingStepRoute = OnboardingStepRouteImport.update({
+  id: '/$step',
+  path: '/$step',
   getParentRoute: () => OnboardingRoute,
 } as any)
 
@@ -87,7 +87,7 @@ export interface FileRoutesByFullPath {
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
-  '/onboarding/': typeof OnboardingRoute
+  '/onboarding/$step': typeof OnboardingStepRoute
   '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRoutesByTo {
@@ -95,11 +95,12 @@ export interface FileRoutesByTo {
   '/biometric': typeof BiometricRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding/$step': typeof OnboardingStepRoute
   '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRoutesById {
@@ -113,7 +114,7 @@ export interface FileRoutesById {
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
-  '/onboarding/': typeof OnboardingRoute
+  '/onboarding/$step': typeof OnboardingStepRoute
   '/onboarding/review': typeof OnboardingReviewRoute
 }
 export interface FileRouteTypes {
@@ -128,7 +129,7 @@ export interface FileRouteTypes {
     | '/splash'
     | '/verify'
     | '/welcome'
-    | '/onboarding/'
+    | '/onboarding/$step'
     | '/onboarding/review'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -136,11 +137,12 @@ export interface FileRouteTypes {
     | '/biometric'
     | '/home'
     | '/join'
+    | '/onboarding'
     | '/sign-in'
     | '/splash'
     | '/verify'
     | '/welcome'
-    | '/onboarding'
+    | '/onboarding/$step'
     | '/onboarding/review'
   id:
     | '__root__'
@@ -153,7 +155,7 @@ export interface FileRouteTypes {
     | '/splash'
     | '/verify'
     | '/welcome'
-    | '/onboarding/'
+    | '/onboarding/$step'
     | '/onboarding/review'
   fileRoutesById: FileRoutesById
 }
@@ -241,23 +243,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingReviewRouteImport
       parentRoute: typeof OnboardingRoute
     }
-    '/onboarding/': {
-      id: '/onboarding/'
-      path: '/'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof OnboardingRouteImport
+    '/onboarding/$step': {
+      id: '/onboarding/$step'
+      path: '/$step'
+      fullPath: '/onboarding/$step'
+      preLoaderRoute: typeof OnboardingStepRouteImport
       parentRoute: typeof OnboardingRoute
     }
   }
 }
 
 interface OnboardingRouteChildren {
-  OnboardingRoute: typeof OnboardingRoute
+  OnboardingStepRoute: typeof OnboardingStepRoute
   OnboardingReviewRoute: typeof OnboardingReviewRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
-  OnboardingRoute: OnboardingRoute,
+  OnboardingStepRoute: OnboardingStepRoute,
   OnboardingReviewRoute: OnboardingReviewRoute,
 }
 
