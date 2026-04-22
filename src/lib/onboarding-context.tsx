@@ -20,15 +20,12 @@ export interface OnboardingData {
   experience?: "u1" | "1to3" | "3to5" | "5to10" | "10plus";
   // Step 8 — specializations (slugs scoped to picked services)
   specializations?: string[];
+  // Step 8 — pro-suggested specialty (free text, stored for future curation, doesn't affect chip selection)
+  customSpecialty?: string;
   // Step 9 — service area
   area?: { lat: number; lng: number; radiusMi: number; label?: string };
-  // Step 10 — travel prefs
-  travel?: {
-    travelToClients: boolean;
-    homeVisits: boolean;
-    officeVisits: boolean;
-    studio: boolean;
-  };
+  // Step 9 — formatted address text (Google Places-style autocomplete)
+  addressLine?: string;
   // Step 11 — weekly availability
   availability?: WeeklyAvailability;
   // Step 12 — service menu
@@ -56,13 +53,6 @@ export const DEFAULT_AVAILABILITY: WeeklyAvailability = {
   fri: { enabled: true, start: "10:00", end: "19:00" },
   sat: { enabled: true, start: "10:00", end: "19:00" },
   sun: { enabled: false, start: "10:00", end: "19:00" },
-};
-
-export const DEFAULT_TRAVEL = {
-  travelToClients: true,
-  homeVisits: true,
-  officeVisits: false,
-  studio: false,
 };
 
 export interface ServiceMenuItem {
@@ -180,4 +170,4 @@ export const EXPERIENCE_OPTIONS: { value: NonNullable<OnboardingData["experience
   { value: "10plus", label: "10+ years" },
 ];
 
-export const TOTAL_STEPS = 14;
+export const TOTAL_STEPS = 12;
