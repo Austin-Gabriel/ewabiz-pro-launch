@@ -12,7 +12,7 @@ export function Step7Experience({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={7}
+      step={6}
       title="How long, professionally?"
       subtitle="Helps us match you with the right kind of clients."
       onContinue={submit}

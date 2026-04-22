@@ -38,7 +38,7 @@ export function Step13Portfolio({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={13}
+      step={11}
       title="Show your work."
       subtitle={`Add at least ${MIN_PHOTOS} photos. Your best, not your most.`}
       onContinue={submit}

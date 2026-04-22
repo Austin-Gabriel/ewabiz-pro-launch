@@ -25,7 +25,7 @@ export function Step11Availability({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={11}
+      step={9}
       title="Your weekly hours."
       subtitle="We&apos;ve set a common pro schedule. Adjust whatever doesn&apos;t fit."
       onContinue={submit}

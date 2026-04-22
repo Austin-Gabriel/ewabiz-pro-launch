@@ -45,7 +45,7 @@ export function Step3Otp({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={3}
+      step={2}
       title="Enter the 6-digit code."
       subtitle={<>Sent to <span style={{ fontWeight: 500 }}>{data.phone ?? "your phone"}</span>.</>}
       onContinue={onNext}
