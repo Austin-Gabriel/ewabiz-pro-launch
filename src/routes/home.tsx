@@ -5,7 +5,13 @@ import { BottomTabs, type TabKey } from "@/components/home/bottom-tabs";
 import { StateMidOnboarding } from "@/components/home/state-mid-onboarding";
 import { StatePending } from "@/components/home/state-pending";
 import { StateLive } from "@/components/home/state-live";
-import { LIVE_FIRST_TIME, LIVE_QUIET_DAY, LIVE_ACTIVE_DAY } from "@/components/home/mock-data";
+import {
+  LIVE_FIRST_TIME,
+  LIVE_QUIET_DAY,
+  LIVE_ACTIVE_DAY,
+  INCOMING_REQUEST_EXAMPLE,
+} from "@/components/home/mock-data";
+import type { LiveStatus } from "@/components/home/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { useKyc } from "@/lib/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
@@ -23,11 +29,14 @@ import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
  */
 
 type PreviewState = "auto" | "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active";
+type LivePreview = "default" | "in-progress" | "en-route" | "incoming";
 
 export const Route = createFileRoute("/home")({
   head: () => ({ meta: [{ title: "Home — Ewà Biz" }] }),
-  validateSearch: (search: Record<string, unknown>): { state?: PreviewState } => {
+  validateSearch: (search: Record<string, unknown>): { state?: PreviewState; live?: LivePreview } => {
     const s = search.state;
+    const live = search.live;
+    const out: { state?: PreviewState; live?: LivePreview } = {};
     if (
       s === "mid-onboarding" ||
       s === "pending" ||
@@ -35,15 +44,18 @@ export const Route = createFileRoute("/home")({
       s === "live-quiet" ||
       s === "live-active"
     ) {
-      return { state: s };
+      out.state = s;
     }
-    return {};
+    if (live === "in-progress" || live === "en-route" || live === "incoming") {
+      out.live = live;
+    }
+    return out;
   },
   component: HomePage,
 });
 
 function HomePage() {
-  const { state: forcedState } = Route.useSearch();
+  const { state: forcedState, live: livePreview } = Route.useSearch();
   const auth = useAuth();
   const { data: kyc } = useKyc();
   const { data: onboarding } = useOnboarding();
@@ -53,6 +65,16 @@ function HomePage() {
   const resolved = resolveState({ forcedState, auth, kyc, onboarding });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
+
+  // Derive live-state overrides from the ?live= query param so designers can
+  // preview In Progress / En Route / Incoming Request screens.
+  const liveStatus: LiveStatus | undefined =
+    livePreview === "in-progress"
+      ? { kind: "in-progress", elapsedMin: 24 }
+      : livePreview === "en-route"
+        ? { kind: "en-route", etaMin: 12 }
+        : undefined;
+  const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -73,13 +95,28 @@ function HomePage() {
       ) : null}
 
       {resolved.kind === "live-first" ? (
-        <StateLive {...LIVE_FIRST_TIME} greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_FIRST_TIME.greetingName)} />
+        <StateLive
+          {...LIVE_FIRST_TIME}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_FIRST_TIME.greetingName)}
+          liveStatus={liveStatus ?? LIVE_FIRST_TIME.liveStatus}
+          incomingRequest={incomingRequest}
+        />
       ) : null}
       {resolved.kind === "live-quiet" ? (
-        <StateLive {...LIVE_QUIET_DAY} greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_QUIET_DAY.greetingName)} />
+        <StateLive
+          {...LIVE_QUIET_DAY}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_QUIET_DAY.greetingName)}
+          liveStatus={liveStatus ?? LIVE_QUIET_DAY.liveStatus}
+          incomingRequest={incomingRequest}
+        />
       ) : null}
       {resolved.kind === "live-active" ? (
-        <StateLive {...LIVE_ACTIVE_DAY} greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_ACTIVE_DAY.greetingName)} />
+        <StateLive
+          {...LIVE_ACTIVE_DAY}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_ACTIVE_DAY.greetingName)}
+          liveStatus={liveStatus ?? LIVE_ACTIVE_DAY.liveStatus}
+          incomingRequest={incomingRequest}
+        />
       ) : null}
 
       {!isHardGate ? (
