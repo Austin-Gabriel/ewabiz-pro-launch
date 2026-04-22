@@ -45,12 +45,12 @@ export interface HomeShellProps {
 }
 
 export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps) {
+  // Native-mobile working surface: lock to dark mode. Theme plumbing is kept
+  // for downstream components that already read it.
   const [isDark, setIsDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: light)");
-    if (mq.matches) setIsDark(false);
     setMounted(true);
   }, []);
 
@@ -114,25 +114,6 @@ export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps)
             transition: "opacity 600ms ease",
           }}
         />
-
-        {/* Theme toggle in top-right (no top label here — the greeting IS the header). */}
-        <div className="relative z-10 flex items-center justify-end px-5" style={{ paddingTop: 14 }}>
-          <button
-            type="button"
-            onClick={() => setIsDark(!isDark)}
-            aria-label="Toggle color mode"
-            className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
-            style={{
-              border: `1px solid ${borderCol}`,
-              color: text,
-              opacity: 0.6,
-              fontSize: 12,
-              transition: "border-color 600ms ease, color 600ms ease, transform 200ms ease",
-            }}
-          >
-            {isDark ? "☀" : "☾"}
-          </button>
-        </div>
 
         <div
           className="relative z-[1] flex flex-1 flex-col"
