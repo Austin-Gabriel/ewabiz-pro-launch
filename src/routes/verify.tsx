@@ -26,7 +26,7 @@ function VerifyPage() {
   const { mode } = Route.useSearch();
   return (
     <AuthShell
-      topLabel={mode === "join" ? "Step 1 of 4" : "Verify"}
+      topLabel="Verify"
       onBack={() => navigate({ to: mode === "join" ? "/join" : "/sign-in" })}
     >
       <VerifyBody mode={mode} />
