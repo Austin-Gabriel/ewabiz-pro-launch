@@ -94,10 +94,14 @@ function VerifyBody({ mode }: { mode: VerifyMode }) {
       const id = identifier ?? "";
       if (mode === "join") {
         completeRegistration(id);
-        navigate({ to: "/onboarding" });
+        navigate({ to: "/onboarding/$step", params: { step: "4" } });
       } else {
         completeSignIn(id);
-        navigate({ to: state === "onboarding" ? "/onboarding" : "/home" });
+        if (state === "onboarding") {
+          navigate({ to: "/onboarding" });
+        } else {
+          navigate({ to: "/home" });
+        }
       }
     }, 350);
     return () => window.clearTimeout(t);
