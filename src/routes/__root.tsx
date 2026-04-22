@@ -3,6 +3,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { OnboardingProvider } from "@/lib/onboarding-context";
+import { KycProvider } from "@/lib/kyc-context";
 
 function NotFoundComponent() {
   return (
@@ -76,7 +77,9 @@ function RootComponent() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <Outlet />
+        <KycProvider>
+          <Outlet />
+        </KycProvider>
       </OnboardingProvider>
     </AuthProvider>
   );
