@@ -98,6 +98,28 @@
   .ewa-drift-b { animation: ewa-drift-b 28s ease-in-out infinite; transform-origin: center; }
   .ewa-spark { animation: ewa-spark 11s ease-in-out infinite; }
   .ewa-step-slide { animation: ewa-step-slide 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  /* Splash-drop: bagel falls in from above, squashes on impact, then settles.
+     Pair with .ewa-splash-ring on a sibling element for the ripple. */
+  @keyframes ewa-drop {
+    0%   { opacity: 0; transform: translate3d(0, -64px, 0) scale(0.78); }
+    55%  { opacity: 1; transform: translate3d(0, 4px, 0)   scale(1.06, 0.86); }
+    72%  { transform: translate3d(0, -8px, 0) scale(0.96, 1.06); }
+    86%  { transform: translate3d(0, 2px, 0)  scale(1.02, 0.98); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0)     scale(1); }
+  }
+  @keyframes ewa-splash-ring {
+    0%, 45% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+    55%     { opacity: 0.55; transform: translate(-50%, -50%) scale(0.6); }
+    100%    { opacity: 0; transform: translate(-50%, -50%) scale(1.9); }
+  }
+  .ewa-drop {
+    animation: ewa-drop 1.05s cubic-bezier(0.34, 1.56, 0.5, 1) both;
+    transform-origin: 50% 100%;
+  }
+  .ewa-splash-ring {
+    animation: ewa-splash-ring 1.05s ease-out both;
+    transform-origin: center;
+  }
 }
 
 /*
