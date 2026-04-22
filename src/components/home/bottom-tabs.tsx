@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { useHomeTheme, HOME_SANS } from "./home-shell";
 
 export type TabKey = "home" | "calendar" | "earnings" | "profile";
@@ -16,7 +17,7 @@ interface Props {
 export function BottomTabs({ active, onSelect, badge }: Props) {
   const { isDark, text, borderCol } = useHomeTheme();
 
-  const tabs: { key: TabKey; label: string; icon: JSX.Element }[] = [
+  const tabs: { key: TabKey; label: string; icon: ReactElement }[] = [
     {
       key: "home",
       label: "Home",
