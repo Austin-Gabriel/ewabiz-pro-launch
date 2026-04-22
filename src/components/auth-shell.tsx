@@ -24,8 +24,17 @@ const ThemeContext = createContext<ThemeCtx | null>(null);
 
 export function useAuthTheme(): ThemeCtx {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useAuthTheme must be used inside <AuthShell>");
-  return ctx;
+  if (ctx) return ctx;
+  // Graceful fallback so shared primitives (PrimaryButton/SecondaryButton)
+  // can be reused inside other shells (HomeShell, KycShell) without crashing.
+  return {
+    isDark: true,
+    setIsDark: () => {},
+    text: "#F0EBD8",
+    bg: "#061C27",
+    borderCol: "rgba(240,235,216,0.18)",
+    sans: SANS,
+  };
 }
 
 export const SANS_STACK = SANS;
