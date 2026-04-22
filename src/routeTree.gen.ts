@@ -14,12 +14,17 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as KycRouteImport } from './routes/kyc'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as EnableFaceidRouteImport } from './routes/enable-faceid'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
+import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
+import { Route as KycPendingRouteImport } from './routes/kyc.pending'
+import { Route as KycApprovedRouteImport } from './routes/kyc.approved'
+import { Route as KycStepRouteImport } from './routes/kyc.$step'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -44,6 +49,11 @@ const SignInRoute = SignInRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KycRoute = KycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -76,6 +86,26 @@ const OnboardingStepRoute = OnboardingStepRouteImport.update({
   path: '/$step',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const KycRejectedRoute = KycRejectedRouteImport.update({
+  id: '/rejected',
+  path: '/rejected',
+  getParentRoute: () => KycRoute,
+} as any)
+const KycPendingRoute = KycPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => KycRoute,
+} as any)
+const KycApprovedRoute = KycApprovedRouteImport.update({
+  id: '/approved',
+  path: '/approved',
+  getParentRoute: () => KycRoute,
+} as any)
+const KycStepRoute = KycStepRouteImport.update({
+  id: '/$step',
+  path: '/$step',
+  getParentRoute: () => KycRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,11 +113,16 @@ export interface FileRoutesByFullPath {
   '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
+  '/kyc': typeof KycRouteWithChildren
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/kyc/$step': typeof KycStepRoute
+  '/kyc/approved': typeof KycApprovedRoute
+  '/kyc/pending': typeof KycPendingRoute
+  '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
 }
 export interface FileRoutesByTo {
@@ -96,11 +131,16 @@ export interface FileRoutesByTo {
   '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
+  '/kyc': typeof KycRouteWithChildren
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/kyc/$step': typeof KycStepRoute
+  '/kyc/approved': typeof KycApprovedRoute
+  '/kyc/pending': typeof KycPendingRoute
+  '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
 }
 export interface FileRoutesById {
@@ -110,11 +150,16 @@ export interface FileRoutesById {
   '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
+  '/kyc': typeof KycRouteWithChildren
   '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/kyc/$step': typeof KycStepRoute
+  '/kyc/approved': typeof KycApprovedRoute
+  '/kyc/pending': typeof KycPendingRoute
+  '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
 }
 export interface FileRouteTypes {
@@ -125,11 +170,16 @@ export interface FileRouteTypes {
     | '/enable-faceid'
     | '/home'
     | '/join'
+    | '/kyc'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/kyc/$step'
+    | '/kyc/approved'
+    | '/kyc/pending'
+    | '/kyc/rejected'
     | '/onboarding/$step'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,11 +188,16 @@ export interface FileRouteTypes {
     | '/enable-faceid'
     | '/home'
     | '/join'
+    | '/kyc'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/kyc/$step'
+    | '/kyc/approved'
+    | '/kyc/pending'
+    | '/kyc/rejected'
     | '/onboarding/$step'
   id:
     | '__root__'
@@ -151,11 +206,16 @@ export interface FileRouteTypes {
     | '/enable-faceid'
     | '/home'
     | '/join'
+    | '/kyc'
     | '/onboarding'
     | '/sign-in'
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/kyc/$step'
+    | '/kyc/approved'
+    | '/kyc/pending'
+    | '/kyc/rejected'
     | '/onboarding/$step'
   fileRoutesById: FileRoutesById
 }
@@ -165,6 +225,7 @@ export interface RootRouteChildren {
   EnableFaceidRoute: typeof EnableFaceidRoute
   HomeRoute: typeof HomeRoute
   JoinRoute: typeof JoinRoute
+  KycRoute: typeof KycRouteWithChildren
   OnboardingRoute: typeof OnboardingRouteWithChildren
   SignInRoute: typeof SignInRoute
   SplashRoute: typeof SplashRoute
@@ -209,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kyc': {
+      id: '/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof KycRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join': {
       id: '/join'
       path: '/join'
@@ -251,8 +319,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingStepRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/kyc/rejected': {
+      id: '/kyc/rejected'
+      path: '/rejected'
+      fullPath: '/kyc/rejected'
+      preLoaderRoute: typeof KycRejectedRouteImport
+      parentRoute: typeof KycRoute
+    }
+    '/kyc/pending': {
+      id: '/kyc/pending'
+      path: '/pending'
+      fullPath: '/kyc/pending'
+      preLoaderRoute: typeof KycPendingRouteImport
+      parentRoute: typeof KycRoute
+    }
+    '/kyc/approved': {
+      id: '/kyc/approved'
+      path: '/approved'
+      fullPath: '/kyc/approved'
+      preLoaderRoute: typeof KycApprovedRouteImport
+      parentRoute: typeof KycRoute
+    }
+    '/kyc/$step': {
+      id: '/kyc/$step'
+      path: '/$step'
+      fullPath: '/kyc/$step'
+      preLoaderRoute: typeof KycStepRouteImport
+      parentRoute: typeof KycRoute
+    }
   }
 }
+
+interface KycRouteChildren {
+  KycStepRoute: typeof KycStepRoute
+  KycApprovedRoute: typeof KycApprovedRoute
+  KycPendingRoute: typeof KycPendingRoute
+  KycRejectedRoute: typeof KycRejectedRoute
+}
+
+const KycRouteChildren: KycRouteChildren = {
+  KycStepRoute: KycStepRoute,
+  KycApprovedRoute: KycApprovedRoute,
+  KycPendingRoute: KycPendingRoute,
+  KycRejectedRoute: KycRejectedRoute,
+}
+
+const KycRouteWithChildren = KycRoute._addFileChildren(KycRouteChildren)
 
 interface OnboardingRouteChildren {
   OnboardingStepRoute: typeof OnboardingStepRoute
@@ -272,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   EnableFaceidRoute: EnableFaceidRoute,
   HomeRoute: HomeRoute,
   JoinRoute: JoinRoute,
+  KycRoute: KycRouteWithChildren,
   OnboardingRoute: OnboardingRouteWithChildren,
   SignInRoute: SignInRoute,
   SplashRoute: SplashRoute,
