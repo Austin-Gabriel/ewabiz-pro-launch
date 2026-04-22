@@ -1,5 +1,3 @@
-import { Step2Phone } from "./steps/02-phone";
-import { Step3Otp } from "./steps/03-otp";
 import { Step4Name } from "./steps/04-name";
 import { Step5Craft } from "./steps/05-craft";
 import { Step6Services } from "./steps/06-services";
@@ -18,18 +16,16 @@ interface Props {
 
 export function StepRouter({ step, onNext }: Props) {
   switch (step) {
-    case 1: return <Step2Phone onNext={onNext} />;
-    case 2: return <Step3Otp onNext={onNext} />;
-    case 3: return <Step4Name onNext={onNext} />;
-    case 4: return <Step5Craft onNext={onNext} />;
-    case 5: return <Step6Services onNext={onNext} />;
-    case 6: return <Step7Experience onNext={onNext} />;
-    case 7: return <Step8Specializations onNext={onNext} />;
-    case 8: return <Step9Area onNext={onNext} />;
-    case 9: return <Step11Availability onNext={onNext} />;
-    case 10: return <Step12Menu onNext={onNext} />;
-    case 11: return <Step13Portfolio onNext={onNext} />;
-    case 12: return <Step14Review onNext={onNext} />;
+    case 1: return <Step4Name onNext={onNext} />;
+    case 2: return <Step5Craft onNext={onNext} />;
+    case 3: return <Step6Services onNext={onNext} />;
+    case 4: return <Step7Experience onNext={onNext} />;
+    case 5: return <Step8Specializations onNext={onNext} />;
+    case 6: return <Step9Area onNext={onNext} />;
+    case 7: return <Step11Availability onNext={onNext} />;
+    case 8: return <Step12Menu onNext={onNext} />;
+    case 9: return <Step13Portfolio onNext={onNext} />;
+    case 10: return <Step14Review onNext={onNext} />;
     default: return null;
   }
 }
