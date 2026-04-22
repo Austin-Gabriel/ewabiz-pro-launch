@@ -14,6 +14,12 @@ export interface StepShellProps {
   secondaryLabel?: string;
   onSecondary?: () => void;
   hideDock?: boolean;
+  /**
+   * Quiet decoration: confines squiggles to the bottom 25% of the screen.
+   * Defaults to `true` because most onboarding screens are functional forms.
+   * Pass `false` on hero / celebratory steps (intro, review summary).
+   */
+  quietBg?: boolean;
 }
 
 export function StepShell(props: StepShellProps) {
@@ -33,7 +39,7 @@ export function StepShell(props: StepShellProps) {
   };
 
   return (
-    <AuthShell onBack={back}>
+    <AuthShell onBack={back} quietSquiggles={props.quietBg ?? true}>
       <ProgressBar step={props.step} />
       <StepBody {...props} />
     </AuthShell>

@@ -38,9 +38,15 @@ export interface AuthShellProps {
   onBack?: () => void;
   /** Optional override of the dim ambient glow intensity. */
   glowBoost?: number;
+  /**
+   * Form mode: confines the squiggle decoration to the bottom 25% of the
+   * screen and reduces opacity so input fields, labels, and CTAs read clean.
+   * Use on functional form screens; leave off for hero/celebratory moments.
+   */
+  quietSquiggles?: boolean;
 }
 
-export function AuthShell({ children, topLabel, onBack, glowBoost = 1 }: AuthShellProps) {
+export function AuthShell({ children, topLabel, onBack, glowBoost = 1, quietSquiggles = false }: AuthShellProps) {
   const [isDark, setIsDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -54,7 +60,7 @@ export function AuthShell({ children, topLabel, onBack, glowBoost = 1 }: AuthShe
   const bg = isDark ? "#061C27" : "#F0EBD8";
   const glowBase = (isDark ? 0.14 : 0.09) * glowBoost;
   const borderCol = isDark ? "rgba(240,235,216,0.18)" : "rgba(6,28,39,0.18)";
-  const squiggleOpacity = isDark ? 0.08 : 0.12;
+  const squiggleOpacity = quietSquiggles ? (isDark ? 0.06 : 0.07) : (isDark ? 0.08 : 0.12);
   const grainOpacity = isDark ? 0.18 : 0.22;
 
   return (
@@ -71,11 +77,21 @@ export function AuthShell({ children, topLabel, onBack, glowBoost = 1 }: AuthShe
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        {/* Drifting organic squiggles */}
+        {/* Drifting organic squiggles. In quiet mode, they're masked to the
+            bottom 25% so they never touch fields, labels, or CTAs. */}
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-[10%] ewa-drift-a"
-          style={{ opacity: squiggleOpacity, transition: "opacity 600ms ease" }}
+          style={{
+            opacity: squiggleOpacity,
+            transition: "opacity 600ms ease",
+            ...(quietSquiggles
+              ? {
+                  WebkitMaskImage: "linear-gradient(to bottom, transparent 70%, #000 92%)",
+                  maskImage: "linear-gradient(to bottom, transparent 70%, #000 92%)",
+                }
+              : {}),
+          }}
         >
           <svg viewBox="0 0 600 600" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
             <path
@@ -97,7 +113,16 @@ export function AuthShell({ children, topLabel, onBack, glowBoost = 1 }: AuthShe
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-[15%] ewa-drift-b"
-          style={{ opacity: squiggleOpacity * 0.7, transition: "opacity 600ms ease" }}
+          style={{
+            opacity: squiggleOpacity * 0.7,
+            transition: "opacity 600ms ease",
+            ...(quietSquiggles
+              ? {
+                  WebkitMaskImage: "linear-gradient(to bottom, transparent 70%, #000 92%)",
+                  maskImage: "linear-gradient(to bottom, transparent 70%, #000 92%)",
+                }
+              : {}),
+          }}
         >
           <svg viewBox="0 0 600 600" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
             <path

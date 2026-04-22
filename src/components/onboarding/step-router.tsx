@@ -1,4 +1,3 @@
-import { Step1Intro } from "./steps/01-intro";
 import { Step2Phone } from "./steps/02-phone";
 import { Step3Otp } from "./steps/03-otp";
 import { Step4Name } from "./steps/04-name";
@@ -7,7 +6,6 @@ import { Step6Services } from "./steps/06-services";
 import { Step7Experience } from "./steps/07-experience";
 import { Step8Specializations } from "./steps/08-specializations";
 import { Step9Area } from "./steps/09-area";
-import { Step10Travel } from "./steps/10-travel";
 import { Step11Availability } from "./steps/11-availability";
 import { Step12Menu } from "./steps/12-menu";
 import { Step13Portfolio } from "./steps/13-portfolio";
@@ -20,20 +18,18 @@ interface Props {
 
 export function StepRouter({ step, onNext }: Props) {
   switch (step) {
-    case 1: return <Step1Intro onNext={onNext} />;
-    case 2: return <Step2Phone onNext={onNext} />;
-    case 3: return <Step3Otp onNext={onNext} />;
-    case 4: return <Step4Name onNext={onNext} />;
-    case 5: return <Step5Craft onNext={onNext} />;
-    case 6: return <Step6Services onNext={onNext} />;
-    case 7: return <Step7Experience onNext={onNext} />;
-    case 8: return <Step8Specializations onNext={onNext} />;
-    case 9: return <Step9Area onNext={onNext} />;
-    case 10: return <Step10Travel onNext={onNext} />;
-    case 11: return <Step11Availability onNext={onNext} />;
-    case 12: return <Step12Menu onNext={onNext} />;
-    case 13: return <Step13Portfolio onNext={onNext} />;
-    case 14: return <Step14Review onNext={onNext} />;
+    case 1: return <Step2Phone onNext={onNext} />;
+    case 2: return <Step3Otp onNext={onNext} />;
+    case 3: return <Step4Name onNext={onNext} />;
+    case 4: return <Step5Craft onNext={onNext} />;
+    case 5: return <Step6Services onNext={onNext} />;
+    case 6: return <Step7Experience onNext={onNext} />;
+    case 7: return <Step8Specializations onNext={onNext} />;
+    case 8: return <Step9Area onNext={onNext} />;
+    case 9: return <Step11Availability onNext={onNext} />;
+    case 10: return <Step12Menu onNext={onNext} />;
+    case 11: return <Step13Portfolio onNext={onNext} />;
+    case 12: return <Step14Review onNext={onNext} />;
     default: return null;
   }
 }

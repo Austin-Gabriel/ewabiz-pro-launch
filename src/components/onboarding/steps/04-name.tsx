@@ -19,7 +19,7 @@ export function Step4Name({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={4}
+      step={3}
       title="Your legal name."
       subtitle="As it appears on your ID. We use this only for verification."
       onContinue={submit}

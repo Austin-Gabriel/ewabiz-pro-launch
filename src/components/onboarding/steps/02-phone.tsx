@@ -27,9 +27,9 @@ export function Step2Phone({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={2}
-      title="What&apos;s your number?"
-      subtitle="Clients reach you here. We&apos;ll send a code to confirm it&apos;s yours."
+      step={1}
+      title={<>Let&apos;s get you set up.</>}
+      subtitle="Start with your phone number — we'll text you a code."
       onContinue={submit}
       canContinue={valid}
       ctaLabel="Send code"
