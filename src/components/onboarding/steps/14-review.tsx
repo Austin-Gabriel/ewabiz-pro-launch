@@ -6,7 +6,6 @@ import type { StepProps } from "../step-router";
 
 export function Step14Review({ onNext }: StepProps) {
   const { data } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const navigate = useNavigate();
 
   const goEdit = (step: number) =>
@@ -46,7 +45,21 @@ export function Step14Review({ onNext }: StepProps) {
       canContinue
       ctaLabel="Continue to verification"
     >
-      <div className="flex flex-col">
+      <ReviewBody sections={sections} goEdit={goEdit} />
+    </StepShell>
+  );
+}
+
+function ReviewBody({
+  sections,
+  goEdit,
+}: {
+  sections: { step: number; label: string; value: string }[];
+  goEdit: (step: number) => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <div className="flex flex-col">
         {sections.map((s, i) => (
           <button
             key={i}
@@ -78,7 +91,6 @@ export function Step14Review({ onNext }: StepProps) {
             </span>
           </button>
         ))}
-      </div>
-    </StepShell>
+    </div>
   );
 }

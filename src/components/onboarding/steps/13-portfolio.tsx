@@ -8,7 +8,6 @@ const MIN_PHOTOS = 3;
 
 export function Step13Portfolio({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const [photos, setPhotos] = useState<string[]>(data.portfolio ?? []);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -46,6 +45,27 @@ export function Step13Portfolio({ onNext }: StepProps) {
       canContinue={enough}
       ctaLabel={enough ? "Continue" : `${MIN_PHOTOS - photos.length} more to go`}
     >
+      <PortfolioBody
+        photos={photos}
+        inputRef={inputRef}
+        onFiles={onFiles}
+        remove={remove}
+      />
+    </StepShell>
+  );
+}
+
+function PortfolioBody({
+  photos, inputRef, onFiles, remove,
+}: {
+  photos: string[];
+  inputRef: React.MutableRefObject<HTMLInputElement | null>;
+  onFiles: (files: FileList | null) => void;
+  remove: (idx: number) => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <>
       <input
         ref={inputRef} type="file" accept="image/*" multiple className="hidden"
         onChange={(e) => onFiles(e.target.files)}
@@ -83,6 +103,6 @@ export function Step13Portfolio({ onNext }: StepProps) {
       <p className="mt-4 text-center" style={{ fontFamily: SANS_STACK, fontSize: 11, color: text, opacity: 0.45 }}>
         {photos.length} / {MIN_PHOTOS} minimum
       </p>
-    </StepShell>
+    </>
   );
 }
