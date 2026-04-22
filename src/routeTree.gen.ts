@@ -18,6 +18,7 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OnboardingRouteImport } from './routes/onboarding.'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -64,28 +65,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/onboarding/': typeof OnboardingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
-  '/onboarding': typeof OnboardingRoute
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/onboarding': typeof OnboardingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,11 +100,12 @@ export interface FileRoutesById {
   '/biometric': typeof BiometricRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
+  '/onboarding/': typeof OnboardingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,17 +119,18 @@ export interface FileRouteTypes {
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/biometric'
     | '/home'
     | '/join'
-    | '/onboarding'
     | '/sign-in'
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/onboarding'
   id:
     | '__root__'
     | '/'
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/splash'
     | '/verify'
     | '/welcome'
+    | '/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,7 +150,7 @@ export interface RootRouteChildren {
   BiometricRoute: typeof BiometricRoute
   HomeRoute: typeof HomeRoute
   JoinRoute: typeof JoinRoute
-  OnboardingRoute: typeof OnboardingRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
   SignInRoute: typeof SignInRoute
   SplashRoute: typeof SplashRoute
   VerifyRoute: typeof VerifyRoute
@@ -212,15 +222,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
   }
 }
+
+interface OnboardingRouteChildren {
+  OnboardingRoute: typeof OnboardingRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingRoute: OnboardingRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
   HomeRoute: HomeRoute,
   JoinRoute: JoinRoute,
-  OnboardingRoute: OnboardingRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
   SignInRoute: SignInRoute,
   SplashRoute: SplashRoute,
   VerifyRoute: VerifyRoute,
