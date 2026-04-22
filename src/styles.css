@@ -1,13 +1,12 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
 /* Brand fonts: Uncut Sans (body/UI) + Fraunces as the closest free stand-in for the
    editorial serif used in the wordmark. Serif is reserved for the logo only. */
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&display=swap");
-
 @font-face {
   font-family: "Uncut Sans";
   font-style: normal;
