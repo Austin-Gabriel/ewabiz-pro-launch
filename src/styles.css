@@ -120,6 +120,11 @@
     animation: ewa-splash-ring 1.05s ease-out both;
     transform-origin: center;
   }
+  /* Subtle pulse for live status dots (in-progress / en-route / incoming). */
+  @keyframes ewa-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: 0.45; transform: scale(0.7); }
+  }
 }
 
 /*
