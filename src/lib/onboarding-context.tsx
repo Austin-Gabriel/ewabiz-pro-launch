@@ -6,6 +6,8 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
  * mode; in production this would sync to Lovable Cloud on every patch.
  */
 export interface OnboardingData {
+  // Collected at signup
+  studioName?: string;
   // Step 2 — phone (already captured pre-onboarding via /join)
   phone?: string;
   // Step 4 — personal info

@@ -4,6 +4,7 @@ import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { PrimaryButton } from "@/components/auth-buttons";
 import { AuthInput } from "@/components/auth-input";
 import { useAuth } from "@/lib/auth-context";
+import { useOnboarding } from "@/lib/onboarding-context";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -16,11 +17,11 @@ export const Route = createFileRoute("/signup")({
 });
 
 const SERVICES: { slug: string; label: string }[] = [
-  { slug: "hair", label: "Hair" },
-  { slug: "nails", label: "Nails" },
-  { slug: "makeup", label: "Makeup" },
-  { slug: "lashes", label: "Lashes" },
-  { slug: "brows", label: "Brows" },
+  { slug: "hair", label: "Hair Stylist" },
+  { slug: "nails", label: "Nail Tech" },
+  { slug: "makeup", label: "Makeup Artist" },
+  { slug: "lashes", label: "Lash Tech" },
+  { slug: "brows", label: "Brow Artist" },
   { slug: "barber", label: "Barber" },
 ];
 
@@ -37,8 +38,10 @@ function SignUpBody() {
   const { text, borderCol } = useAuthTheme();
   const navigate = useNavigate();
   const { signUpWithPassword } = useAuth();
+  const { patch, markFurthest } = useOnboarding();
 
   const [fullName, setFullName] = useState("");
+  const [studioName, setStudioName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -74,8 +77,22 @@ function SignUpBody() {
       setError(err);
       return;
     }
-    // New account — drop into the rich onboarding flow.
-    navigate({ to: "/onboarding" });
+
+    // Pre-populate onboarding with what we already know so these steps aren't repeated.
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? "";
+    const lastName = nameParts.slice(1).join(" ");
+    patch({
+      phone,
+      firstName,
+      lastName,
+      studioName: studioName.trim() || undefined,
+      furthestStep: 3,
+    });
+    markFurthest(3);
+
+    // Skip phone (step 1) and OTP (step 2) — jump straight to legal name + DOB.
+    navigate({ to: "/onboarding/$step", params: { step: "3" } });
   };
 
   return (
@@ -115,6 +132,13 @@ function SignUpBody() {
           placeholder="Jamie Carter"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+        />
+        <AuthInput
+          label="Studio name"
+          autoComplete="organization"
+          placeholder="e.g. Maya's Beauty Studio (optional)"
+          value={studioName}
+          onChange={(e) => setStudioName(e.target.value)}
         />
         <AuthInput
           label="Email"
