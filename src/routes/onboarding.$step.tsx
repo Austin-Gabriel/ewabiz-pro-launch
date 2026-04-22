@@ -26,7 +26,8 @@ function StepPage() {
 
   const goNext = () => {
     if (n >= TOTAL_STEPS) {
-      navigate({ to: "/onboarding/review" });
+      // Step 14 IS the review. CTA from review goes to KYC (Phase 2 — TBD).
+      navigate({ to: "/home" });
     } else {
       navigate({ to: "/onboarding/$step", params: { step: String(n + 1) } });
     }
