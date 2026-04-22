@@ -16,6 +16,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as EnableFaceidRouteImport } from './routes/enable-faceid'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
@@ -55,6 +56,11 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnableFaceidRoute = EnableFaceidRouteImport.update({
+  id: '/enable-faceid',
+  path: '/enable-faceid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BiometricRoute = BiometricRouteImport.update({
   id: '/biometric',
   path: '/biometric',
@@ -74,6 +80,7 @@ const OnboardingStepRoute = OnboardingStepRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
+  '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
+  '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
+  '/enable-faceid': typeof EnableFaceidRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/biometric'
+    | '/enable-faceid'
     | '/home'
     | '/join'
     | '/onboarding'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/biometric'
+    | '/enable-faceid'
     | '/home'
     | '/join'
     | '/onboarding'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/biometric'
+    | '/enable-faceid'
     | '/home'
     | '/join'
     | '/onboarding'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BiometricRoute: typeof BiometricRoute
+  EnableFaceidRoute: typeof EnableFaceidRoute
   HomeRoute: typeof HomeRoute
   JoinRoute: typeof JoinRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
@@ -210,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enable-faceid': {
+      id: '/enable-faceid'
+      path: '/enable-faceid'
+      fullPath: '/enable-faceid'
+      preLoaderRoute: typeof EnableFaceidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/biometric': {
       id: '/biometric'
       path: '/biometric'
@@ -249,6 +269,7 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
+  EnableFaceidRoute: EnableFaceidRoute,
   HomeRoute: HomeRoute,
   JoinRoute: JoinRoute,
   OnboardingRoute: OnboardingRouteWithChildren,

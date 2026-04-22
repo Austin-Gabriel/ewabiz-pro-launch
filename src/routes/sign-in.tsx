@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
 import { AuthInput } from "@/components/auth-input";
@@ -12,24 +12,43 @@ export const Route = createFileRoute("/sign-in")({
       { name: "description", content: "Welcome back. One tap to your studio." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    faceid: search.faceid === "enrolled" ? ("enrolled" as const) : undefined,
+  }),
   component: SignInPage,
 });
 
 function SignInPage() {
   const navigate = useNavigate();
+  const { faceid } = Route.useSearch();
   return (
-    <AuthShell topLabel="Sign in" onBack={() => navigate({ to: "/welcome" })}>
-      <SignInBody />
+    <AuthShell topLabel="Sign in" onBack={() => navigate({ to: "/welcome" })} quietSquiggles>
+      <SignInBody faceIdEnrolled={faceid === "enrolled"} />
     </AuthShell>
   );
 }
 
-function SignInBody() {
+function SignInBody({ faceIdEnrolled }: { faceIdEnrolled: boolean }) {
   const { text } = useAuthTheme();
   const navigate = useNavigate();
   const { setIdentifier } = useAuth();
   const [value, setValue] = useState("");
   const [tab, setTab] = useState<"phone" | "email">("phone");
+  const [faceState, setFaceState] = useState<"idle" | "prompting" | "failed">(
+    faceIdEnrolled ? "prompting" : "idle"
+  );
+  const promptedRef = useRef(false);
+
+  // Auto-prompt Face ID once when the screen loads (enrolled state).
+  useEffect(() => {
+    if (!faceIdEnrolled || promptedRef.current) return;
+    promptedRef.current = true;
+    const t = window.setTimeout(() => {
+      // Mock: treat auto-prompt as cancelled so the fallback UI is reviewable.
+      setFaceState("failed");
+    }, 1400);
+    return () => window.clearTimeout(t);
+  }, [faceIdEnrolled]);
 
   const placeholder = tab === "phone" ? "+1  •  555  •  000  •  0000" : "you@studio.com";
   const valid =
@@ -41,6 +60,11 @@ function SignInBody() {
     if (!valid) return;
     setIdentifier(value);
     navigate({ to: "/verify", search: { mode: "sign-in" } });
+  };
+
+  const tryFaceId = () => {
+    setFaceState("prompting");
+    window.setTimeout(() => navigate({ to: "/biometric" }), 500);
   };
 
   return (
@@ -71,57 +95,75 @@ function SignInBody() {
             maxWidth: 300,
           }}
         >
-          One tap to your studio.
+          {faceIdEnrolled
+            ? faceState === "failed"
+              ? "Use Face ID, or sign in below."
+              : "Hold steady — looking for your face."
+            : "One tap to your studio."}
         </p>
       </div>
 
-      {/* Biometric quick-action — present for returning hands */}
-      <div className="ewa-rise mt-7" style={{ animationDelay: "220ms" }}>
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/biometric" })}
-          className="group flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 active:scale-[0.99]"
-          style={{
-            border: `1px solid rgba(255,130,63,0.35)`,
-            backgroundColor: "rgba(255,130,63,0.06)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,130,63,0.12)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "rgba(255,130,63,0.06)";
-          }}
-        >
-          <span
-            className="flex h-9 w-9 items-center justify-center rounded-full"
-            style={{ backgroundColor: "rgba(255,130,63,0.14)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF823F" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 11a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0v-3a3 3 0 0 0-3-3Z" />
-              <path d="M5 11V8a7 7 0 0 1 14 0v3" />
-              <path d="M8 11h8" opacity="0.5" />
-            </svg>
-          </span>
-          <span style={{ fontFamily: SANS_STACK, fontSize: 13.5, fontWeight: 500, color: text }}>
-            Use Face ID
-          </span>
-          <span
-            className="ml-auto transition-transform group-hover:translate-x-1"
-            style={{ color: "#FF823F", fontSize: 16 }}
-          >
-            →
-          </span>
-        </button>
-      </div>
+      {/* Face ID — only present when enrolled. Prominent, with auto-prompt
+          state mirrored in the button. */}
+      {faceIdEnrolled ? (
+        <>
+          <div className="ewa-rise mt-8" style={{ animationDelay: "220ms" }}>
+            <button
+              type="button"
+              onClick={tryFaceId}
+              className="group flex w-full items-center gap-3 rounded-2xl px-4 py-4 transition-all duration-300 active:scale-[0.99]"
+              style={{
+                border: `1.5px solid rgba(255,130,63,0.55)`,
+                backgroundColor: "rgba(255,130,63,0.10)",
+                boxShadow:
+                  faceState === "prompting"
+                    ? "0 0 36px 0 rgba(255,130,63,0.35)"
+                    : "0 0 18px 0 rgba(255,130,63,0.15)",
+              }}
+            >
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  faceState === "prompting" ? "ewa-breathe" : ""
+                }`}
+                style={{ backgroundColor: "rgba(255,130,63,0.18)" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF823F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 8V6a1 1 0 0 1 1-1h2" />
+                  <path d="M19 8V6a1 1 0 0 0-1-1h-2" />
+                  <path d="M5 16v2a1 1 0 0 0 1 1h2" />
+                  <path d="M19 16v2a1 1 0 0 1-1 1h-2" />
+                  <path d="M9 10v1" /><path d="M15 10v1" /><path d="M12 10v3" />
+                  <path d="M9 16c1 .8 2 1 3 1s2-.2 3-1" />
+                </svg>
+              </span>
+              <span className="flex flex-col items-start">
+                <span style={{ fontFamily: SANS_STACK, fontSize: 14.5, fontWeight: 600, color: text }}>
+                  {faceState === "prompting" ? "Looking…" : "Sign in with Face ID"}
+                </span>
+                <span style={{ fontFamily: SANS_STACK, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 2 }}>
+                  {faceState === "failed" ? "Didn't recognize you. Try again." : "One glance to unlock"}
+                </span>
+              </span>
+              <span
+                className="ml-auto transition-transform group-hover:translate-x-1"
+                style={{ color: "#FF823F", fontSize: 16 }}
+              >
+                →
+              </span>
+            </button>
+          </div>
 
-      {/* Divider */}
-      <div className="ewa-fade my-6 flex items-center gap-3" style={{ animationDelay: "300ms" }}>
-        <div className="h-px flex-1" style={{ backgroundColor: text, opacity: 0.12 }} />
-        <span style={{ fontFamily: SANS_STACK, fontSize: 10, letterSpacing: "2px", color: text, opacity: 0.4 }}>
-          OR
-        </span>
-        <div className="h-px flex-1" style={{ backgroundColor: text, opacity: 0.12 }} />
-      </div>
+          <div className="ewa-fade my-6 flex items-center gap-3" style={{ animationDelay: "300ms" }}>
+            <div className="h-px flex-1" style={{ backgroundColor: text, opacity: 0.12 }} />
+            <span style={{ fontFamily: SANS_STACK, fontSize: 10, letterSpacing: "2px", color: text, opacity: 0.4 }}>
+              OR
+            </span>
+            <div className="h-px flex-1" style={{ backgroundColor: text, opacity: 0.12 }} />
+          </div>
+        </>
+      ) : (
+        <div className="mt-7" />
+      )}
 
       {/* Tab switcher */}
       <div
