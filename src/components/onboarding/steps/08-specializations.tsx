@@ -7,7 +7,6 @@ import type { StepProps } from "../step-router";
 
 export function Step8Specializations({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text } = useAuthTheme();
   const [picked, setPicked] = useState<string[]>(data.specializations ?? []);
 
   const grouped = useMemo(() => {
@@ -36,7 +35,23 @@ export function Step8Specializations({ onNext }: StepProps) {
       secondaryLabel="Skip for now"
       onSecondary={onNext}
     >
-      <div className="flex flex-col gap-6">
+      <SpecBody grouped={grouped} picked={picked} toggle={toggle} />
+    </StepShell>
+  );
+}
+
+function SpecBody({
+  grouped,
+  picked,
+  toggle,
+}: {
+  grouped: { slug: string; label: string; items: string[] }[];
+  picked: string[];
+  toggle: (label: string) => void;
+}) {
+  const { text } = useAuthTheme();
+  return (
+    <div className="flex flex-col gap-6">
         {grouped.length === 0 ? (
           <p style={{ fontFamily: SANS_STACK, fontSize: 13, color: text, opacity: 0.6 }}>
             Pick at least one service first.
@@ -61,7 +76,6 @@ export function Step8Specializations({ onNext }: StepProps) {
             </div>
           ))
         )}
-      </div>
-    </StepShell>
+    </div>
   );
 }

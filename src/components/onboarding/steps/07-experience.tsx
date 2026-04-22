@@ -6,7 +6,6 @@ import type { StepProps } from "../step-router";
 
 export function Step7Experience({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const [exp, setExp] = useState<OnboardingData["experience"]>(data.experience);
 
   const submit = () => { if (exp) { patch({ experience: exp }); onNext(); } };
@@ -19,7 +18,21 @@ export function Step7Experience({ onNext }: StepProps) {
       onContinue={submit}
       canContinue={!!exp}
     >
-      <div className="flex flex-col gap-2.5">
+      <ExperienceBody exp={exp} setExp={setExp} />
+    </StepShell>
+  );
+}
+
+function ExperienceBody({
+  exp,
+  setExp,
+}: {
+  exp: OnboardingData["experience"];
+  setExp: (v: OnboardingData["experience"]) => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <div className="flex flex-col gap-2.5">
         {EXPERIENCE_OPTIONS.map((o) => {
           const selected = exp === o.value;
           return (
@@ -43,7 +56,6 @@ export function Step7Experience({ onNext }: StepProps) {
             </button>
           );
         })}
-      </div>
-    </StepShell>
+    </div>
   );
 }

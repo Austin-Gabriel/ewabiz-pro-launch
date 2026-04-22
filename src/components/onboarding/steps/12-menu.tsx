@@ -7,7 +7,6 @@ import type { StepProps } from "../step-router";
 
 export function Step12Menu({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const [items, setItems] = useState<ServiceMenuItem[]>(data.menu ?? []);
   const [name, setName] = useState("");
   const [duration, setDuration] = useState("");
@@ -48,6 +47,37 @@ export function Step12Menu({ onNext }: StepProps) {
       canContinue={items.length > 0}
       ctaLabel={items.length > 0 ? "Continue" : "Add at least one"}
     >
+      <MenuBody
+        items={items}
+        remove={remove}
+        name={name} setName={setName}
+        duration={duration} setDuration={setDuration}
+        price={price} setPrice={setPrice}
+        desc={desc} setDesc={setDesc}
+        valid={valid}
+        add={add}
+      />
+    </StepShell>
+  );
+}
+
+function MenuBody({
+  items, remove,
+  name, setName, duration, setDuration, price, setPrice, desc, setDesc,
+  valid, add,
+}: {
+  items: ServiceMenuItem[];
+  remove: (id: string) => void;
+  name: string; setName: (v: string) => void;
+  duration: string; setDuration: (v: string) => void;
+  price: string; setPrice: (v: string) => void;
+  desc: string; setDesc: (v: string) => void;
+  valid: boolean;
+  add: () => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <>
       {items.length > 0 ? (
         <div className="mb-6 flex flex-col gap-2">
           {items.map((it) => (
@@ -100,6 +130,6 @@ export function Step12Menu({ onNext }: StepProps) {
           + Add to menu
         </button>
       </div>
-    </StepShell>
+    </>
   );
 }
