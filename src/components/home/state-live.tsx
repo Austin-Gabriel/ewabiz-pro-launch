@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HOME_SANS, useHomeTheme } from "./home-shell";
+import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
