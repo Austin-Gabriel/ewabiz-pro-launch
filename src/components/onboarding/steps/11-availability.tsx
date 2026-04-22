@@ -16,7 +16,6 @@ const DAYS: { key: WeekDay; label: string }[] = [
 
 export function Step11Availability({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const [w, setW] = useState<WeeklyAvailability>(data.availability ?? DEFAULT_AVAILABILITY);
 
   const update = (k: WeekDay, next: Partial<typeof w[WeekDay]>) =>
@@ -32,7 +31,21 @@ export function Step11Availability({ onNext }: StepProps) {
       onContinue={submit}
       canContinue
     >
-      <div className="flex flex-col">
+      <AvailabilityBody w={w} update={update} />
+    </StepShell>
+  );
+}
+
+function AvailabilityBody({
+  w,
+  update,
+}: {
+  w: WeeklyAvailability;
+  update: (k: WeekDay, next: Partial<WeeklyAvailability[WeekDay]>) => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <div className="flex flex-col">
         {DAYS.map((d) => {
           const day = w[d.key];
           return (
@@ -73,8 +86,7 @@ export function Step11Availability({ onNext }: StepProps) {
             </div>
           );
         })}
-      </div>
-    </StepShell>
+    </div>
   );
 }
 

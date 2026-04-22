@@ -11,7 +11,6 @@ import type { StepProps } from "../step-router";
  */
 export function Step9Area({ onNext }: StepProps) {
   const { data, patch } = useOnboarding();
-  const { text, borderCol, isDark } = useAuthTheme();
   const [radius, setRadius] = useState(data.area?.radiusMi ?? 8);
   const [pin, setPin] = useState({ x: data.area?.lng ?? 50, y: data.area?.lat ?? 50 });
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +36,6 @@ export function Step9Area({ onNext }: StepProps) {
   };
 
   const radiusPx = 30 + radius * 4; // 1 → 34px, 30 → 150px
-  const grid = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.05)";
 
   return (
     <StepShell
@@ -47,7 +45,34 @@ export function Step9Area({ onNext }: StepProps) {
       onContinue={submit}
       canContinue
     >
-      <div className="flex flex-1 flex-col">
+      <AreaBody
+        radius={radius}
+        setRadius={setRadius}
+        pin={pin}
+        radiusPx={radiusPx}
+        mapRef={mapRef}
+        onPointerDown={(e) => { dragging.current = true; move(e); }}
+        onPointerMove={move}
+      />
+    </StepShell>
+  );
+}
+
+function AreaBody({
+  radius, setRadius, pin, radiusPx, mapRef, onPointerDown, onPointerMove,
+}: {
+  radius: number;
+  setRadius: (n: number) => void;
+  pin: { x: number; y: number };
+  radiusPx: number;
+  mapRef: React.MutableRefObject<HTMLDivElement | null>;
+  onPointerDown: (e: React.PointerEvent) => void;
+  onPointerMove: (e: React.PointerEvent) => void;
+}) {
+  const { text, borderCol, isDark } = useAuthTheme();
+  const grid = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.05)";
+  return (
+    <div className="flex flex-1 flex-col">
         <div
           ref={mapRef}
           className="relative overflow-hidden rounded-3xl"
@@ -60,8 +85,8 @@ export function Step9Area({ onNext }: StepProps) {
             cursor: "crosshair",
             touchAction: "none",
           }}
-          onPointerDown={(e) => { dragging.current = true; move(e); }}
-          onPointerMove={move}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
         >
           {/* meandering "streets" */}
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 200 200" preserveAspectRatio="none" aria-hidden>
@@ -113,7 +138,6 @@ export function Step9Area({ onNext }: StepProps) {
             style={{ accentColor: "#FF823F" }}
           />
         </div>
-      </div>
-    </StepShell>
+    </div>
   );
 }
