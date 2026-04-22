@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react";
-import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
+import { useState } from "react";
+import { HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
   type BookingRequest,
-  formatToday,
   formatUsd,
-  timeOfDayGreeting,
 } from "./mock-data";
+
+// Industrial type discipline on the working surface: Inter only, no serif,
+// no italics. The brand still uses Fraunces elsewhere — this screen is a tool.
+const UI = `Inter, ${HOME_SANS}`;
 
 /**
  * The live working surface. Same scaffold for all three variants — what
@@ -20,7 +22,7 @@ import {
  *   5. Today's schedule
  */
 export function StateLive({
-  greetingName,
+  greetingName: _greetingName,
   weekToDateUsd,
   monthToDateUsd,
   bookingsToday,
@@ -36,73 +38,21 @@ export function StateLive({
   bookingLink?: string;
   nextOpenSlot?: string;
 }) {
-  const { text, isDark, borderCol } = useHomeTheme();
-  const greeting = useMemo(() => timeOfDayGreeting(), []);
-  const today = useMemo(() => formatToday(), []);
-
-  const isFirstTime = bookingsToday.length === 0 && pendingRequests.length === 0 && weekToDateUsd === 0;
+  void _greetingName;
+  const isFirstTime =
+    bookingsToday.length === 0 && pendingRequests.length === 0 && weekToDateUsd === 0;
   const nextBooking = bookingsToday[0];
+  const unreadCount = pendingRequests.length; // bell badge mirrors the queue
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-5 pt-1">
-      {/* Brand mark — splash-drop entrance. Small, top-left, never competes
-          with the greeting. The ring is a one-shot ripple at impact. */}
-      <div className="relative" style={{ height: 28, width: 28, marginTop: 2 }}>
-        <span
-          aria-hidden
-          className="ewa-splash-ring absolute"
-          style={{
-            top: "100%",
-            left: "50%",
-            width: 28,
-            height: 8,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(ellipse at center, rgba(255,130,63,0.55) 0%, rgba(255,130,63,0) 70%)",
-            animationDelay: "60ms",
-          }}
-        />
-        <div className="ewa-drop" style={{ animationDelay: "60ms" }}>
-          <EwaMark size={28} />
-        </div>
-      </div>
+      {/* Thin top bar — logomark left, notifications bell right. Nothing else.
+          The pro knows who they are; we don't greet them. */}
+      <TopBar unreadCount={unreadCount} />
 
-      {/* Date line */}
-      <div
-        className="ewa-fade"
-        style={{
-          fontFamily: HOME_SANS,
-          fontSize: 11,
-          letterSpacing: "1.6px",
-          textTransform: "uppercase",
-          color: text,
-          opacity: 0.42,
-          fontWeight: 600,
-          marginTop: 14,
-        }}
-      >
-        {today}
-      </div>
-
-      {/* Greeting — serif, the warmest beat */}
-      <h1
-        className="ewa-rise"
-        style={{
-          fontFamily: HOME_SERIF,
-          fontWeight: 400,
-          fontSize: 32,
-          lineHeight: 1.1,
-          letterSpacing: "-0.02em",
-          color: text,
-          margin: "10px 0 0 0",
-          maxWidth: 320,
-          animationDelay: "60ms",
-        }}
-      >
-        {greeting}, <span style={{ fontStyle: "italic" }}>{greetingName}</span>.
-      </h1>
-
-      {/* FOCUS CARD — the "what's next" answer */}
+      {/* UP NEXT — the hero. Sits immediately below the top bar with breathing
+          room. Either a real booking, a first-booking nudge, or a quiet-day
+          empty state — same slot, different content. */}
       <FocusCard
         nextBooking={nextBooking}
         nextOpenSlot={nextOpenSlot}
@@ -117,47 +67,105 @@ export function StateLive({
         isFirstTime={isFirstTime}
       />
 
-      {/* PENDING REQUESTS */}
+      {/* WAITING ON YOU */}
       {pendingRequests.length > 0 ? (
         <PendingRequests requests={pendingRequests} />
       ) : null}
 
-      {/* TODAY'S SCHEDULE */}
-      {bookingsToday.length > 0 ? (
-        <TodaySchedule bookings={bookingsToday} />
-      ) : pendingRequests.length === 0 && !isFirstTime ? (
-        <QuietDayNote nextOpenSlot={nextOpenSlot} />
-      ) : null}
+      {/* TODAY'S SCHEDULE — only when there are additional bookings beyond
+          the one already in Up Next. */}
+      {bookingsToday.length > 1 ? <TodaySchedule bookings={bookingsToday} /> : null}
 
       <div style={{ height: 24 }} />
-
-      <div
-        className="ewa-fade mt-2 text-center"
-        style={{
-          fontFamily: HOME_SERIF,
-          fontStyle: "italic",
-          fontSize: 12,
-          color: text,
-          opacity: 0.35,
-          animationDelay: "600ms",
-          paddingBottom: 8,
-        }}
-      >
-        {dailyBlessings[new Date().getDay()]}
-      </div>
     </div>
   );
 }
 
-const dailyBlessings = [
-  "A slow Sunday is also a craft.",
-  "Monday hands. Steady mind.",
-  "Tuesday — the quiet alchemist.",
-  "Halfway. You've got this.",
-  "Thursday: nearly weekend hair.",
-  "Friday energy. Pace yourself.",
-  "Saturday — your busiest art.",
-];
+/* ---------------- Top bar ---------------- */
+
+function TopBar({ unreadCount }: { unreadCount: number }) {
+  const { text, isDark, borderCol } = useHomeTheme();
+  return (
+    <div
+      className="ewa-fade flex items-center justify-between"
+      style={{ height: 44, marginTop: 2 }}
+    >
+      <div className="relative" style={{ height: 26, width: 26 }}>
+        <span
+          aria-hidden
+          className="ewa-splash-ring absolute"
+          style={{
+            top: "100%",
+            left: "50%",
+            width: 26,
+            height: 7,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(ellipse at center, rgba(255,130,63,0.55) 0%, rgba(255,130,63,0) 70%)",
+            animationDelay: "60ms",
+          }}
+        />
+        <div className="ewa-drop" style={{ animationDelay: "60ms" }}>
+          <EwaMark size={26} />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label={
+          unreadCount > 0
+            ? `Notifications, ${unreadCount} unread`
+            : "Notifications"
+        }
+        className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
+        style={{
+          width: 36,
+          height: 36,
+          backgroundColor: isDark ? "rgba(240,235,216,0.05)" : "rgba(255,255,255,0.55)",
+          border: `1px solid ${borderCol}`,
+          color: text,
+        }}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
+        {unreadCount > 0 ? (
+          <span
+            aria-hidden
+            className="absolute flex items-center justify-center rounded-full"
+            style={{
+              top: -2,
+              right: -2,
+              minWidth: 16,
+              height: 16,
+              padding: "0 4px",
+              backgroundColor: "#FF823F",
+              color: "#061C27",
+              fontFamily: UI,
+              fontSize: 10,
+              fontWeight: 700,
+              lineHeight: 1,
+              boxShadow: "0 0 12px rgba(255,130,63,0.55)",
+              border: `2px solid ${isDark ? "#061C27" : "#F0EBD8"}`,
+            }}
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        ) : null}
+      </button>
+    </div>
+  );
+}
 
 /* ---------------- Focus card ---------------- */
 
