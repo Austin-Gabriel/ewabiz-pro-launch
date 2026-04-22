@@ -26,7 +26,7 @@ function VerifyPage() {
   const { mode } = Route.useSearch();
   return (
     <AuthShell
-      topLabel={mode === "join" ? "Step 1 of 4" : "Verify"}
+      topLabel="Verify"
       onBack={() => navigate({ to: mode === "join" ? "/join" : "/sign-in" })}
     >
       <VerifyBody mode={mode} />
@@ -94,10 +94,14 @@ function VerifyBody({ mode }: { mode: VerifyMode }) {
       const id = identifier ?? "";
       if (mode === "join") {
         completeRegistration(id);
-        navigate({ to: "/onboarding" });
+        navigate({ to: "/onboarding/$step", params: { step: "4" } });
       } else {
         completeSignIn(id);
-        navigate({ to: state === "onboarding" ? "/onboarding" : "/home" });
+        if (state === "onboarding") {
+          navigate({ to: "/onboarding" });
+        } else {
+          navigate({ to: "/home" });
+        }
       }
     }, 350);
     return () => window.clearTimeout(t);

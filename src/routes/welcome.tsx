@@ -118,7 +118,9 @@ function WelcomeBody() {
         className="relative z-[1] mt-10 flex flex-col items-stretch px-5 ewa-rise"
         style={{ animationDelay: "640ms" }}
       >
-        <PrimaryButton onClick={() => navigate({ to: "/join" })}>Join as a pro</PrimaryButton>
+        <PrimaryButton onClick={() => navigate({ to: "/onboarding/$step", params: { step: "1" } })}>
+          Join as a pro
+        </PrimaryButton>
         <div className="mt-2.5">
           <SecondaryButton onClick={() => navigate({ to: "/sign-in" })}>
             I already have an account
