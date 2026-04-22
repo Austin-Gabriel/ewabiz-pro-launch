@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { EwaLockup } from "@/components/ewa-logo";
-import { getAuthSnapshot } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/splash")({
   head: () => ({
@@ -28,20 +28,21 @@ function SplashPage() {
 function SplashBody() {
   const { isDark, text } = useAuthTheme();
   const navigate = useNavigate();
+  const { loading, state } = useAuth();
 
   useEffect(() => {
+    if (loading) return;
     const t = window.setTimeout(() => {
-      const snap = getAuthSnapshot();
-      if (snap.state === "active") {
+      if (state === "active") {
         navigate({ to: "/biometric" });
-      } else if (snap.state === "onboarding") {
+      } else if (state === "onboarding") {
         navigate({ to: "/onboarding" });
       } else {
-        navigate({ to: "/welcome" });
+        navigate({ to: "/login" });
       }
-    }, 1600);
+    }, 1200);
     return () => window.clearTimeout(t);
-  }, [navigate]);
+  }, [navigate, loading, state]);
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-8">
