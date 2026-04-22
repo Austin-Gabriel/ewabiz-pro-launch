@@ -12,6 +12,10 @@ export interface Booking {
   durationMin: number;
   priceUsd: number;
   isNewClient?: boolean;
+  /** Short locality string shown in lists (e.g. "Bed-Stuy, Brooklyn"). */
+  location?: string;
+  /** Full street address used by the live state card / nav button. */
+  address?: string;
 }
 
 export interface BookingRequest {
@@ -22,6 +26,31 @@ export interface BookingRequest {
   requestedFor: string; // "Sat, Apr 27 · 2:00 PM"
   priceUsd: number;
   message?: string;
+  /** Where the appointment will happen (city or neighborhood). */
+  location?: string;
+  /** Distance from the pro right now, e.g. "2.4 mi". Optional. */
+  distance?: string;
+}
+
+export type LiveStateKind = "in-progress" | "en-route" | "idle";
+
+export interface LiveStatus {
+  kind: LiveStateKind;
+  /** When in-progress, minutes elapsed since start. */
+  elapsedMin?: number;
+  /** When en-route, ETA string. */
+  etaMin?: number;
+}
+
+export interface IncomingRequest extends BookingRequest {
+  /** Distance from current location. */
+  distance: string;
+  /** ETA to client in minutes. */
+  etaMin: number;
+  /** Estimated payout (after fees). */
+  payoutUsd: number;
+  /** Client photo URL. Optional — falls back to initial avatar. */
+  photoUrl?: string;
 }
 
 /* --------- Three live-pro variants --------- */
@@ -33,6 +62,12 @@ export const LIVE_FIRST_TIME = {
   bookingsToday: [] as Booking[],
   pendingRequests: [] as BookingRequest[],
   bookingLink: "ewa.app/amara",
+  ratingValue: 0,
+  ratingCount: 0,
+  completionPct: 100,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 0,
+  liveStatus: { kind: "idle" } as LiveStatus,
 };
 
 export const LIVE_QUIET_DAY = {
@@ -49,9 +84,17 @@ export const LIVE_QUIET_DAY = {
       requestedFor: "Sat, Apr 27 · 11:00 AM",
       priceUsd: 220,
       message: "Hi! Saw you on a friend's reel — would love to book.",
+      location: "Crown Heights, Brooklyn",
+      distance: "3.1 mi",
     },
   ] as BookingRequest[],
   nextOpenSlot: "Tomorrow, 10:30 AM",
+  ratingValue: 4.9,
+  ratingCount: 38,
+  completionPct: 100,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 0,
+  liveStatus: { kind: "idle" } as LiveStatus,
 };
 
 export const LIVE_ACTIVE_DAY = {
@@ -67,6 +110,8 @@ export const LIVE_ACTIVE_DAY = {
       startsAt: "10:30",
       durationMin: 90,
       priceUsd: 140,
+      location: "Fort Greene, Brooklyn",
+      address: "212 Lafayette Ave, Brooklyn, NY",
     },
     {
       id: "b2",
@@ -77,6 +122,8 @@ export const LIVE_ACTIVE_DAY = {
       durationMin: 240,
       priceUsd: 280,
       isNewClient: true,
+      location: "Bed-Stuy, Brooklyn",
+      address: "488 Halsey St, Brooklyn, NY",
     },
     {
       id: "b3",
@@ -86,6 +133,8 @@ export const LIVE_ACTIVE_DAY = {
       startsAt: "5:30",
       durationMin: 75,
       priceUsd: 95,
+      location: "Clinton Hill, Brooklyn",
+      address: "70 Greene Ave, Brooklyn, NY",
     },
   ] as Booking[],
   pendingRequests: [
@@ -96,6 +145,8 @@ export const LIVE_ACTIVE_DAY = {
       service: "Box braids · waist length",
       requestedFor: "Sun, Apr 28 · 9:00 AM",
       priceUsd: 320,
+      location: "Harlem, Manhattan",
+      distance: "5.8 mi",
     },
     {
       id: "r2",
@@ -105,8 +156,33 @@ export const LIVE_ACTIVE_DAY = {
       requestedFor: "Mon, Apr 29 · 6:00 PM",
       priceUsd: 120,
       message: "Need it for an event Tuesday morning — flexible on time.",
+      location: "Park Slope, Brooklyn",
+      distance: "2.4 mi",
     },
   ] as BookingRequest[],
+  ratingValue: 4.9,
+  ratingCount: 142,
+  completionPct: 98,
+  todayEarningsUsd: 420,
+  todayProjectedUsd: 540,
+  /** Default to a "Up Next" framing — home.tsx can override via ?live=in-progress|en-route. */
+  liveStatus: { kind: "idle" } as LiveStatus,
+};
+
+/* --------- Incoming request modal example --------- */
+
+export const INCOMING_REQUEST_EXAMPLE: IncomingRequest = {
+  id: "inc1",
+  clientName: "Simone Carter",
+  clientInitial: "S",
+  service: "Silk press + trim",
+  requestedFor: "Today · 4:30 PM",
+  priceUsd: 160,
+  payoutUsd: 142,
+  location: "Prospect Heights, Brooklyn",
+  distance: "1.8 mi",
+  etaMin: 12,
+  message: "Have a wedding tomorrow morning — could really use you.",
 };
 
 /* --------- Greeting helper --------- */

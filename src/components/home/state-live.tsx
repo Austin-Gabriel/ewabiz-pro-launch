@@ -1,35 +1,34 @@
-import { useState } from "react";
-import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
+import { useEffect, useRef, useState } from "react";
+import { HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
   type BookingRequest,
+  type IncomingRequest,
+  type LiveStatus,
   formatUsd,
 } from "./mock-data";
 
-// Industrial type discipline on the working surface: Inter only, no serif,
-// no italics. The brand still uses Fraunces elsewhere — this screen is a tool.
-const UI = `Inter, ${HOME_SANS}`;
-
 /**
- * The live working surface. Same scaffold for all three variants — what
- * changes is just the content. Editorial hierarchy:
+ * Native-mobile working surface for a beauty pro who travels to clients.
  *
- *   1. Greeting (serif, the warmest thing on screen)
- *   2. Focus card (next booking | first-booking nudge | open slot)
- *   3. Earnings glance (proud, never busy)
- *   4. Pending requests (only when present)
- *   5. Today's schedule
+ * Hierarchy (top → bottom), tuned for one-handed scanning under 2 seconds:
+ *
+ *   1. Header  — logo (left), notifications bell (right)
+ *   2. Status  — Online/Offline toggle + Schedule shortcut
+ *   3. Live    — In Progress / En Route / Up Next / quiet empty state
+ *   4. Waiting — pending requests (Accept = primary, Decline = quiet)
+ *   5. Glance  — "N more jobs · $X projected"
+ *   6. Stats   — Rating · Completion · Today's earnings (with cash-tip edit)
+ *
+ * Industrial type discipline: Inter only, no serif, no italics. Flat cards
+ * with subtle borders — no ambient glows, no decorative gradients.
  */
-export function StateLive({
-  greetingName: _greetingName,
-  weekToDateUsd,
-  monthToDateUsd,
-  bookingsToday,
-  pendingRequests,
-  bookingLink,
-  nextOpenSlot,
-}: {
+
+const UI = `Inter, ${HOME_SANS}`;
+const ORANGE = "#FF823F";
+
+export interface StateLiveProps {
   greetingName: string;
   weekToDateUsd: number;
   monthToDateUsd: number;
@@ -37,108 +36,107 @@ export function StateLive({
   pendingRequests: BookingRequest[];
   bookingLink?: string;
   nextOpenSlot?: string;
-}) {
-  void _greetingName;
-  const isFirstTime =
-    bookingsToday.length === 0 && pendingRequests.length === 0 && weekToDateUsd === 0;
+  ratingValue?: number;
+  ratingCount?: number;
+  completionPct?: number;
+  todayEarningsUsd?: number;
+  todayProjectedUsd?: number;
+  /** Live work status — drives the hero card. */
+  liveStatus?: LiveStatus;
+  /** When set, full-screen incoming-request modal renders over the surface. */
+  incomingRequest?: IncomingRequest;
+}
+
+export function StateLive({
+  bookingsToday,
+  pendingRequests,
+  nextOpenSlot,
+  ratingValue = 0,
+  ratingCount = 0,
+  completionPct = 100,
+  todayEarningsUsd = 0,
+  todayProjectedUsd = 0,
+  liveStatus = { kind: "idle" },
+  incomingRequest,
+}: StateLiveProps) {
+  const [online, setOnline] = useState(true);
+  const [tipsLogged, setTipsLogged] = useState(0);
+  const [showTipModal, setShowTipModal] = useState(false);
+
+  // If pro toggled offline, the incoming-request modal must not appear.
+  const incoming = online ? incomingRequest : undefined;
+
   const nextBooking = bookingsToday[0];
-  const unreadCount = pendingRequests.length; // bell badge mirrors the queue
+  const remainingCount = Math.max(0, bookingsToday.length - 1);
+  const projectedRemaining = Math.max(0, todayProjectedUsd - todayEarningsUsd);
 
   return (
-    <div className="relative z-[1] flex flex-1 flex-col px-5 pt-1">
-      {/* Thin top bar — logomark left, notifications bell right. Nothing else.
-          The pro knows who they are; we don't greet them. */}
-      <TopBar unreadCount={unreadCount} />
+    <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
+      <Header unreadCount={pendingRequests.length} />
 
-      {/* UP NEXT — the hero. Sits immediately below the top bar with breathing
-          room. Either a real booking, a first-booking nudge, or a quiet-day
-          empty state — same slot, different content. */}
-      <FocusCard
+      <StatusBar online={online} onToggle={() => setOnline((v) => !v)} />
+
+      <LiveStateCard
+        online={online}
+        liveStatus={liveStatus}
         nextBooking={nextBooking}
         nextOpenSlot={nextOpenSlot}
-        isFirstTime={isFirstTime}
-        bookingLink={bookingLink}
       />
 
-      {/* EARNINGS GLANCE */}
-      <EarningsGlance
-        weekToDateUsd={weekToDateUsd}
-        monthToDateUsd={monthToDateUsd}
-        isFirstTime={isFirstTime}
-      />
-
-      {/* WAITING ON YOU */}
-      {pendingRequests.length > 0 ? (
+      {online && pendingRequests.length > 0 ? (
         <PendingRequests requests={pendingRequests} />
       ) : null}
 
-      {/* TODAY'S SCHEDULE — only when there are additional bookings beyond
-          the one already in Up Next. */}
-      {bookingsToday.length > 1 ? <TodaySchedule bookings={bookingsToday} /> : null}
+      {bookingsToday.length > 0 ? (
+        <TodayGlance
+          remainingCount={remainingCount}
+          projectedRemainingUsd={projectedRemaining}
+        />
+      ) : null}
 
-      <div style={{ height: 24 }} />
+      <QuickStats
+        ratingValue={ratingValue}
+        ratingCount={ratingCount}
+        completionPct={completionPct}
+        todayEarningsUsd={todayEarningsUsd + tipsLogged}
+        onEditTip={() => setShowTipModal(true)}
+      />
+
+      {showTipModal ? (
+        <TipSheet
+          onClose={() => setShowTipModal(false)}
+          onSave={(amount) => {
+            setTipsLogged((v) => v + amount);
+            setShowTipModal(false);
+          }}
+        />
+      ) : null}
+
+      {incoming ? <IncomingRequestModal request={incoming} /> : null}
     </div>
   );
 }
 
-/* ---------------- Top bar ---------------- */
+/* ---------------- Header ---------------- */
 
-function TopBar({ unreadCount }: { unreadCount: number }) {
-  const { text, isDark, borderCol } = useHomeTheme();
+function Header({ unreadCount }: { unreadCount: number }) {
+  const { text, borderCol, bg } = useHomeTheme();
   return (
-    <div
-      className="ewa-fade flex items-center justify-between"
-      style={{ height: 44, marginTop: 2 }}
-    >
-      <div className="relative" style={{ height: 26, width: 26 }}>
-        <span
-          aria-hidden
-          className="ewa-splash-ring absolute"
-          style={{
-            top: "100%",
-            left: "50%",
-            width: 26,
-            height: 7,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(ellipse at center, rgba(255,130,63,0.55) 0%, rgba(255,130,63,0) 70%)",
-            animationDelay: "60ms",
-          }}
-        />
-        <div className="ewa-drop" style={{ animationDelay: "60ms" }}>
-          <EwaMark size={26} />
-        </div>
-      </div>
-
+    <div className="flex items-center justify-between" style={{ height: 48 }}>
+      <EwaMark size={26} />
       <button
         type="button"
-        aria-label={
-          unreadCount > 0
-            ? `Notifications, ${unreadCount} unread`
-            : "Notifications"
-        }
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
         style={{
           width: 36,
           height: 36,
-          backgroundColor: isDark ? "rgba(240,235,216,0.05)" : "rgba(255,255,255,0.55)",
+          backgroundColor: "rgba(240,235,216,0.04)",
           border: `1px solid ${borderCol}`,
           color: text,
         }}
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-        </svg>
+        <BellIcon />
         {unreadCount > 0 ? (
           <span
             aria-hidden
@@ -149,14 +147,13 @@ function TopBar({ unreadCount }: { unreadCount: number }) {
               minWidth: 16,
               height: 16,
               padding: "0 4px",
-              backgroundColor: "#FF823F",
+              backgroundColor: ORANGE,
               color: "#061C27",
               fontFamily: UI,
               fontSize: 10,
               fontWeight: 700,
               lineHeight: 1,
-              boxShadow: "0 0 12px rgba(255,130,63,0.55)",
-              border: `2px solid ${isDark ? "#061C27" : "#F0EBD8"}`,
+              border: `2px solid ${bg}`,
             }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -167,323 +164,355 @@ function TopBar({ unreadCount }: { unreadCount: number }) {
   );
 }
 
-/* ---------------- Focus card ---------------- */
+/* ---------------- Status bar ---------------- */
 
-function FocusCard({
-  nextBooking,
-  nextOpenSlot,
-  isFirstTime,
-  bookingLink,
-}: {
-  nextBooking?: Booking;
-  nextOpenSlot?: string;
-  isFirstTime: boolean;
-  bookingLink?: string;
-}) {
-  const { text, isDark, borderCol } = useHomeTheme();
-
-  if (isFirstTime) {
-    return (
-      <div
-        className="ewa-rise mt-6 overflow-hidden rounded-3xl px-5 py-5"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(255,130,63,0.18) 0%, rgba(255,130,63,0.06) 100%)",
-          border: "1px solid rgba(255,130,63,0.32)",
-          boxShadow: "0 12px 36px rgba(255,130,63,0.18)",
-          animationDelay: "180ms",
-        }}
-      >
-        <div style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: "#FF823F", fontWeight: 700 }}>
-          You're live
-        </div>
-        <p
-          style={{
-            fontFamily: UI,
-            fontSize: 22,
-            lineHeight: 1.25,
-            letterSpacing: "-0.01em",
-            color: text,
-            marginTop: 8,
-            fontWeight: 400,
-          }}
-        >
-          Your first booking is one share away.
-        </p>
-        <p style={{ fontFamily: HOME_SANS, fontSize: 13, lineHeight: 1.5, color: text, opacity: 0.7, marginTop: 8 }}>
-          Send your link to three regulars. The first to book sets the tone for the rest.
-        </p>
-
-        {bookingLink ? (
-          <button
-            type="button"
-            className="mt-4 flex w-full items-center justify-between rounded-2xl px-4 py-3 transition-transform active:scale-[0.99]"
-            style={{
-              backgroundColor: isDark ? "rgba(6,28,39,0.55)" : "rgba(247,243,230,0.85)",
-              border: `1px solid ${borderCol}`,
-            }}
-            onClick={() => navigator.clipboard?.writeText(`https://${bookingLink}`)}
-          >
-            <div className="flex flex-col items-start">
-              <span style={{ fontFamily: HOME_SANS, fontSize: 10, letterSpacing: "1.4px", textTransform: "uppercase", color: text, opacity: 0.5, fontWeight: 600 }}>
-                Your booking link
-              </span>
-              <span style={{ fontFamily: HOME_SANS, fontSize: 14, color: text, fontWeight: 500, marginTop: 2 }}>
-                {bookingLink}
-              </span>
-            </div>
-            <span
-              style={{
-                fontFamily: HOME_SANS,
-                fontSize: 12,
-                color: "#FF823F",
-                fontWeight: 600,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" />
-                <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-              </svg>
-              Copy
-            </span>
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (nextBooking) {
-    return (
-      <div
-        className="ewa-rise mt-6 overflow-hidden rounded-3xl"
-        style={{
-          background: isDark
-            ? "linear-gradient(160deg, rgba(255,130,63,0.14) 0%, rgba(240,235,216,0.04) 60%)"
-            : "linear-gradient(160deg, rgba(255,130,63,0.16) 0%, rgba(255,255,255,0.6) 60%)",
-          border: `1px solid ${isDark ? "rgba(255,130,63,0.30)" : "rgba(255,130,63,0.32)"}`,
-          boxShadow: "0 12px 36px rgba(255,130,63,0.14)",
-          animationDelay: "180ms",
-        }}
-      >
-        <div className="px-5 pt-5">
-          <div className="flex items-center gap-2">
-            <span
-              className="ewa-breathe inline-block rounded-full"
-              style={{
-                width: 7,
-                height: 7,
-                backgroundColor: "#FF823F",
-                boxShadow: "0 0 10px rgba(255,130,63,0.7)",
-              }}
-            />
-            <span style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: "#FF823F", fontWeight: 700 }}>
-              Up next
-            </span>
-          </div>
-
-          <div className="mt-3 flex items-baseline gap-3">
-            <span
-              style={{
-                fontFamily: UI,
-                fontSize: 44,
-                fontWeight: 400,
-                color: text,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-              }}
-            >
-              {nextBooking.startsAt}
-            </span>
-            <span style={{ fontFamily: HOME_SANS, fontSize: 13, color: text, opacity: 0.6, fontWeight: 500 }}>
-              · {nextBooking.durationMin} min
-            </span>
-          </div>
-
-          <div className="mt-2.5 flex items-center gap-2.5">
-            <Avatar initial={nextBooking.clientInitial} />
-            <div className="flex flex-col">
-              <span style={{ fontFamily: HOME_SANS, fontSize: 15, color: text, fontWeight: 500 }}>
-                {nextBooking.clientName}
-                {nextBooking.isNewClient ? (
-                  <span
-                    className="ml-2 inline-block rounded-full px-1.5 py-px align-middle"
-                    style={{
-                      fontSize: 9,
-                      letterSpacing: "1.2px",
-                      textTransform: "uppercase",
-                      color: "#FF823F",
-                      backgroundColor: "rgba(255,130,63,0.12)",
-                      border: "1px solid rgba(255,130,63,0.35)",
-                      fontWeight: 700,
-                    }}
-                  >
-                    New
-                  </span>
-                ) : null}
-              </span>
-              <span style={{ fontFamily: HOME_SANS, fontSize: 12.5, color: text, opacity: 0.6 }}>
-                {nextBooking.service}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action strip */}
-        <div
-          className="mt-4 flex divide-x"
-          style={{
-            borderTop: `1px solid ${isDark ? "rgba(240,235,216,0.08)" : "rgba(6,28,39,0.08)"}`,
-          }}
-        >
-          <FocusAction label="Message" icon="msg" />
-          <FocusAction label="Directions" icon="map" />
-          <FocusAction label="Mark done" icon="check" />
-        </div>
-      </div>
-    );
-  }
-
-  // Quiet day, no bookings
+function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void }) {
+  const { text, borderCol } = useHomeTheme();
   return (
     <div
-      className="ewa-rise mt-6 rounded-3xl px-5 py-5"
+      className="mt-2 flex items-center justify-between rounded-2xl px-3 py-2.5"
       style={{
-        backgroundColor: isDark ? "rgba(240,235,216,0.04)" : "rgba(255,255,255,0.5)",
+        backgroundColor: "rgba(240,235,216,0.04)",
         border: `1px solid ${borderCol}`,
-        animationDelay: "180ms",
       }}
     >
-      <div style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: text, opacity: 0.5, fontWeight: 600 }}>
-        Today
-      </div>
-      <p
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex min-w-0 flex-1 items-center gap-2.5 transition-opacity active:opacity-70"
+        aria-pressed={online}
+      >
+        <span
+          className="flex shrink-0 items-center rounded-full"
+          style={{
+            width: 34,
+            height: 20,
+            padding: 2,
+            backgroundColor: online ? ORANGE : "rgba(240,235,216,0.18)",
+            transition: "background-color 200ms ease",
+          }}
+        >
+          <span
+            className="rounded-full"
+            style={{
+              width: 16,
+              height: 16,
+              backgroundColor: "#061C27",
+              transform: online ? "translateX(14px)" : "translateX(0)",
+              transition: "transform 200ms ease",
+            }}
+          />
+        </span>
+        <span className="flex min-w-0 flex-col items-start text-left">
+          <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: text, lineHeight: 1.2 }}>
+            {online ? "Online" : "Offline"}
+          </span>
+          <span style={{ fontFamily: UI, fontSize: 11, color: text, opacity: 0.55, lineHeight: 1.2, marginTop: 2 }}>
+            {online ? "Accepting requests" : "Scheduled bookings only"}
+          </span>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        aria-label="Open schedule"
+        className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 transition-opacity active:opacity-70"
         style={{
-          fontFamily: UI,
-          fontSize: 24,
-          lineHeight: 1.25,
+          border: `1px solid ${borderCol}`,
           color: text,
-          marginTop: 8,
-          letterSpacing: "-0.01em",
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 500,
         }}
       >
-        Nothing on the books — rest, or open a slot.
-      </p>
-      {nextOpenSlot ? (
-        <p style={{ fontFamily: HOME_SANS, fontSize: 13, color: text, opacity: 0.6, marginTop: 8 }}>
-          Next available: <span style={{ color: "#FF823F", fontWeight: 600 }}>{nextOpenSlot}</span>
-        </p>
-      ) : null}
+        <CalendarIcon size={13} />
+        Schedule
+      </button>
     </div>
   );
 }
 
-function FocusAction({ label, icon }: { label: string; icon: "msg" | "map" | "check" }) {
+/* ---------------- Live state card ---------------- */
+
+function LiveStateCard({
+  online,
+  liveStatus,
+  nextBooking,
+  nextOpenSlot,
+}: {
+  online: boolean;
+  liveStatus: LiveStatus;
+  nextBooking?: Booking;
+  nextOpenSlot?: string;
+}) {
+  const { text, borderCol } = useHomeTheme();
+
+  // 1) IN-PROGRESS — orange-accented hero with timer + Go to Appointment
+  if (liveStatus.kind === "in-progress" && nextBooking) {
+    return (
+      <Card emphasis="primary">
+        <Eyebrow color={ORANGE}>
+          <PulseDot /> In Progress · {liveStatus.elapsedMin ?? 0} min
+        </Eyebrow>
+        <Headline>{nextBooking.clientName}</Headline>
+        <SubLine>{nextBooking.service}</SubLine>
+        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+        <PrimaryAction label="Go to Appointment" />
+        <SecondaryStrip
+          actions={[
+            { label: "Message", icon: "msg" },
+            { label: "Mark done", icon: "check" },
+          ]}
+        />
+      </Card>
+    );
+  }
+
+  // 2) EN-ROUTE — driving to client
+  if (liveStatus.kind === "en-route" && nextBooking) {
+    return (
+      <Card emphasis="primary">
+        <Eyebrow color={ORANGE}>
+          <PulseDot /> En Route · {liveStatus.etaMin ?? 0} min ETA
+        </Eyebrow>
+        <Headline>{nextBooking.clientName}</Headline>
+        <SubLine>{nextBooking.service}</SubLine>
+        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+        <PrimaryAction label="Open Navigation" />
+        <SecondaryStrip
+          actions={[
+            { label: "Message", icon: "msg" },
+            { label: "I've arrived", icon: "check" },
+          ]}
+        />
+      </Card>
+    );
+  }
+
+  // 3) UP NEXT — there's something on the books
+  if (nextBooking) {
+    return (
+      <Card>
+        <div className="flex items-center justify-between">
+          <Eyebrow>Up Next</Eyebrow>
+          <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.55, fontWeight: 500 }}>
+            {nextBooking.startsAt} · {nextBooking.durationMin} min
+          </span>
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <Avatar initial={nextBooking.clientInitial} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
+              {nextBooking.clientName}
+              {nextBooking.isNewClient ? <NewBadge /> : null}
+            </div>
+            <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.65, marginTop: 2 }}>
+              {nextBooking.service}
+            </div>
+          </div>
+        </div>
+        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+        <PrimaryAction label="Navigate" icon="map" />
+        <SecondaryStrip
+          actions={[
+            { label: "Message", icon: "msg" },
+            { label: "Mark done", icon: "check" },
+          ]}
+        />
+      </Card>
+    );
+  }
+
+  // 4) Quiet empty state — no fake content
+  return (
+    <Card>
+      <Eyebrow>Today</Eyebrow>
+      <p style={{ fontFamily: UI, fontSize: 17, fontWeight: 500, color: text, marginTop: 8, letterSpacing: "-0.01em" }}>
+        {online ? "No bookings today." : "You're offline."}
+      </p>
+      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.6, marginTop: 4 }}>
+        {online
+          ? nextOpenSlot
+            ? `Your next open slot is ${nextOpenSlot}.`
+            : "Open more availability to fill the day."
+          : "Toggle online to start accepting new requests."}
+      </p>
+      {online ? <PrimaryAction label="Open more availability" subtle /> : null}
+    </Card>
+  );
+}
+
+/* ---------------- Live-card primitives ---------------- */
+
+function Card({ children, emphasis }: { children: React.ReactNode; emphasis?: "primary" }) {
+  const { borderCol } = useHomeTheme();
+  return (
+    <div
+      className="mt-3 rounded-2xl px-4 py-4"
+      style={{
+        backgroundColor: "rgba(240,235,216,0.045)",
+        border: `1px solid ${emphasis === "primary" ? "rgba(255,130,63,0.45)" : borderCol}`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Eyebrow({ children, color }: { children: React.ReactNode; color?: string }) {
   const { text } = useHomeTheme();
+  return (
+    <div
+      className="flex items-center gap-1.5"
+      style={{
+        fontFamily: UI,
+        fontSize: 10.5,
+        letterSpacing: "1.4px",
+        textTransform: "uppercase",
+        color: color ?? text,
+        opacity: color ? 1 : 0.55,
+        fontWeight: 700,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Headline({ children }: { children: React.ReactNode }) {
+  const { text } = useHomeTheme();
+  return (
+    <h3
+      style={{
+        fontFamily: UI,
+        fontSize: 22,
+        fontWeight: 600,
+        color: text,
+        letterSpacing: "-0.02em",
+        margin: "8px 0 0",
+        lineHeight: 1.15,
+      }}
+    >
+      {children}
+    </h3>
+  );
+}
+
+function SubLine({ children }: { children: React.ReactNode }) {
+  const { text } = useHomeTheme();
+  return (
+    <div style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.65, marginTop: 4 }}>
+      {children}
+    </div>
+  );
+}
+
+function AddressRow({ address }: { address: string }) {
+  const { text } = useHomeTheme();
+  return (
+    <div className="mt-2 flex items-start gap-1.5" style={{ color: text, opacity: 0.7 }}>
+      <span style={{ marginTop: 1 }}>
+        <PinIcon size={12} />
+      </span>
+      <span style={{ fontFamily: UI, fontSize: 12, lineHeight: 1.35 }}>{address}</span>
+    </div>
+  );
+}
+
+function PulseDot() {
+  return (
+    <span
+      className="inline-block rounded-full"
+      style={{
+        width: 6,
+        height: 6,
+        backgroundColor: ORANGE,
+        marginRight: 4,
+        animation: "ewa-pulse 1600ms ease-in-out infinite",
+      }}
+    />
+  );
+}
+
+function NewBadge() {
+  return (
+    <span
+      className="ml-2 inline-block rounded-full px-1.5 py-px align-middle"
+      style={{
+        fontFamily: UI,
+        fontSize: 9,
+        letterSpacing: "1.2px",
+        textTransform: "uppercase",
+        color: ORANGE,
+        backgroundColor: "rgba(255,130,63,0.12)",
+        border: "1px solid rgba(255,130,63,0.35)",
+        fontWeight: 700,
+      }}
+    >
+      New
+    </span>
+  );
+}
+
+function PrimaryAction({
+  label,
+  icon,
+  subtle,
+}: {
+  label: string;
+  icon?: "map" | "check";
+  subtle?: boolean;
+}) {
   return (
     <button
       type="button"
-      className="flex flex-1 items-center justify-center gap-1.5 py-3.5 transition-opacity hover:opacity-100 active:opacity-60"
-      style={{ fontFamily: HOME_SANS, fontSize: 12.5, fontWeight: 500, color: text, opacity: 0.75 }}
+      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 transition-transform active:scale-[0.99]"
+      style={{
+        backgroundColor: subtle ? "transparent" : ORANGE,
+        color: subtle ? ORANGE : "#061C27",
+        border: subtle ? `1px solid ${ORANGE}` : "none",
+        fontFamily: UI,
+        fontSize: 14,
+        fontWeight: 600,
+        letterSpacing: "-0.005em",
+      }}
     >
-      {icon === "msg" ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      ) : icon === "map" ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s7-7.5 7-12a7 7 0 0 0-14 0c0 4.5 7 12 7 12z" />
-          <circle cx="12" cy="10" r="2.5" />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-      )}
+      {icon === "map" ? <PinIcon size={14} /> : null}
+      {icon === "check" ? <CheckIcon size={14} /> : null}
       {label}
     </button>
   );
 }
 
-/* ---------------- Earnings glance ---------------- */
-
-function EarningsGlance({
-  weekToDateUsd,
-  monthToDateUsd,
-  isFirstTime,
+function SecondaryStrip({
+  actions,
 }: {
-  weekToDateUsd: number;
-  monthToDateUsd: number;
-  isFirstTime: boolean;
+  actions: { label: string; icon: "msg" | "map" | "check" }[];
 }) {
-  const { text, isDark, borderCol } = useHomeTheme();
+  const { text, borderCol } = useHomeTheme();
   return (
     <div
-      className="ewa-rise mt-4 grid grid-cols-2 gap-3"
-      style={{ animationDelay: "260ms" }}
-    >
-      <EarningCell
-        label="This week"
-        value={formatUsd(weekToDateUsd)}
-        isFirstTime={isFirstTime}
-      />
-      <EarningCell
-        label="This month"
-        value={formatUsd(monthToDateUsd)}
-        isFirstTime={isFirstTime}
-        subtle
-      />
-    </div>
-  );
-}
-
-function EarningCell({
-  label,
-  value,
-  subtle,
-  isFirstTime,
-}: {
-  label: string;
-  value: string;
-  subtle?: boolean;
-  isFirstTime: boolean;
-}) {
-  const { text, isDark, borderCol } = useHomeTheme();
-  return (
-    <div
-      className="rounded-2xl px-4 py-3.5"
+      className="mt-3 flex divide-x"
       style={{
-        backgroundColor: isDark ? "rgba(240,235,216,0.04)" : "rgba(255,255,255,0.55)",
-        border: `1px solid ${borderCol}`,
+        borderTop: `1px solid ${borderCol}`,
+        marginInline: -16,
+        paddingInline: 0,
+        marginBottom: -16,
       }}
     >
-      <div style={{ fontFamily: HOME_SANS, fontSize: 10.5, letterSpacing: "1.5px", textTransform: "uppercase", color: text, opacity: subtle ? 0.4 : 0.5, fontWeight: 600 }}>
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily: UI,
-          fontSize: 26,
-          fontWeight: 400,
-          color: text,
-          letterSpacing: "-0.02em",
-          marginTop: 4,
-          opacity: isFirstTime ? 0.35 : 1,
-        }}
-      >
-        {value}
-      </div>
-      {!isFirstTime ? (
-        <div style={{ fontFamily: HOME_SANS, fontSize: 11, color: text, opacity: 0.45, marginTop: 2 }}>
-          paid out Friday
-        </div>
-      ) : (
-        <div style={{ fontFamily: HOME_SANS, fontSize: 11, color: text, opacity: 0.4, marginTop: 2 }}>
-          your first dollar lives here
-        </div>
-      )}
+      {actions.map((a, i) => (
+        <button
+          key={i}
+          type="button"
+          className="flex flex-1 items-center justify-center gap-1.5 py-3 transition-opacity active:opacity-60"
+          style={{ fontFamily: UI, fontSize: 12.5, fontWeight: 500, color: text, opacity: 0.8 }}
+        >
+          {a.icon === "msg" ? <MessageIcon /> : null}
+          {a.icon === "map" ? <PinIcon size={14} /> : null}
+          {a.icon === "check" ? <CheckIcon size={14} /> : null}
+          {a.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -491,113 +520,126 @@ function EarningCell({
 /* ---------------- Pending requests ---------------- */
 
 function PendingRequests({ requests }: { requests: BookingRequest[] }) {
-  const { text, isDark, borderCol } = useHomeTheme();
-  const [resolved, setResolved] = useState<Record<string, "accept" | "decline" | undefined>>({});
+  const { text, borderCol } = useHomeTheme();
+  const [resolved, setResolved] = useState<Record<string, "accept" | "decline">>({});
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
-    <section className="ewa-rise mt-6" style={{ animationDelay: "340ms" }}>
-      <div className="mb-2.5 flex items-center justify-between">
-        <h2 style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: text, opacity: 0.55, fontWeight: 700, margin: 0 }}>
-          Waiting on you · {requests.length}
-        </h2>
-      </div>
-      <div className="flex flex-col gap-2.5">
+    <section className="mt-5">
+      <SectionHeader label="Waiting on you" count={requests.length} />
+      <div className="mt-2 flex flex-col gap-2">
         {requests.map((r) => {
           const state = resolved[r.id];
+          const isOpen = expanded === r.id;
           return (
             <div
               key={r.id}
-              className="rounded-2xl px-4 py-3.5"
+              className="rounded-2xl px-3.5 py-3"
               style={{
-                backgroundColor: isDark ? "rgba(240,235,216,0.045)" : "rgba(255,255,255,0.6)",
-                border: `1px solid ${state ? borderCol : "rgba(255,130,63,0.28)"}`,
+                backgroundColor: "rgba(240,235,216,0.045)",
+                border: `1px solid ${borderCol}`,
                 opacity: state ? 0.55 : 1,
-                transition: "opacity 300ms ease, border-color 300ms ease",
+                transition: "opacity 250ms ease",
               }}
             >
-              <div className="flex items-start gap-3">
-                <Avatar initial={r.clientInitial} />
-                <div className="flex-1">
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => (v === r.id ? null : r.id))}
+                className="flex w-full items-start gap-3 text-left"
+              >
+                <Avatar initial={r.clientInitial} small />
+                <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span style={{ fontFamily: HOME_SANS, fontSize: 14.5, color: text, fontWeight: 500 }}>
+                    <span
+                      className="truncate"
+                      style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}
+                    >
                       {r.clientName}
                     </span>
-                    <span style={{ fontFamily: UI, fontSize: 16, color: text, fontWeight: 400 }}>
+                    <span style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}>
                       {formatUsd(r.priceUsd)}
                     </span>
                   </div>
-                  <div style={{ fontFamily: HOME_SANS, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 2 }}>
+                  <div
+                    className="truncate"
+                    style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 1 }}
+                  >
                     {r.service}
                   </div>
-                  <div style={{ fontFamily: HOME_SANS, fontSize: 12, color: "#FF823F", marginTop: 4, fontWeight: 600 }}>
-                    {r.requestedFor}
+                  <div
+                    className="flex flex-wrap items-center gap-x-2"
+                    style={{ fontFamily: UI, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 4 }}
+                  >
+                    <span style={{ color: ORANGE, opacity: 1, fontWeight: 600 }}>{r.requestedFor}</span>
+                    {r.location ? <span aria-hidden>·</span> : null}
+                    {r.location ? <span>{r.location}</span> : null}
                   </div>
-                  {r.message ? (
-                    <p
-                      style={{
-                        fontFamily: UI,
-                        
-                        fontSize: 13,
-                        lineHeight: 1.45,
-                        color: text,
-                        opacity: 0.6,
-                        marginTop: 8,
-                      }}
-                    >
-                      "{r.message}"
-                    </p>
-                  ) : null}
-
-                  {!state ? (
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
-                        className="flex-1 rounded-full py-2 transition-transform active:scale-95"
-                        style={{
-                          backgroundColor: "#FF823F",
-                          color: "#061C27",
-                          fontFamily: HOME_SANS,
-                          fontSize: 12.5,
-                          fontWeight: 600,
-                          boxShadow: "0 0 18px rgba(255,130,63,0.32)",
-                        }}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
-                        className="rounded-full px-4 py-2 transition-transform active:scale-95"
-                        style={{
-                          backgroundColor: "transparent",
-                          border: `1px solid ${borderCol}`,
-                          color: text,
-                          opacity: 0.75,
-                          fontFamily: HOME_SANS,
-                          fontSize: 12.5,
-                          fontWeight: 500,
-                        }}
-                      >
-                        Decline
-                      </button>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        fontFamily: HOME_SANS,
-                        fontSize: 12,
-                        color: state === "accept" ? "#FF823F" : text,
-                        opacity: state === "accept" ? 1 : 0.5,
-                        marginTop: 10,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {state === "accept" ? "✓ Accepted — they've been texted." : "Declined."}
-                    </div>
-                  )}
                 </div>
-              </div>
+              </button>
+
+              {isOpen && r.message ? (
+                <p
+                  style={{
+                    fontFamily: UI,
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    color: text,
+                    opacity: 0.7,
+                    marginTop: 10,
+                    paddingLeft: 40,
+                  }}
+                >
+                  "{r.message}"
+                </p>
+              ) : null}
+
+              {!state ? (
+                <div className="mt-3 flex items-center gap-2" style={{ paddingLeft: 40 }}>
+                  <button
+                    type="button"
+                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
+                    className="flex-1 rounded-xl py-2 transition-transform active:scale-[0.98]"
+                    style={{
+                      backgroundColor: ORANGE,
+                      color: "#061C27",
+                      fontFamily: UI,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
+                    className="rounded-xl px-3 py-2 transition-opacity active:opacity-60"
+                    style={{
+                      backgroundColor: "transparent",
+                      color: text,
+                      opacity: 0.55,
+                      fontFamily: UI,
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Decline
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    fontFamily: UI,
+                    fontSize: 11.5,
+                    color: state === "accept" ? ORANGE : text,
+                    opacity: state === "accept" ? 1 : 0.5,
+                    marginTop: 8,
+                    paddingLeft: 40,
+                    fontWeight: 600,
+                  }}
+                >
+                  {state === "accept" ? "Accepted — client notified." : "Declined."}
+                </div>
+              )}
             </div>
           );
         })}
@@ -606,145 +648,511 @@ function PendingRequests({ requests }: { requests: BookingRequest[] }) {
   );
 }
 
-/* ---------------- Today's schedule ---------------- */
+/* ---------------- Today at a glance ---------------- */
 
-function TodaySchedule({ bookings }: { bookings: Booking[] }) {
-  const { text, isDark, borderCol } = useHomeTheme();
-  const remaining = bookings.slice(1); // first one is in the focus card
+function TodayGlance({
+  remainingCount,
+  projectedRemainingUsd,
+}: {
+  remainingCount: number;
+  projectedRemainingUsd: number;
+}) {
+  const { text, borderCol } = useHomeTheme();
+  if (remainingCount === 0 && projectedRemainingUsd === 0) return null;
+
+  const label =
+    remainingCount === 0
+      ? "All wrapped for today"
+      : `${remainingCount} more ${remainingCount === 1 ? "job" : "jobs"} today`;
+  const right =
+    projectedRemainingUsd > 0 ? `· ${formatUsd(projectedRemainingUsd)} projected` : "";
 
   return (
-    <section className="ewa-rise mt-6" style={{ animationDelay: "420ms" }}>
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <h2 style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: text, opacity: 0.55, fontWeight: 700, margin: 0 }}>
-          Today · {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
-        </h2>
-        <span style={{ fontFamily: HOME_SANS, fontSize: 11, color: text, opacity: 0.45 }}>
-          {totalRevenue(bookings)} total
-        </span>
+    <button
+      type="button"
+      className="mt-3 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 transition-opacity active:opacity-70"
+      style={{
+        backgroundColor: "rgba(240,235,216,0.035)",
+        border: `1px solid ${borderCol}`,
+      }}
+      aria-label="Open today's calendar"
+    >
+      <span style={{ fontFamily: UI, fontSize: 12.5, color: text, fontWeight: 500 }}>
+        {label} <span style={{ opacity: 0.55 }}>{right}</span>
+      </span>
+      <ChevronIcon />
+    </button>
+  );
+}
+
+/* ---------------- Quick stats ---------------- */
+
+function QuickStats({
+  ratingValue,
+  ratingCount,
+  completionPct,
+  todayEarningsUsd,
+  onEditTip,
+}: {
+  ratingValue: number;
+  ratingCount: number;
+  completionPct: number;
+  todayEarningsUsd: number;
+  onEditTip: () => void;
+}) {
+  const { text, borderCol } = useHomeTheme();
+
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: "rgba(240,235,216,0.04)",
+    border: `1px solid ${borderCol}`,
+    borderRadius: 14,
+    padding: "10px 12px",
+    minHeight: 70,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: UI,
+    fontSize: 10,
+    letterSpacing: "1.2px",
+    textTransform: "uppercase",
+    color: text,
+    opacity: 0.5,
+    fontWeight: 600,
+  };
+
+  const valueStyle: React.CSSProperties = {
+    fontFamily: UI,
+    fontSize: 18,
+    fontWeight: 600,
+    color: text,
+    letterSpacing: "-0.02em",
+    lineHeight: 1,
+  };
+
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2">
+      <div style={cardStyle}>
+        <div style={labelStyle}>Rating</div>
+        <div className="flex items-baseline gap-1">
+          <span style={valueStyle}>
+            {ratingValue > 0 ? ratingValue.toFixed(1) : "—"}
+          </span>
+          <span style={{ color: ORANGE, fontSize: 13, lineHeight: 1 }}>★</span>
+        </div>
+        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
+          {ratingCount > 0 ? `${ratingCount} reviews` : "No reviews yet"}
+        </div>
       </div>
-      {remaining.length === 0 ? (
+
+      <div style={cardStyle}>
+        <div style={labelStyle}>Completion</div>
+        <div style={valueStyle}>{completionPct}%</div>
+        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
+          Last 30 days
+        </div>
+      </div>
+
+      <div style={cardStyle}>
+        <div className="flex items-center justify-between">
+          <span style={labelStyle}>Today</span>
+          <button
+            type="button"
+            onClick={onEditTip}
+            aria-label="Log cash tip"
+            className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+            style={{
+              width: 18,
+              height: 18,
+              border: `1px solid ${borderCol}`,
+              color: text,
+              opacity: 0.7,
+            }}
+          >
+            <PencilIcon />
+          </button>
+        </div>
+        <div style={valueStyle}>{formatUsd(todayEarningsUsd)}</div>
+        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
+          Earnings
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Cash-tip sheet ---------------- */
+
+function TipSheet({
+  onClose,
+  onSave,
+}: {
+  onClose: () => void;
+  onSave: (amount: number) => void;
+}) {
+  const { text, bg, borderCol } = useHomeTheme();
+  const [value, setValue] = useState("");
+  return (
+    <div
+      className="fixed inset-0 z-30 flex items-end justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-t-3xl px-5 pb-8 pt-5"
+        style={{ backgroundColor: bg, border: `1px solid ${borderCol}`, borderBottom: "none" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div
-          className="rounded-2xl px-4 py-3.5"
+          aria-hidden
+          className="mx-auto mb-4 rounded-full"
+          style={{ width: 36, height: 4, backgroundColor: text, opacity: 0.18 }}
+        />
+        <h3 style={{ fontFamily: UI, fontSize: 17, fontWeight: 600, color: text, margin: 0 }}>
+          Log a cash tip
+        </h3>
+        <p style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.6, marginTop: 4 }}>
+          We'll add it to today's earnings — purely for your records.
+        </p>
+        <div
+          className="mt-4 flex items-center rounded-xl px-3"
+          style={{ border: `1px solid ${borderCol}`, height: 48 }}
+        >
+          <span style={{ fontFamily: UI, fontSize: 18, color: text, opacity: 0.55 }}>$</span>
+          <input
+            inputMode="decimal"
+            placeholder="0"
+            autoFocus
+            value={value}
+            onChange={(e) => setValue(e.target.value.replace(/[^\d.]/g, ""))}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              fontFamily: UI,
+              fontSize: 18,
+              fontWeight: 600,
+              color: text,
+              marginLeft: 6,
+            }}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const n = Math.max(0, Math.round(parseFloat(value || "0") || 0));
+            onSave(n);
+          }}
+          className="mt-4 w-full rounded-xl py-3 transition-transform active:scale-[0.99]"
           style={{
-            backgroundColor: isDark ? "rgba(240,235,216,0.03)" : "rgba(255,255,255,0.45)",
-            border: `1px solid ${borderCol}`,
+            backgroundColor: ORANGE,
+            color: "#061C27",
+            fontFamily: UI,
+            fontSize: 14,
+            fontWeight: 600,
           }}
         >
-          <span style={{ fontFamily: UI,  fontSize: 13.5, color: text, opacity: 0.6 }}>
-            That's the whole day. Beautiful.
+          Save tip
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Incoming request modal ---------------- */
+
+function IncomingRequestModal({ request }: { request: IncomingRequest }) {
+  const { text, bg, borderCol } = useHomeTheme();
+  const [secondsLeft, setSecondsLeft] = useState(60);
+  const [dismissed, setDismissed] = useState(false);
+  const startedAt = useRef(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt.current) / 1000);
+      setSecondsLeft(Math.max(0, 60 - elapsed));
+    }, 250);
+    return () => clearInterval(id);
+  }, []);
+
+  if (dismissed || secondsLeft === 0) return null;
+
+  const pct = (secondsLeft / 60) * 100;
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex flex-col"
+      style={{ backgroundColor: bg }}
+      role="dialog"
+      aria-label="Incoming booking request"
+    >
+      {/* Countdown bar */}
+      <div className="h-1.5 w-full" style={{ backgroundColor: "rgba(240,235,216,0.08)" }}>
+        <div
+          className="h-full"
+          style={{
+            width: `${pct}%`,
+            backgroundColor: ORANGE,
+            transition: "width 250ms linear",
+          }}
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col px-5 pb-6 pt-6">
+        <div className="flex items-center justify-between">
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 11,
+              letterSpacing: "1.6px",
+              textTransform: "uppercase",
+              color: ORANGE,
+              fontWeight: 700,
+            }}
+          >
+            <PulseDot /> New request
+          </span>
+          <span style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, fontWeight: 600 }}>
+            {secondsLeft}s
           </span>
         </div>
-      ) : (
-        <ol className="flex flex-col gap-2 p-0" style={{ listStyle: "none" }}>
-          {remaining.map((b) => (
-            <li
-              key={b.id}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3"
-              style={{
-                backgroundColor: isDark ? "rgba(240,235,216,0.035)" : "rgba(255,255,255,0.5)",
-                border: `1px solid ${borderCol}`,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: UI,
-                  fontSize: 18,
-                  fontWeight: 400,
-                  color: text,
-                  letterSpacing: "-0.01em",
-                  width: 56,
-                  flexShrink: 0,
-                }}
-              >
-                {b.startsAt}
-              </div>
-              <Avatar initial={b.clientInitial} small />
-              <div className="min-w-0 flex-1">
-                <div className="truncate" style={{ fontFamily: HOME_SANS, fontSize: 13.5, color: text, fontWeight: 500 }}>
-                  {b.clientName}
-                  {b.isNewClient ? (
-                    <span
-                      className="ml-2 inline-block rounded-full px-1.5 py-px align-middle"
-                      style={{
-                        fontSize: 8.5,
-                        letterSpacing: "1.1px",
-                        textTransform: "uppercase",
-                        color: "#FF823F",
-                        backgroundColor: "rgba(255,130,63,0.12)",
-                        border: "1px solid rgba(255,130,63,0.35)",
-                        fontWeight: 700,
-                      }}
-                    >
-                      New
-                    </span>
-                  ) : null}
-                </div>
-                <div className="truncate" style={{ fontFamily: HOME_SANS, fontSize: 12, color: text, opacity: 0.55 }}>
-                  {b.service} · {b.durationMin} min
-                </div>
-              </div>
-              <div style={{ fontFamily: HOME_SANS, fontSize: 13, color: text, opacity: 0.7, fontWeight: 500 }}>
-                {formatUsd(b.priceUsd)}
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
+
+        <div className="mt-8 flex flex-col items-center text-center">
+          <Avatar initial={request.clientInitial} large />
+          <h2
+            style={{
+              fontFamily: UI,
+              fontSize: 26,
+              fontWeight: 600,
+              color: text,
+              letterSpacing: "-0.02em",
+              margin: "16px 0 0",
+            }}
+          >
+            {request.clientName}
+          </h2>
+          <p style={{ fontFamily: UI, fontSize: 15, color: text, opacity: 0.7, marginTop: 6 }}>
+            {request.service}
+          </p>
+          <p style={{ fontFamily: UI, fontSize: 13, color: ORANGE, marginTop: 8, fontWeight: 600 }}>
+            {request.requestedFor}
+          </p>
+        </div>
+
+        <div
+          className="mt-8 grid grid-cols-3 gap-2"
+          style={{ marginInline: 4 }}
+        >
+          <Stat label="Distance" value={request.distance} />
+          <Stat label="ETA" value={`${request.etaMin} min`} />
+          <Stat label="Payout" value={formatUsd(request.payoutUsd)} accent />
+        </div>
+
+        {request.message ? (
+          <div
+            className="mt-5 rounded-xl px-4 py-3"
+            style={{
+              backgroundColor: "rgba(240,235,216,0.04)",
+              border: `1px solid ${borderCol}`,
+            }}
+          >
+            <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.8, lineHeight: 1.5 }}>
+              "{request.message}"
+            </p>
+          </div>
+        ) : null}
+
+        <div className="flex-1" />
+
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="w-full rounded-2xl transition-transform active:scale-[0.99]"
+          style={{
+            height: 64,
+            backgroundColor: ORANGE,
+            color: "#061C27",
+            fontFamily: UI,
+            fontSize: 18,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Accept booking
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="mt-3 w-full py-3 transition-opacity active:opacity-60"
+          style={{
+            color: text,
+            opacity: 0.55,
+            fontFamily: UI,
+            fontSize: 13,
+            fontWeight: 500,
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          Decline
+        </button>
+      </div>
+    </div>
   );
 }
 
-function QuietDayNote({ nextOpenSlot }: { nextOpenSlot?: string }) {
-  const { text, isDark, borderCol } = useHomeTheme();
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  const { text, borderCol } = useHomeTheme();
   return (
-    <section
-      className="ewa-rise mt-6 rounded-2xl px-4 py-4"
+    <div
+      className="flex flex-col items-center justify-center rounded-xl py-3"
       style={{
-        backgroundColor: isDark ? "rgba(240,235,216,0.03)" : "rgba(255,255,255,0.45)",
-        border: `1px solid ${borderCol}`,
-        animationDelay: "420ms",
+        border: `1px solid ${accent ? "rgba(255,130,63,0.45)" : borderCol}`,
+        backgroundColor: "rgba(240,235,216,0.035)",
       }}
     >
-      <div style={{ fontFamily: HOME_SANS, fontSize: 11, letterSpacing: "1.6px", textTransform: "uppercase", color: text, opacity: 0.5, fontWeight: 700 }}>
-        Today
-      </div>
-      <p style={{ fontFamily: UI,  fontSize: 16, color: text, opacity: 0.7, marginTop: 6 }}>
-        Empty calendar. Good light to clean the station.
-      </p>
-      {nextOpenSlot ? (
-        <p style={{ fontFamily: HOME_SANS, fontSize: 12.5, color: text, opacity: 0.55, marginTop: 8 }}>
-          Next open slot: <span style={{ color: "#FF823F", fontWeight: 600 }}>{nextOpenSlot}</span>
-        </p>
-      ) : null}
-    </section>
+      <span
+        style={{
+          fontFamily: UI,
+          fontSize: 9.5,
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+          color: text,
+          opacity: 0.55,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontFamily: UI,
+          fontSize: 17,
+          fontWeight: 700,
+          color: accent ? ORANGE : text,
+          letterSpacing: "-0.02em",
+          marginTop: 4,
+        }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
-function totalRevenue(bookings: Booking[]) {
-  return formatUsd(bookings.reduce((s, b) => s + b.priceUsd, 0));
+/* ---------------- Section header ---------------- */
+
+function SectionHeader({ label, count }: { label: string; count?: number }) {
+  const { text } = useHomeTheme();
+  return (
+    <div className="flex items-baseline justify-between">
+      <h2
+        style={{
+          fontFamily: UI,
+          fontSize: 11,
+          letterSpacing: "1.5px",
+          textTransform: "uppercase",
+          color: text,
+          opacity: 0.6,
+          fontWeight: 700,
+          margin: 0,
+        }}
+      >
+        {label}
+        {typeof count === "number" ? (
+          <span style={{ color: ORANGE, opacity: 1, marginLeft: 6 }}>{count}</span>
+        ) : null}
+      </h2>
+    </div>
+  );
 }
 
 /* ---------------- Avatar ---------------- */
 
-function Avatar({ initial, small }: { initial: string; small?: boolean }) {
-  const { isDark } = useHomeTheme();
-  const size = small ? 28 : 36;
+function Avatar({
+  initial,
+  small,
+  large,
+}: {
+  initial: string;
+  small?: boolean;
+  large?: boolean;
+}) {
+  const size = large ? 84 : small ? 32 : 40;
   return (
     <div
-      className="flex items-center justify-center rounded-full"
+      className="flex shrink-0 items-center justify-center rounded-full"
       style={{
         width: size,
         height: size,
-        flexShrink: 0,
-        background: "linear-gradient(135deg, rgba(255,130,63,0.35) 0%, rgba(255,130,63,0.10) 100%)",
-        border: `1px solid ${isDark ? "rgba(255,130,63,0.35)" : "rgba(255,130,63,0.40)"}`,
-        color: isDark ? "#F0EBD8" : "#061C27",
+        backgroundColor: "rgba(255,130,63,0.14)",
+        border: "1px solid rgba(255,130,63,0.40)",
+        color: "#F0EBD8",
         fontFamily: UI,
-        fontSize: small ? 12 : 15,
-        fontWeight: 500,
+        fontSize: large ? 32 : small ? 13 : 16,
+        fontWeight: 600,
       }}
     >
       {initial}
     </div>
+  );
+}
+
+/* ---------------- Icons ---------------- */
+
+function BellIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+}
+function CalendarIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+function PinIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s7-7.5 7-12a7 7 0 0 0-14 0c0 4.5 7 12 7 12z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+function MessageIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function CheckIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+function ChevronIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+function PencilIcon() {
+  return (
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
   );
 }
