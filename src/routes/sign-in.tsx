@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { EwaMark } from "@/components/ewa-logo";
 import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
 import { AuthInput } from "@/components/auth-input";
 import { useAuth } from "@/lib/auth-context";
