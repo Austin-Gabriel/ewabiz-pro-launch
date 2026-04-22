@@ -6,7 +6,6 @@ import type { StepProps } from "../step-router";
 
 export function Step3Otp({ onNext }: StepProps) {
   const { data } = useOnboarding();
-  const { text, borderCol } = useAuthTheme();
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [resendIn, setResendIn] = useState(30);
   const refs = useRef<Array<HTMLInputElement | null>>([]);
@@ -48,11 +47,36 @@ export function Step3Otp({ onNext }: StepProps) {
     <StepShell
       step={3}
       title="Enter the 6-digit code."
-      subtitle={<>Sent to <span style={{ color: text, fontWeight: 500 }}>{data.phone ?? "your phone"}</span>.</>}
+      subtitle={<>Sent to <span style={{ fontWeight: 500 }}>{data.phone ?? "your phone"}</span>.</>}
       onContinue={onNext}
       canContinue={complete}
       ctaLabel={complete ? "Verifying…" : "Continue"}
     >
+      <OtpBody
+        digits={digits}
+        refs={refs}
+        change={change}
+        paste={paste}
+        resendIn={resendIn}
+        onResend={() => { setResendIn(30); setDigits(["","","","","",""]); refs.current[0]?.focus(); }}
+      />
+    </StepShell>
+  );
+}
+
+function OtpBody({
+  digits, refs, change, paste, resendIn, onResend,
+}: {
+  digits: string[];
+  refs: React.MutableRefObject<Array<HTMLInputElement | null>>;
+  change: (i: number, raw: string) => void;
+  paste: (e: React.ClipboardEvent<HTMLInputElement>) => void;
+  resendIn: number;
+  onResend: () => void;
+}) {
+  const { text, borderCol } = useAuthTheme();
+  return (
+    <>
       <div className="flex justify-between gap-2">
         {digits.map((d, i) => (
           <input
@@ -86,13 +110,13 @@ export function Step3Otp({ onNext }: StepProps) {
         ) : (
           <button
             type="button"
-            onClick={() => { setResendIn(30); setDigits(["","","","","",""]); refs.current[0]?.focus(); }}
+            onClick={onResend}
             style={{ fontFamily: SANS_STACK, fontSize: 12, fontWeight: 500, color: "#FF823F" }}
           >
             Resend code
           </button>
         )}
       </div>
-    </StepShell>
+    </>
   );
 }
