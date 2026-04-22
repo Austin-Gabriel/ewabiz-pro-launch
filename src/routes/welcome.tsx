@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { EwaLockup } from "@/components/ewa-logo";
 import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
+import { useAuth } from "@/lib/auth-context";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -33,6 +35,16 @@ function WelcomePage() {
 function WelcomeBody() {
   const { isDark, text } = useAuthTheme();
   const navigate = useNavigate();
+  const { loading, state } = useAuth();
+
+  // If a session exists, /welcome is the wrong screen — bounce to the
+  // appropriate home surface so the pro sees their resume card / dashboard.
+  useEffect(() => {
+    if (loading) return;
+    if (state === "active" || state === "onboarding") {
+      navigate({ to: "/home", replace: true });
+    }
+  }, [loading, state, navigate]);
 
   return (
     <>
