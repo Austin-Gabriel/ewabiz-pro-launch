@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useKyc } from "@/lib/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
 import { RequireAuth } from "@/components/require-auth";
+import { ProfileSheet } from "@/components/home/profile-sheet";
 
 /**
  * Home is state-aware. The same URL renders one of five surfaces:
@@ -135,6 +136,10 @@ function HomePage() {
           badge={resolved.kind === "live-active" ? { tab: "calendar", count: 2 } : resolved.kind === "live-quiet" ? { tab: "calendar", count: 1 } : undefined}
         />
       ) : null}
+      <ProfileSheet
+        open={!isHardGate && activeTab === "profile"}
+        onClose={() => setActiveTab("home")}
+      />
     </HomeShell>
   );
 }
