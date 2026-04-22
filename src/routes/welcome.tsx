@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import ewaLogo from "@/assets/ewa-logo.png";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/welcome")({
   component: WelcomePage,
 });
 
-const FONT = 'Helvetica, "Helvetica Neue", Arial, sans-serif';
+const SANS = '"Uncut Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 
 function WelcomePage() {
   const [isDark, setIsDark] = useState(true);
@@ -36,18 +37,60 @@ function WelcomePage() {
   const bg = isDark ? "#061C27" : "#F0EBD8";
   const glowBase = isDark ? 0.14 : 0.09;
   const borderCol = isDark ? "rgba(240,235,216,0.18)" : "rgba(6,28,39,0.18)";
+  const squiggleOpacity = isDark ? 0.08 : 0.12;
+  const grainOpacity = isDark ? 0.18 : 0.22;
 
   return (
     <div
-      className="relative flex min-h-screen w-full flex-col overflow-hidden transition-colors duration-300 ease-out"
+      className="relative flex min-h-screen w-full flex-col overflow-hidden"
       style={{
         backgroundColor: bg,
         color: text,
-        fontFamily: FONT,
+        fontFamily: SANS,
+        transition: "background-color 600ms cubic-bezier(0.4, 0, 0.2, 1), color 600ms cubic-bezier(0.4, 0, 0.2, 1)",
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
+      {/* Organic drifting squiggles — soft, low-opacity, slow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-[10%] ewa-drift-a"
+        style={{ opacity: squiggleOpacity, transition: "opacity 600ms ease" }}
+      >
+        <svg viewBox="0 0 600 600" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+          <path
+            d="M-20,180 C80,100 180,260 290,180 S500,100 640,200"
+            fill="none"
+            stroke="#FF823F"
+            strokeWidth="42"
+            strokeLinecap="round"
+          />
+          <path
+            d="M-40,440 C90,360 220,520 340,440 S560,360 660,460"
+            fill="none"
+            stroke="#FF823F"
+            strokeWidth="36"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-[15%] ewa-drift-b"
+        style={{ opacity: squiggleOpacity * 0.7, transition: "opacity 600ms ease" }}
+      >
+        <svg viewBox="0 0 600 600" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+          <path
+            d="M-30,300 C120,220 260,400 400,310 S620,240 700,330"
+            fill="none"
+            stroke="#FF823F"
+            strokeWidth="28"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+
       {/* Ambient radial glow */}
       <div
         aria-hidden
@@ -68,6 +111,20 @@ function WelcomePage() {
           background: isDark
             ? "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%)"
             : "radial-gradient(ellipse at center, transparent 60%, rgba(6,28,39,0.06) 100%)",
+          transition: "background 600ms ease",
+        }}
+      />
+
+      {/* Printed-paper grain overlay (SVG turbulence) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 mix-blend-overlay"
+        style={{
+          opacity: grainOpacity,
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          backgroundSize: "220px 220px",
+          transition: "opacity 600ms ease",
         }}
       />
 
@@ -93,83 +150,68 @@ function WelcomePage() {
           type="button"
           onClick={() => setIsDark((v) => !v)}
           aria-label="Toggle color mode"
-          className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
+          className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300 hover:scale-110 active:scale-95"
           style={{
             border: `1px solid ${borderCol}`,
             color: text,
             opacity: 0.7,
             fontSize: 12,
+            transition: "border-color 600ms ease, color 600ms ease, transform 200ms ease",
           }}
         >
           {isDark ? "☀" : "☾"}
         </button>
       </div>
 
-      {/* Logo block */}
+      {/* Logo block — exact brand wordmark, quietly breathing */}
       <div
         className="relative z-[1] flex flex-col items-center"
-        style={{ paddingTop: "14vh" }}
+        style={{ paddingTop: "13vh" }}
       >
-        <div className="relative ewa-mark-in" style={{ width: 56, height: 56 }}>
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              backgroundColor: "#FF823F",
-              boxShadow: "0 8px 32px -8px rgba(255,130,63,0.5)",
-            }}
-          />
-          <div
-            className="absolute rounded-full"
-            style={{
-              width: 20,
-              height: 20,
-              backgroundColor: bg,
-              top: "50%",
-              left: "50%",
-              transform: "translate(-65%, -50%)",
-              transition: "background-color 300ms ease",
-            }}
-          />
-          <div
-            className="absolute"
-            style={{
-              width: 11,
-              height: 2.5,
-              backgroundColor: "#FF823F",
-              borderRadius: 2,
-              top: -5,
-              right: -3,
-              transform: "rotate(15deg)",
-            }}
-          />
-        </div>
-
-        <div
-          className="ewa-rise"
-          style={{
-            fontFamily: FONT,
-            fontWeight: 400,
-            fontSize: 26,
-            letterSpacing: "-0.02em",
-            lineHeight: 1,
-            marginTop: 18,
-            color: text,
-            animationDelay: "120ms",
-          }}
-        >
-          ewà
-          <span style={{ color: "#FF823F" }}>.</span>
+        <div className="relative ewa-mark-in">
+          <div className="ewa-breathe relative">
+            {/* Easter egg: tiny spark glints off the bagel every ~11s for those who linger */}
+            <span
+              aria-hidden
+              className="ewa-spark absolute"
+              style={{
+                top: "18%",
+                left: "10%",
+                width: 6,
+                height: 6,
+                borderRadius: 9999,
+                background: "#FFE9D6",
+                boxShadow: "0 0 12px 2px rgba(255,233,214,0.9)",
+                pointerEvents: "none",
+              }}
+            />
+            <img
+              src={ewaLogo}
+              alt="Ewà"
+              draggable={false}
+              style={{
+                height: 64,
+                width: "auto",
+                display: "block",
+                // Lift wordmark off cream background by knocking out the brand's dark bg.
+                // In dark mode the logo's native dark background blends into ours.
+                mixBlendMode: isDark ? "normal" : "multiply",
+                filter: isDark ? "none" : "contrast(1.02)",
+                transition: "filter 600ms ease",
+              }}
+            />
+          </div>
         </div>
 
         <div
           className="ewa-fade"
           style={{
-            fontFamily: FONT,
-            fontWeight: 700,
+            fontFamily: SANS,
+            fontWeight: 600,
             fontSize: 9,
-            letterSpacing: "3.5px",
+            letterSpacing: "4px",
             color: "#FF823F",
-            marginTop: 10,
+            marginTop: 14,
             animationDelay: "260ms",
           }}
         >
@@ -184,11 +226,11 @@ function WelcomePage() {
         <h1
           className="ewa-rise"
           style={{
-            fontFamily: FONT,
-            fontWeight: 400,
+            fontFamily: SANS,
+            fontWeight: 500,
             fontSize: 26,
-            lineHeight: 1.15,
-            letterSpacing: "-0.025em",
+            lineHeight: 1.18,
+            letterSpacing: "-0.02em",
             color: text,
             margin: 0,
             animationDelay: "400ms",
@@ -217,13 +259,13 @@ function WelcomePage() {
         <p
           className="ewa-rise"
           style={{
-            fontFamily: FONT,
+            fontFamily: SANS,
             fontWeight: 400,
             fontSize: 13,
             lineHeight: 1.5,
-            letterSpacing: "-0.005em",
+            letterSpacing: "0",
             color: text,
-            opacity: 0.6,
+            opacity: 0.62,
             marginTop: 12,
             marginBottom: 0,
             maxWidth: 280,
@@ -242,25 +284,25 @@ function WelcomePage() {
         <button
           type="button"
           onClick={() => console.log("join_as_pro_tapped")}
-          className="group relative w-full overflow-hidden transition-transform duration-200 active:scale-[0.98]"
+          className="group relative w-full overflow-hidden transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_0_44px_0_rgba(255,130,63,0.42)] active:scale-[0.98] active:translate-y-0"
           style={{
             height: 52,
             borderRadius: 9999,
             backgroundColor: "#FF823F",
             color: "#061C27",
-            fontFamily: FONT,
-            fontWeight: 700,
+            fontFamily: SANS,
+            fontWeight: 600,
             fontSize: 14,
-            letterSpacing: "-0.005em",
+            letterSpacing: "0",
             boxShadow: "0 0 32px 0 rgba(255,130,63,0.28), 0 1px 0 0 rgba(255,255,255,0.15) inset",
           }}
         >
           <span
             aria-hidden
-            className="absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+            className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             style={{
               background:
-                "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%)",
+                "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 60%)",
             }}
           />
           <span className="relative">Join as a pro</span>
@@ -269,25 +311,28 @@ function WelcomePage() {
         <button
           type="button"
           onClick={() => console.log("sign_in_tapped")}
-          className="mt-2.5 w-full transition-all duration-200 active:scale-[0.98]"
+          className="mt-2.5 w-full transition-all duration-300 active:scale-[0.98]"
           style={{
             height: 52,
             borderRadius: 9999,
             backgroundColor: "transparent",
             border: `1px solid ${borderCol}`,
             color: text,
-            fontFamily: FONT,
+            fontFamily: SANS,
             fontWeight: 500,
             fontSize: 14,
-            letterSpacing: "-0.005em",
+            letterSpacing: "0",
+            transition: "border-color 300ms ease, background-color 300ms ease, transform 200ms ease, color 600ms ease",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = isDark
-              ? "rgba(240,235,216,0.4)"
-              : "rgba(6,28,39,0.4)";
+            e.currentTarget.style.borderColor = "#FF823F";
+            e.currentTarget.style.backgroundColor = isDark
+              ? "rgba(255,130,63,0.06)"
+              : "rgba(255,130,63,0.08)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = borderCol;
+            e.currentTarget.style.backgroundColor = "transparent";
           }}
         >
           I already have an account
@@ -303,10 +348,10 @@ function WelcomePage() {
           href="#"
           className="group text-center transition-opacity hover:opacity-100"
           style={{
-            fontFamily: FONT,
+            fontFamily: SANS,
             fontWeight: 400,
             fontSize: 11.5,
-            letterSpacing: "-0.005em",
+            letterSpacing: "0",
           }}
         >
           <span style={{ color: text, opacity: 0.45 }}>Looking for a beauty pro? </span>
@@ -320,7 +365,7 @@ function WelcomePage() {
         <div
           style={{
             marginTop: 10,
-            fontFamily: FONT,
+            fontFamily: SANS,
             fontSize: 10,
             letterSpacing: "0.02em",
             color: text,
