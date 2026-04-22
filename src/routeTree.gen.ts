@@ -12,11 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as SplashRouteImport } from './routes/splash'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as KycRouteImport } from './routes/kyc'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EnableFaceidRouteImport } from './routes/enable-faceid'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +29,7 @@ import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
 import { Route as KycApprovedRouteImport } from './routes/kyc.approved'
 import { Route as KycStepRouteImport } from './routes/kyc.$step'
+import { Route as ApiPublicSeedDemoRouteImport } from './routes/api.public.seed-demo'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -41,14 +46,29 @@ const SplashRoute = SplashRouteImport.update({
   path: '/splash',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KycRoute = KycRouteImport.update({
@@ -64,6 +84,11 @@ const JoinRoute = JoinRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnableFaceidRoute = EnableFaceidRouteImport.update({
@@ -106,16 +131,25 @@ const KycStepRoute = KycStepRouteImport.update({
   path: '/$step',
   getParentRoute: () => KycRoute,
 } as any)
+const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
+  id: '/api/public/seed-demo',
+  path: '/api/public/seed-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/enable-faceid': typeof EnableFaceidRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -124,16 +158,21 @@ export interface FileRoutesByFullPath {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/enable-faceid': typeof EnableFaceidRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -142,17 +181,22 @@ export interface FileRoutesByTo {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/enable-faceid': typeof EnableFaceidRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
+  '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
+  '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
@@ -161,6 +205,7 @@ export interface FileRoutesById {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,11 +213,15 @@ export interface FileRouteTypes {
     | '/'
     | '/biometric'
     | '/enable-faceid'
+    | '/forgot-password'
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
+    | '/reset-password'
     | '/sign-in'
+    | '/signup'
     | '/splash'
     | '/verify'
     | '/welcome'
@@ -181,16 +230,21 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/api/public/seed-demo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/biometric'
     | '/enable-faceid'
+    | '/forgot-password'
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
+    | '/reset-password'
     | '/sign-in'
+    | '/signup'
     | '/splash'
     | '/verify'
     | '/welcome'
@@ -199,16 +253,21 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/api/public/seed-demo'
   id:
     | '__root__'
     | '/'
     | '/biometric'
     | '/enable-faceid'
+    | '/forgot-password'
     | '/home'
     | '/join'
     | '/kyc'
+    | '/login'
     | '/onboarding'
+    | '/reset-password'
     | '/sign-in'
+    | '/signup'
     | '/splash'
     | '/verify'
     | '/welcome'
@@ -217,20 +276,26 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/api/public/seed-demo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BiometricRoute: typeof BiometricRoute
   EnableFaceidRoute: typeof EnableFaceidRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
   JoinRoute: typeof JoinRoute
   KycRoute: typeof KycRouteWithChildren
+  LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
+  SignupRoute: typeof SignupRoute
   SplashRoute: typeof SplashRoute
   VerifyRoute: typeof VerifyRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiPublicSeedDemoRoute: typeof ApiPublicSeedDemoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -256,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplashRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
@@ -263,11 +335,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kyc': {
@@ -289,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enable-faceid': {
@@ -347,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KycStepRouteImport
       parentRoute: typeof KycRoute
     }
+    '/api/public/seed-demo': {
+      id: '/api/public/seed-demo'
+      path: '/api/public/seed-demo'
+      fullPath: '/api/public/seed-demo'
+      preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -382,14 +482,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
   EnableFaceidRoute: EnableFaceidRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
   JoinRoute: JoinRoute,
   KycRoute: KycRouteWithChildren,
+  LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,
+  SignupRoute: SignupRoute,
   SplashRoute: SplashRoute,
   VerifyRoute: VerifyRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiPublicSeedDemoRoute: ApiPublicSeedDemoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

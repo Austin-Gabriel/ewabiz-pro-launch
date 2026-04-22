@@ -15,6 +15,8 @@ import type { LiveStatus } from "@/components/home/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { useKyc } from "@/lib/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
+import { RequireAuth } from "@/components/require-auth";
+import { ProfileSheet } from "@/components/home/profile-sheet";
 
 /**
  * Home is state-aware. The same URL renders one of five surfaces:
@@ -51,8 +53,16 @@ export const Route = createFileRoute("/home")({
     }
     return out;
   },
-  component: HomePage,
+  component: HomeRoute,
 });
+
+function HomeRoute() {
+  return (
+    <RequireAuth>
+      <HomePage />
+    </RequireAuth>
+  );
+}
 
 function HomePage() {
   const { state: forcedState, live: livePreview } = Route.useSearch();
@@ -126,6 +136,10 @@ function HomePage() {
           badge={resolved.kind === "live-active" ? { tab: "calendar", count: 2 } : resolved.kind === "live-quiet" ? { tab: "calendar", count: 1 } : undefined}
         />
       ) : null}
+      <ProfileSheet
+        open={!isHardGate && activeTab === "profile"}
+        onClose={() => setActiveTab("home")}
+      />
     </HomeShell>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
+import { RequireAuth } from "@/components/require-auth";
 
 export const Route = createFileRoute("/enable-faceid")({
   head: () => ({
@@ -9,8 +10,16 @@ export const Route = createFileRoute("/enable-faceid")({
       { name: "description", content: "Sign in faster next time with Face ID." },
     ],
   }),
-  component: EnableFaceIdPage,
+  component: EnableFaceIdRoute,
 });
+
+function EnableFaceIdRoute() {
+  return (
+    <RequireAuth>
+      <EnableFaceIdPage />
+    </RequireAuth>
+  );
+}
 
 function EnableFaceIdPage() {
   return (
