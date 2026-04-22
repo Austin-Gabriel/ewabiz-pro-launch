@@ -10,8 +10,35 @@
   --color-cream: #F0EBD8;
   --color-cream-elevated: #F7F3E6;
   --color-bagel: #FF823F;
-  --font-serif: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: Helvetica, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer utilities {
+  @keyframes ewa-rise {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ewa-fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes ewa-glow {
+    0%, 100% { opacity: var(--glow-base, 0.12); transform: scale(1); }
+    50% { opacity: calc(var(--glow-base, 0.12) * 1.4); transform: scale(1.05); }
+  }
+  @keyframes ewa-underline {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+  }
+  @keyframes ewa-mark-in {
+    0% { opacity: 0; transform: scale(0.6) rotate(15deg); }
+    100% { opacity: 1; transform: scale(1) rotate(15deg); }
+  }
+  .ewa-rise { animation: ewa-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .ewa-fade { animation: ewa-fade 0.9s ease-out both; }
+  .ewa-glow-anim { animation: ewa-glow 6s ease-in-out infinite; }
+  .ewa-underline-anim { animation: ewa-underline 0.8s cubic-bezier(0.65, 0, 0.35, 1) both; transform-origin: left center; }
+  .ewa-mark-in { animation: ewa-mark-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 }
 
 /*
