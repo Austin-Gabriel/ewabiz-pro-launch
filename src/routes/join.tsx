@@ -16,13 +16,6 @@ export const Route = createFileRoute("/join")({
   component: JoinPage,
 });
 
-const STEPS = [
-  { n: "01", label: "Verify your phone" },
-  { n: "02", label: "Tell us about your craft" },
-  { n: "03", label: "ID & license check" },
-  { n: "04", label: "Go live, take bookings" },
-];
-
 function JoinPage() {
   const navigate = useNavigate();
   return (
@@ -51,12 +44,12 @@ function JoinBody() {
         <EwaMark size={36} />
       </div>
 
-      <div className="ewa-rise mt-8" style={{ animationDelay: "120ms" }}>
+      <div className="ewa-rise mt-10" style={{ animationDelay: "120ms" }}>
         <h1
           style={{
             fontFamily: SANS_STACK,
             fontWeight: 500,
-            fontSize: 26,
+            fontSize: 28,
             lineHeight: 1.18,
             letterSpacing: "-0.02em",
             color: text,
@@ -64,9 +57,9 @@ function JoinBody() {
             maxWidth: 320,
           }}
         >
-          Let&apos;s get you{" "}
+          Let&apos;s{" "}
           <span className="relative inline-block">
-            verified
+            begin
             <span
               aria-hidden
               className="absolute left-0 ewa-underline-anim"
@@ -93,65 +86,11 @@ function JoinBody() {
             maxWidth: 320,
           }}
         >
-          Ewà Biz is invite-grade. We verify every pro before they go live —
-          your clients can trust who they&apos;re booking, and so can you.
+          Your number is how clients reach you. We&apos;ll send a code to confirm it&apos;s yours.
         </p>
       </div>
 
-      {/* What happens next preview */}
-      <div
-        className="ewa-rise mt-7 rounded-2xl px-4 py-4"
-        style={{
-          animationDelay: "240ms",
-          border: `1px solid rgba(255,130,63,0.18)`,
-          backgroundColor: "rgba(255,130,63,0.04)",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: SANS_STACK,
-            fontSize: 10,
-            letterSpacing: "1.8px",
-            textTransform: "uppercase",
-            fontWeight: 600,
-            color: "#FF823F",
-            marginBottom: 12,
-          }}
-        >
-          What happens next · ~6 min
-        </div>
-        <ol className="flex flex-col gap-2.5">
-          {STEPS.map((s) => (
-            <li key={s.n} className="flex items-baseline gap-3">
-              <span
-                style={{
-                  fontFamily: SANS_STACK,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "#FF823F",
-                  opacity: 0.85,
-                  width: 18,
-                }}
-              >
-                {s.n}
-              </span>
-              <span
-                style={{
-                  fontFamily: SANS_STACK,
-                  fontSize: 13,
-                  fontWeight: 400,
-                  color: text,
-                  opacity: 0.85,
-                }}
-              >
-                {s.label}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      <div className="ewa-rise mt-7" style={{ animationDelay: "360ms" }}>
+      <div className="ewa-rise mt-10" style={{ animationDelay: "260ms" }}>
         <AuthInput
           label="Mobile number"
           type="tel"
@@ -163,14 +102,15 @@ function JoinBody() {
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
           }}
+          autoFocus
         />
       </div>
 
       <div className="flex-1" />
 
-      <div className="ewa-rise mb-4" style={{ animationDelay: "500ms" }}>
+      <div className="ewa-rise mb-4" style={{ animationDelay: "380ms" }}>
         <PrimaryButton onClick={submit} disabled={!valid}>
-          Send verification code
+          Continue
         </PrimaryButton>
         <p
           className="mt-3 text-center"
