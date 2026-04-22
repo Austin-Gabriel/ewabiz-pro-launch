@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { KycShell } from "../kyc-shell";
 import { CameraCapture } from "../camera-capture";
 import { CapturePreview } from "./capture-preview";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { useKyc } from "@/lib/kyc-context";
 import type { KycScreenProps } from "@/routes/kyc.$step";
 
@@ -79,7 +78,3 @@ function SelfieCamera({
     />
   );
 }
-
-// Re-export so the unused-import linter ignores SANS_STACK if tree-shaken.
-export const __sansRef = SANS_STACK;
-export const __themeRef = useAuthTheme;
