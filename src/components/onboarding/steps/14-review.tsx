@@ -39,7 +39,7 @@ export function Step14Review({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={12}
+      step={10}
       title="Review and continue."
       subtitle="Looks good? Next we'll verify your identity."
       onContinue={onNext}

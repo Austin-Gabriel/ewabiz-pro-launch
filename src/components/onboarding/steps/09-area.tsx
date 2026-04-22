@@ -67,7 +67,7 @@ export function Step9Area({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={8}
+      step={6}
       title="What's your base address?"
       subtitle="We use this to calculate travel distance to clients. Never shown to anyone."
       onContinue={submit}

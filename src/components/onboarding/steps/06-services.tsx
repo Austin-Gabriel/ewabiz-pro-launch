@@ -14,7 +14,7 @@ export function Step6Services({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={5}
+      step={3}
       title="What do you offer?"
       subtitle="Pick all that apply. You can refine prices and durations later."
       onContinue={submit}

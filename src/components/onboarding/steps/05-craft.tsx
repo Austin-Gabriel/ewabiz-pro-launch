@@ -11,7 +11,7 @@ export function Step5Craft({ onNext }: StepProps) {
 
   return (
     <StepShell
-      step={4}
+      step={2}
       title="How do you describe what you do?"
       subtitle="One or two sentences. Clients will read this on your profile."
       onContinue={submit}
