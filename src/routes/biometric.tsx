@@ -3,11 +3,20 @@ import { useEffect, useState } from "react";
 import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { useAuth } from "@/lib/auth-context";
+import { RequireAuth } from "@/components/require-auth";
 
 export const Route = createFileRoute("/biometric")({
   head: () => ({ meta: [{ title: "Unlock — Ewà Biz" }] }),
-  component: BiometricPage,
+  component: BiometricRoute,
 });
+
+function BiometricRoute() {
+  return (
+    <RequireAuth>
+      <BiometricPage />
+    </RequireAuth>
+  );
+}
 
 /**
  * "Walking into your own studio." Active pros land here from splash if a

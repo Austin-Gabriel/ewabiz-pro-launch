@@ -15,6 +15,7 @@ import type { LiveStatus } from "@/components/home/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { useKyc } from "@/lib/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
+import { RequireAuth } from "@/components/require-auth";
 
 /**
  * Home is state-aware. The same URL renders one of five surfaces:
@@ -51,8 +52,16 @@ export const Route = createFileRoute("/home")({
     }
     return out;
   },
-  component: HomePage,
+  component: HomeRoute,
 });
+
+function HomeRoute() {
+  return (
+    <RequireAuth>
+      <HomePage />
+    </RequireAuth>
+  );
+}
 
 function HomePage() {
   const { state: forcedState, live: livePreview } = Route.useSearch();

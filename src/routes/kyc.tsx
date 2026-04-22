@@ -1,6 +1,7 @@
 import { Outlet, createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getKycSnapshot } from "@/lib/kyc-context";
+import { RequireAuth } from "@/components/require-auth";
 
 /**
  * Bare /kyc entry — resume at the furthest step the pro reached. Mirrors
@@ -8,8 +9,16 @@ import { getKycSnapshot } from "@/lib/kyc-context";
  * lands somewhere meaningful.
  */
 export const Route = createFileRoute("/kyc")({
-  component: KycLayout,
+  component: KycRoute,
 });
+
+function KycRoute() {
+  return (
+    <RequireAuth>
+      <KycLayout />
+    </RequireAuth>
+  );
+}
 
 function KycLayout() {
   const navigate = useNavigate();

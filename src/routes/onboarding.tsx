@@ -1,6 +1,7 @@
 import { Outlet, createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getOnboardingSnapshot } from "@/lib/onboarding-context";
+import { RequireAuth } from "@/components/require-auth";
 
 /**
  * Bare /onboarding entry — resume at the furthest step the pro reached.
@@ -8,8 +9,16 @@ import { getOnboardingSnapshot } from "@/lib/onboarding-context";
  * and the back button always lands somewhere meaningful.
  */
 export const Route = createFileRoute("/onboarding")({
-  component: OnboardingRoute,
+  component: OnboardingRouteGuarded,
 });
+
+function OnboardingRouteGuarded() {
+  return (
+    <RequireAuth>
+      <OnboardingRoute />
+    </RequireAuth>
+  );
+}
 
 function OnboardingRoute() {
   const navigate = useNavigate();
