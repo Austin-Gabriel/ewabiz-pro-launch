@@ -7,7 +7,7 @@ import {
   type IncomingRequest,
   type LiveStatus,
   formatUsd,
-} from "./mock-data";
+} from "@/data/mock-data";
 
 /**
  * Native-mobile working surface for a beauty pro who travels to clients.
