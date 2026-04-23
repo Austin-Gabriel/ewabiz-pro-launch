@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { KYC_STEP_ORDER, type KycStep, getKycSnapshot } from "@/lib/kyc-context";
-import { KycIntro } from "@/components/kyc/screens/intro";
-import { KycTax } from "@/components/kyc/screens/tax";
-import { KycIdFront } from "@/components/kyc/screens/id-front";
-import { KycIdBack } from "@/components/kyc/screens/id-back";
-import { KycSelfie } from "@/components/kyc/screens/selfie";
-import { KycSubmit } from "@/components/kyc/screens/submit";
+import { KYC_STEP_ORDER, type KycStep, getKycSnapshot } from "@/onboarding-states/kyc/kyc-context";
+import { KycIntro } from "@/onboarding-states/kyc/screens/intro";
+import { KycTax } from "@/onboarding-states/kyc/screens/tax";
+import { KycIdFront } from "@/onboarding-states/kyc/screens/id-front";
+import { KycIdBack } from "@/onboarding-states/kyc/screens/id-back";
+import { KycSelfie } from "@/onboarding-states/kyc/screens/selfie";
+import { KycSubmit } from "@/onboarding-states/kyc/screens/submit";
 
 function isKycStep(s: string): s is KycStep {
   return (KYC_STEP_ORDER as readonly string[]).includes(s);

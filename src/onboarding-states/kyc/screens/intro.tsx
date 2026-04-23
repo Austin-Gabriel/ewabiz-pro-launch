@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { KycShell } from "../kyc-shell";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import type { KycScreenProps } from "@/routes/kyc.$step";
 
 export function KycIntro({ onNext }: KycScreenProps) {

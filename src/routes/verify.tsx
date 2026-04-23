@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import { EwaMark } from "@/components/ewa-logo";
-import { PrimaryButton } from "@/components/auth-buttons";
-import { useAuth } from "@/lib/auth-context";
+import { PrimaryButton } from "@/auth/auth-buttons";
+import { useAuth } from "@/auth/auth-context";
 
 type VerifyMode = "sign-in" | "join";
 

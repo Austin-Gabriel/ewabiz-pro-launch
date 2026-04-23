@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { KycShell } from "../kyc-shell";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { useKyc } from "@/lib/kyc-context";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 
 /**
  * Final summary + submit. On submit we run a short "verifying" moment and

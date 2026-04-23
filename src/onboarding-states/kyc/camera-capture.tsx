@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SANS_STACK } from "@/components/auth-shell";
+import { SANS_STACK } from "@/auth/auth-shell";
 
 export type CameraFacing = "environment" | "user";
 

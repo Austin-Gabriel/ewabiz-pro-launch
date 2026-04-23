@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton } from "@/components/auth-buttons";
-import { AuthInput } from "@/components/auth-input";
-import { useAuth } from "@/lib/auth-context";
-import { useOnboarding } from "@/lib/onboarding-context";
-import { getPendingSignup, clearPendingSignup } from "@/lib/signup-pending";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton } from "@/auth/auth-buttons";
+import { AuthInput } from "@/auth/auth-input";
+import { useAuth } from "@/auth/auth-context";
+import { useOnboarding } from "@/onboarding/onboarding-context";
+import { getPendingSignup, clearPendingSignup } from "@/auth/signup-pending";
 
 export const Route = createFileRoute("/signup/services")({
   head: () => ({

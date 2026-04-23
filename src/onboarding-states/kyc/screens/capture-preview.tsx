@@ -1,4 +1,4 @@
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 
 /**
  * Compact preview tile shown on capture-step shells. If a shot exists, we

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/auth/auth-context";
 import { useHomeTheme, HOME_SANS } from "./home-shell";
 
 interface Props {

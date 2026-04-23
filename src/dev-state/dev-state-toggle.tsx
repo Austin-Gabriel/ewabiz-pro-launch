@@ -5,7 +5,7 @@ import {
   type DevDataDensity,
   type DevProState,
   type DevThemeOverride,
-} from "@/lib/dev-state-context";
+} from "@/dev-state/dev-state-context";
 
 /**
  * Floating dev-only state toggle. Pinned bottom-right, above the bottom

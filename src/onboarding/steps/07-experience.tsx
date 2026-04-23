@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StepShell } from "../step-shell";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { EXPERIENCE_OPTIONS, useOnboarding, type OnboardingData } from "@/lib/onboarding-context";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { EXPERIENCE_OPTIONS, useOnboarding, type OnboardingData } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 export function Step7Experience({ onNext }: StepProps) {

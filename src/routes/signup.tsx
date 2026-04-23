@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton } from "@/components/auth-buttons";
-import { AuthInput } from "@/components/auth-input";
-import { setPendingSignup } from "@/lib/signup-pending";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton } from "@/auth/auth-buttons";
+import { AuthInput } from "@/auth/auth-input";
+import { setPendingSignup } from "@/auth/signup-pending";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({

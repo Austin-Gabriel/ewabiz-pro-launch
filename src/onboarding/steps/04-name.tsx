@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StepShell } from "../step-shell";
 import { BigInput } from "../inputs";
-import { useOnboarding } from "@/lib/onboarding-context";
+import { useOnboarding } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 export function Step4Name({ onNext }: StepProps) {

@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { StepShell } from "../step-shell";
 import { Chip, BigInput } from "../inputs";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { SERVICE_CATALOG, SPECIALIZATIONS, useOnboarding } from "@/lib/onboarding-context";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { SERVICE_CATALOG, SPECIALIZATIONS, useOnboarding } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 export function Step8Specializations({ onNext }: StepProps) {

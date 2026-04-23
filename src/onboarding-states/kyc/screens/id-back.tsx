@@ -2,7 +2,7 @@ import { useState } from "react";
 import { KycShell } from "../kyc-shell";
 import { CameraCapture } from "../camera-capture";
 import { CapturePreview } from "./capture-preview";
-import { useKyc } from "@/lib/kyc-context";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import type { KycScreenProps } from "@/routes/kyc.$step";
 
 export function KycIdBack({ onNext }: KycScreenProps) {

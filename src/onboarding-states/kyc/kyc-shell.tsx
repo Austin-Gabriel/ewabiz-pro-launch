@@ -1,12 +1,12 @@
 import { type ReactNode, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import {
   KYC_STEP_ORDER,
   KYC_TOTAL_STEPS,
   type KycStep,
   useKyc,
-} from "@/lib/kyc-context";
+} from "@/onboarding-states/kyc/kyc-context";
 
 export interface KycShellProps {
   step: KycStep;

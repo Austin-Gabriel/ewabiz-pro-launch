@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { StepShell } from "../step-shell";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { useOnboarding } from "@/lib/onboarding-context";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { useOnboarding } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 const MIN_PHOTOS = 3;

@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
-import { AuthInput } from "@/components/auth-input";
-import { useAuth } from "@/lib/auth-context";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton, SecondaryButton } from "@/auth/auth-buttons";
+import { AuthInput } from "@/auth/auth-input";
+import { useAuth } from "@/auth/auth-context";
 
 export const Route = createFileRoute("/sign-in")({
   head: () => ({

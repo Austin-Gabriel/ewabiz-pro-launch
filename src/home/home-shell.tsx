@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { useDevState } from "@/lib/dev-state-context";
+import { useDevState } from "@/dev-state/dev-state-context";
 
 /**
  * Working-surface shell used by /home and the future tab routes (calendar,

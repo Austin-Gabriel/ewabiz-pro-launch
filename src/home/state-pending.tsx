@@ -1,5 +1,5 @@
 import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
-import { SecondaryButton } from "@/components/auth-buttons";
+import { SecondaryButton } from "@/auth/auth-buttons";
 import { useNavigate } from "@tanstack/react-router";
 
 /**

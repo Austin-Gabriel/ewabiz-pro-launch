@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { HOME_SANS, HOME_SERIF, useHomeTheme } from "./home-shell";
-import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
+import { PrimaryButton, SecondaryButton } from "@/auth/auth-buttons";
 import { EwaMark } from "@/components/ewa-logo";
 
 /**

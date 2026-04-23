@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
-import { useKyc } from "@/lib/kyc-context";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton, SecondaryButton } from "@/auth/auth-buttons";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 
 export const Route = createFileRoute("/kyc/pending")({
   head: () => ({ meta: [{ title: "Under review — Ewà Biz" }] }),

@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { StepShell } from "../step-shell";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { SERVICE_CATALOG, EXPERIENCE_OPTIONS, useOnboarding } from "@/lib/onboarding-context";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { SERVICE_CATALOG, EXPERIENCE_OPTIONS, useOnboarding } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 export function Step14Review({ onNext }: StepProps) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StepShell } from "../step-shell";
 import { Chip } from "../inputs";
-import { SERVICE_CATALOG, useOnboarding } from "@/lib/onboarding-context";
+import { SERVICE_CATALOG, useOnboarding } from "@/onboarding/onboarding-context";
 import type { StepProps } from "../step-router";
 
 export function Step6Services({ onNext }: StepProps) {

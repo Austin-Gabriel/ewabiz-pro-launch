@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { HomeShell } from "@/components/home/home-shell";
-import { BottomTabs, type TabKey } from "@/components/home/bottom-tabs";
-import { StateMidOnboarding } from "@/components/home/state-mid-onboarding";
-import { StatePending } from "@/components/home/state-pending";
-import { StateLive } from "@/components/home/state-live";
+import { HomeShell } from "@/home/home-shell";
+import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
+import { StateMidOnboarding } from "@/home/state-mid-onboarding";
+import { StatePending } from "@/home/state-pending";
+import { StateLive } from "@/home/state-live";
 import {
   LIVE_FIRST_TIME,
   LIVE_QUIET_DAY,
   LIVE_ACTIVE_DAY,
   INCOMING_REQUEST_EXAMPLE,
-} from "@/components/home/mock-data";
-import type { LiveStatus } from "@/components/home/mock-data";
-import { useAuth } from "@/lib/auth-context";
-import { useKyc } from "@/lib/kyc-context";
-import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
-import { useDevState, type DevDataDensity, type DevProState } from "@/lib/dev-state-context";
-import { RequireAuth } from "@/components/require-auth";
-import { ProfileSheet } from "@/components/home/profile-sheet";
+} from "@/data/mock-data";
+import type { LiveStatus } from "@/data/mock-data";
+import { useAuth } from "@/auth/auth-context";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
+import { useOnboarding, TOTAL_STEPS } from "@/onboarding/onboarding-context";
+import { useDevState, type DevDataDensity, type DevProState } from "@/dev-state/dev-state-context";
+import { RequireAuth } from "@/auth/require-auth";
+import { ProfileSheet } from "@/home/profile-sheet";
 
 /**
  * Home is state-aware. The same URL renders one of five surfaces:

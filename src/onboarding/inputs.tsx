@@ -1,5 +1,5 @@
 import { type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef } from "react";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 
 export const FieldLabel = ({ children }: { children: React.ReactNode }) => {
   const { text } = useAuthTheme();

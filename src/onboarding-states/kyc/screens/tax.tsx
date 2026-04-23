@@ -1,9 +1,9 @@
 import { useState, type ChangeEvent } from "react";
 import { KycShell } from "../kyc-shell";
-import { AuthInput } from "@/components/auth-input";
-import { useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { useKyc } from "@/lib/kyc-context";
-import { useOnboarding } from "@/lib/onboarding-context";
+import { AuthInput } from "@/auth/auth-input";
+import { useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
+import { useOnboarding } from "@/onboarding/onboarding-context";
 import type { KycScreenProps } from "@/routes/kyc.$step";
 
 export function KycTax({ onNext }: KycScreenProps) {

@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { TOTAL_STEPS, useOnboarding } from "@/lib/onboarding-context";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { TOTAL_STEPS, useOnboarding } from "@/onboarding/onboarding-context";
 
 export interface StepShellProps {
   step: number;
