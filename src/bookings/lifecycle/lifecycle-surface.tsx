@@ -365,10 +365,12 @@ function GetReady({
   booking,
   onStartRoute,
   onCancel,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onStartRoute: () => void;
   onCancel: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   // Prep timer: starts at prepMin and counts down. Kept in seconds.
@@ -383,8 +385,8 @@ function GetReady({
 
   return (
     <LifecycleColumn>
-      <Header title="Get ready" />
-      <ClientCard booking={booking} />
+      <Header title="Get ready" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="get-ready" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -431,15 +433,19 @@ function GetReady({
 function EnRoute({
   booking,
   onArrived,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onArrived: () => void;
+  onSafety: () => void;
 }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <LifecycleColumn>
-      <Header title="On your way" />
-      <ClientCard booking={booking} />
+      <Header title="On your way" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="en-route" />
+
+      <StaticMapMock />
 
       <CardTheme>
         <div
@@ -511,10 +517,12 @@ function ArrivedPin({
   booking,
   onSuccess,
   onClientNotHere,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onSuccess: () => void;
   onClientNotHere: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   const [digits, setDigits] = useState<string[]>(["", "", "", ""]);
@@ -556,8 +564,8 @@ function ArrivedPin({
 
   return (
     <LifecycleColumn>
-      <Header title="Enter client's PIN" />
-      <ClientCard booking={booking} />
+      <Header title="Enter client's PIN" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="arrived" />
       <p style={{ ...subline(text), marginTop: 14, fontSize: 12.5, lineHeight: 1.5, textAlign: "left" }}>
         Ask {booking.clientName.split(" ")[0]} for their 4-digit code. They received it when the booking confirmed.
       </p>
@@ -734,9 +742,11 @@ function SheetAction({
 function InProgress({
   booking,
   onEnd,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onEnd: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   // Service timer running since mount. Real implementation would persist
@@ -756,8 +766,8 @@ function InProgress({
 
   return (
     <LifecycleColumn>
-      <Header title="In session" />
-      <ClientCard booking={booking} />
+      <Header title="In session" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="in-progress" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -829,7 +839,7 @@ function Complete({
   return (
     <LifecycleColumn>
       <Header title="Service complete" />
-      <ClientCard booking={booking} />
+      <ClientCard booking={booking} kind="complete" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -1070,7 +1080,7 @@ function NoShow({
   return (
     <LifecycleColumn>
       <Header title="Waiting on client" />
-      <ClientCard booking={booking} />
+      <ClientCard booking={booking} kind="arrived" />
 
       <div className="mt-8 flex flex-col items-center">
         <span
