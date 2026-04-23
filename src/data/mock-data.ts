@@ -218,3 +218,51 @@ export function formatUsd(n: number): string {
   if (n === 0) return "$0";
   return "$" + n.toLocaleString("en-US");
 }
+
+/* --------- Time-of-day variants of the active day --------- */
+
+/**
+ * Fresh start of the day. First booking is at 10:30, three on the books.
+ * No earnings yet. Used to demo the morning Up Next state.
+ */
+export const LIVE_DAY_MORNING = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "morning" } as LiveStatus,
+};
+
+/**
+ * 10:25 AM — Maya's appointment is in 5 minutes. Pro should head out now.
+ */
+export const LIVE_DAY_HEADS_UP = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "heads-up", leaveInMin: 5 } as LiveStatus,
+};
+
+/**
+ * 11:00 AM — pro is mid-appointment with Maya. Two more booked.
+ */
+export const LIVE_DAY_IN_PROGRESS = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "in-progress", elapsedMin: 32 } as LiveStatus,
+};
+
+/**
+ * 7:15 PM — Renée's appointment just wrapped. Day is done.
+ */
+export const LIVE_DAY_WRAP_UP = {
+  ...LIVE_ACTIVE_DAY,
+  bookingsToday: [] as Booking[],
+  todayEarningsUsd: 515,
+  todayProjectedUsd: 515,
+  liveStatus: {
+    kind: "wrap-up",
+    completedCount: 3,
+    completedTotalUsd: 515,
+  } as LiveStatus,
+};
