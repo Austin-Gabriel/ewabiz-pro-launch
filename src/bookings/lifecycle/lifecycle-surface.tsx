@@ -426,7 +426,7 @@ function DistanceHero({ booking }: { booking: LifecycleBooking }) {
       <span
         style={{
           fontFamily: UI,
-          fontSize: 48,
+          fontSize: 40,
           fontWeight: 700,
           color: text,
           letterSpacing: "-0.03em",
@@ -436,7 +436,7 @@ function DistanceHero({ booking }: { booking: LifecycleBooking }) {
       >
         {booking.distance}
       </span>
-      <p style={{ ...subline(text), marginTop: 10, fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+      <p style={{ ...subline(text), marginTop: 8, fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
         Est. {booking.etaMin} min · arriving {booking.arrivalAt}
       </p>
     </div>
