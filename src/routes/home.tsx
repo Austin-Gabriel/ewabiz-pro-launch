@@ -132,7 +132,7 @@ function HomePage() {
     homeMode === "offline" ? (("pendingRequests" in liveData) ? (liveData as { pendingRequests: unknown[] }).pendingRequests.length : 0) : 0;
 
   return (
-    <HomeShell noTabBarSpacing={isHardGate}>
+    <HomeShell noTabBarSpacing={isHardGate || lifecycleActive}>
       {resolved.kind === "mid-onboarding" ? (
         <StateMidOnboarding
           firstName={firstNameOf(auth.displayName, onboarding.firstName)}
@@ -149,7 +149,7 @@ function HomePage() {
         />
       ) : null}
 
-      {!isHardGate ? (
+      {!isHardGate && !lifecycleActive ? (
         <StateHome
           mode={homeMode}
           dayContext={dev.dayContext}
@@ -167,7 +167,7 @@ function HomePage() {
         />
       ) : null}
 
-      {!isHardGate ? (
+      {!isHardGate && !lifecycleActive ? (
         <BottomTabs
           active={activeTab}
           onSelect={setActiveTab}
@@ -175,9 +175,11 @@ function HomePage() {
         />
       ) : null}
       <ProfileSheet
-        open={!isHardGate && activeTab === "profile"}
+        open={!isHardGate && !lifecycleActive && activeTab === "profile"}
         onClose={() => setActiveTab("home")}
       />
+
+      {lifecycleActive ? <LifecycleSurface /> : null}
     </HomeShell>
   );
 }
