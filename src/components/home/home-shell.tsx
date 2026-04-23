@@ -43,6 +43,29 @@ export function useHomeTheme(): ThemeCtx {
 export const HOME_SANS = SANS;
 export const HOME_SERIF = SERIF;
 
+/**
+ * CardTheme — overrides the surrounding HomeTheme so that anything rendered
+ * inside a card sees: navy text on a white surface, with a soft navy border.
+ * Use this to wrap card primitives so all the existing sub-components that
+ * read `text` / `borderCol` from useHomeTheme() automatically flip to the
+ * card palette without having to be rewritten one by one.
+ *
+ * Cards are PURE WHITE in both light and dark mode. See mem://design/card-surfaces.
+ */
+export function CardTheme({ children }: { children: ReactNode }) {
+  const parent = useHomeTheme();
+  const value: ThemeCtx = {
+    ...parent,
+    text: parent.cardText,
+    bg: parent.cardSurface,
+    surface: "rgba(6,28,39,0.04)",
+    surfaceElevated: "rgba(6,28,39,0.06)",
+    borderCol: parent.cardBorder,
+    borderSoft: parent.cardBorderSoft,
+  };
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
 export interface HomeShellProps {
   children: ReactNode;
   /** Hide the bottom-tab spacer (used on mid-onboarding/pending hard-gates). */
