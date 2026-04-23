@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { HOME_SANS, useHomeTheme } from "./home-shell";
+import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
@@ -345,13 +345,22 @@ function LiveStateCard({
 /* ---------------- Live-card primitives ---------------- */
 
 function Card({ children, emphasis }: { children: React.ReactNode; emphasis?: "primary" }) {
-  const { borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <CardInner emphasis={emphasis}>{children}</CardInner>
+    </CardTheme>
+  );
+}
+
+function CardInner({ children, emphasis }: { children: React.ReactNode; emphasis?: "primary" }) {
+  const { cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
       className="mt-3 rounded-2xl px-4 py-4"
       style={{
-        backgroundColor: "rgba(240,235,216,0.045)",
-        border: `1px solid ${emphasis === "primary" ? "rgba(255,130,63,0.45)" : borderCol}`,
+        backgroundColor: cardSurface,
+        border: `1px solid ${emphasis === "primary" ? "rgba(255,130,63,0.55)" : cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
     >
       {children}
