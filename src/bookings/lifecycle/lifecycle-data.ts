@@ -16,6 +16,8 @@ export interface LifecycleBooking {
   /** Estimated payout to pro after fees. */
   payoutUsd: number;
   address: string;
+  /** Neighborhood-level location shown before pro commits to traveling. */
+  neighborhood: string;
   /** Distance from pro's current location, e.g. "2.3 mi". */
   distance: string;
   /** ETA in minutes from current location. */
@@ -40,6 +42,7 @@ export const LIFECYCLE_BOOKING: LifecycleBooking = {
   priceUsd: 180,
   payoutUsd: 162,
   address: "212 Lafayette Ave, Brooklyn, NY",
+  neighborhood: "Bed-Stuy, Brooklyn",
   distance: "2.3 mi",
   etaMin: 12,
   arrivalAt: "11:00 AM",

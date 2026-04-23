@@ -20,6 +20,26 @@ import { EwaMark } from "@/components/ewa-logo";
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
+const DESTRUCTIVE = "#B4493A";
+
+/**
+ * Lifecycle states where the client's full street address is exposed to the
+ * pro. Pre-commitment states (incoming, get-ready, complete) only show
+ * neighborhood-level location for client privacy.
+ */
+const ADDRESS_REVEALED: ReadonlySet<LifecycleKind> = new Set([
+  "en-route",
+  "arrived",
+  "in-progress",
+]);
+
+/** Lifecycle states that show the Safety tools shield in the header. */
+const SAFETY_VISIBLE: ReadonlySet<LifecycleKind> = new Set([
+  "get-ready",
+  "en-route",
+  "arrived",
+  "in-progress",
+]);
 
 /** Inner kind that we *render*. Includes branches not present in DevLifecycle. */
 type LifecycleKind =
@@ -39,6 +59,11 @@ export function LifecycleSurface() {
   // Internal "kind" tracks dev.lifecycle plus any branch screens (decline,
   // cancel-confirm, no-show) the user opens from inside a state.
   const [kind, setKind] = useState<LifecycleKind>(devToKind(dev.lifecycle));
+  // Safety bottom-sheet state. Lives at the surface root so it can overlay
+  // any lifecycle screen without each child managing its own modal.
+  const [safetyOpen, setSafetyOpen] = useState(false);
+  const [emergencyConfirm, setEmergencyConfirm] = useState(false);
+  const openSafety = () => setSafetyOpen(true);
 
   // Sync external dev-toggle changes into our local kind.
   useEffect(() => {
@@ -65,11 +90,16 @@ export function LifecycleSurface() {
           booking={booking}
           onStartRoute={() => setLifecycle("en-route")}
           onCancel={() => setKind("cancel-confirm")}
+          onSafety={openSafety}
         />
       ) : null}
 
       {kind === "en-route" ? (
-        <EnRoute booking={booking} onArrived={() => setLifecycle("arrived")} />
+        <EnRoute
+          booking={booking}
+          onArrived={() => setLifecycle("arrived")}
+          onSafety={openSafety}
+        />
       ) : null}
 
       {kind === "arrived" ? (
@@ -77,11 +107,16 @@ export function LifecycleSurface() {
           booking={booking}
           onSuccess={() => setLifecycle("in-progress")}
           onClientNotHere={() => setKind("no-show")}
+          onSafety={openSafety}
         />
       ) : null}
 
       {kind === "in-progress" ? (
-        <InProgress booking={booking} onEnd={() => setLifecycle("complete")} />
+        <InProgress
+          booking={booking}
+          onEnd={() => setLifecycle("complete")}
+          onSafety={openSafety}
+        />
       ) : null}
 
       {kind === "complete" ? (
@@ -101,6 +136,25 @@ export function LifecycleSurface() {
 
       {kind === "no-show" ? (
         <NoShow booking={booking} onMarkNoShow={exitToHome} />
+      ) : null}
+
+      {safetyOpen ? (
+        <SafetySheet
+          onClose={() => setSafetyOpen(false)}
+          onCall911={() => {
+            setSafetyOpen(false);
+            setEmergencyConfirm(true);
+          }}
+        />
+      ) : null}
+      {emergencyConfirm ? (
+        <EmergencyConfirmSheet
+          onCancel={() => setEmergencyConfirm(false)}
+          onConfirm={() => {
+            setEmergencyConfirm(false);
+            // In production: window.location.href = "tel:911"
+          }}
+        />
       ) : null}
     </SurfaceRoot>
   );
@@ -311,10 +365,12 @@ function GetReady({
   booking,
   onStartRoute,
   onCancel,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onStartRoute: () => void;
   onCancel: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   // Prep timer: starts at prepMin and counts down. Kept in seconds.
@@ -329,8 +385,8 @@ function GetReady({
 
   return (
     <LifecycleColumn>
-      <Header title="Get ready" />
-      <ClientCard booking={booking} />
+      <Header title="Get ready" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="get-ready" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -377,15 +433,19 @@ function GetReady({
 function EnRoute({
   booking,
   onArrived,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onArrived: () => void;
+  onSafety: () => void;
 }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <LifecycleColumn>
-      <Header title="On your way" />
-      <ClientCard booking={booking} />
+      <Header title="On your way" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="en-route" />
+
+      <StaticMapMock />
 
       <CardTheme>
         <div
@@ -457,10 +517,12 @@ function ArrivedPin({
   booking,
   onSuccess,
   onClientNotHere,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onSuccess: () => void;
   onClientNotHere: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   const [digits, setDigits] = useState<string[]>(["", "", "", ""]);
@@ -502,8 +564,8 @@ function ArrivedPin({
 
   return (
     <LifecycleColumn>
-      <Header title="Enter client's PIN" />
-      <ClientCard booking={booking} />
+      <Header title="Enter client's PIN" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="arrived" />
       <p style={{ ...subline(text), marginTop: 14, fontSize: 12.5, lineHeight: 1.5, textAlign: "left" }}>
         Ask {booking.clientName.split(" ")[0]} for their 4-digit code. They received it when the booking confirmed.
       </p>
@@ -680,9 +742,11 @@ function SheetAction({
 function InProgress({
   booking,
   onEnd,
+  onSafety,
 }: {
   booking: LifecycleBooking;
   onEnd: () => void;
+  onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
   // Service timer running since mount. Real implementation would persist
@@ -702,8 +766,8 @@ function InProgress({
 
   return (
     <LifecycleColumn>
-      <Header title="In session" />
-      <ClientCard booking={booking} />
+      <Header title="In session" showSafety onSafety={onSafety} />
+      <ClientCard booking={booking} kind="in-progress" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -775,7 +839,7 @@ function Complete({
   return (
     <LifecycleColumn>
       <Header title="Service complete" />
-      <ClientCard booking={booking} />
+      <ClientCard booking={booking} kind="complete" />
 
       <div className="mt-7 flex flex-col items-center">
         <span
@@ -1016,7 +1080,7 @@ function NoShow({
   return (
     <LifecycleColumn>
       <Header title="Waiting on client" />
-      <ClientCard booking={booking} />
+      <ClientCard booking={booking} kind="arrived" />
 
       <div className="mt-8 flex flex-col items-center">
         <span
@@ -1086,37 +1150,78 @@ function LifecycleColumn({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-1 flex-col px-5 pt-5 pb-5">{children}</div>;
 }
 
-function Header({ title }: { title: string }) {
-  const { text } = useHomeTheme();
+function Header({
+  title,
+  showSafety,
+  onSafety,
+}: {
+  title: string;
+  showSafety?: boolean;
+  onSafety?: () => void;
+}) {
+  const { text, cardBorder } = useHomeTheme();
   return (
     <div className="flex items-center justify-between">
-      <h1
-        style={{
-          fontFamily: UI,
-          fontSize: 17,
-          fontWeight: 600,
-          color: text,
-          letterSpacing: "-0.01em",
-          margin: 0,
-        }}
-      >
-        {title}
-      </h1>
-      <EwaMark size={22} />
+      <div className="flex items-center gap-2.5">
+        <EwaMark size={22} />
+        <h1
+          style={{
+            fontFamily: UI,
+            fontSize: 17,
+            fontWeight: 600,
+            color: text,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          {title}
+        </h1>
+      </div>
+      {showSafety ? (
+        <button
+          type="button"
+          onClick={onSafety}
+          aria-label="Safety tools"
+          className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+          style={{
+            width: 36,
+            height: 36,
+            border: `1px solid ${cardBorder}`,
+            color: text,
+            backgroundColor: "transparent",
+          }}
+        >
+          <ShieldIcon size={16} />
+        </button>
+      ) : null}
     </div>
   );
 }
 
-function ClientCard({ booking }: { booking: LifecycleBooking }) {
+function ClientCard({
+  booking,
+  kind,
+}: {
+  booking: LifecycleBooking;
+  kind: LifecycleKind;
+}) {
   return (
     <CardTheme>
-      <ClientCardInner booking={booking} />
+      <ClientCardInner booking={booking} kind={kind} />
     </CardTheme>
   );
 }
 
-function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
+function ClientCardInner({
+  booking,
+  kind,
+}: {
+  booking: LifecycleBooking;
+  kind: LifecycleKind;
+}) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
+  const showFullAddress = ADDRESS_REVEALED.has(kind);
+  const locationLine = showFullAddress ? booking.address : booking.neighborhood;
   return (
     <div
       className="mt-4 rounded-2xl px-4 py-3.5"
@@ -1151,7 +1256,7 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
           <PinIcon size={11} />
         </span>
         <div className="min-w-0 flex-1">
-          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{booking.address}</div>
+          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{locationLine}</div>
           <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
             {booking.distance} · {booking.etaMin} min away
           </div>
@@ -1383,6 +1488,231 @@ function StarIcon({ size = 22 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
+  );
+}
+
+function ShieldIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
+/* =================================================================
+ * Static Map Mock — decorative illustration for On Your Way
+ * ================================================================= */
+
+function StaticMapMock() {
+  const { cardSurface, cardBorder, isDark } = useHomeTheme();
+  const route = isDark ? "rgba(255,130,63,0.55)" : "rgba(255,130,63,0.7)";
+  const routeSoft = isDark ? "rgba(255,130,63,0.18)" : "rgba(255,130,63,0.22)";
+  const grid = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.05)";
+  return (
+    <div
+      aria-hidden
+      className="mt-4 overflow-hidden rounded-2xl"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+        height: 140,
+        position: "relative",
+      }}
+    >
+      <svg width="100%" height="100%" viewBox="0 0 320 140" preserveAspectRatio="none">
+        {/* faint grid streets */}
+        <g stroke={grid} strokeWidth="1">
+          <line x1="0" y1="40" x2="320" y2="40" />
+          <line x1="0" y1="80" x2="320" y2="80" />
+          <line x1="0" y1="110" x2="320" y2="110" />
+          <line x1="70" y1="0" x2="70" y2="140" />
+          <line x1="160" y1="0" x2="160" y2="140" />
+          <line x1="240" y1="0" x2="240" y2="140" />
+        </g>
+        {/* route halo */}
+        <path
+          d="M40,110 C90,90 120,60 170,55 C210,50 240,40 280,30"
+          stroke={routeSoft}
+          strokeWidth="10"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* route line */}
+        <path
+          d="M40,110 C90,90 120,60 170,55 C210,50 240,40 280,30"
+          stroke={route}
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray="0"
+        />
+        {/* pro position (small) */}
+        <circle cx="40" cy="110" r="6" fill="#061C27" />
+        <circle cx="40" cy="110" r="3" fill="#F0EBD8" />
+        {/* client pin (large) */}
+        <g transform="translate(280,30)">
+          <circle r="11" fill={ORANGE} />
+          <circle r="4" fill="#061C27" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+/* =================================================================
+ * Safety bottom sheet
+ * ================================================================= */
+
+function SafetySheet({
+  onClose,
+  onCall911,
+}: {
+  onClose: () => void;
+  onCall911: () => void;
+}) {
+  const { text, bg, borderCol, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-t-3xl px-5 pb-8 pt-5"
+        style={{ backgroundColor: bg, border: `1px solid ${borderCol}`, borderBottom: "none" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div aria-hidden className="mx-auto mb-4 rounded-full" style={{ width: 36, height: 4, backgroundColor: text, opacity: 0.18 }} />
+        <div className="flex items-center gap-2">
+          <ShieldIcon size={18} />
+          <h3 style={{ fontFamily: UI, fontSize: 17, fontWeight: 600, color: text, margin: 0 }}>
+            Safety
+          </h3>
+        </div>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12.5, textAlign: "left" }}>
+          Tools to keep you safe on every booking.
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <SafetyAction
+            title="Share my location"
+            subtitle="Live share with your emergency contact"
+            onClick={onClose}
+          />
+          <SafetyAction
+            title="Message Ewà support"
+            subtitle="Urgent chat with our team"
+            onClick={onClose}
+          />
+          <button
+            type="button"
+            onClick={onCall911}
+            className="w-full rounded-xl px-4 py-3 text-left transition-opacity active:opacity-70"
+            style={{
+              border: `1px solid ${cardBorder}`,
+              backgroundColor: "transparent",
+              color: DESTRUCTIVE,
+              fontFamily: UI,
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Call 911</div>
+            <div style={{ fontSize: 11.5, opacity: 0.75, marginTop: 2 }}>
+              For immediate emergencies only
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SafetyAction({
+  title,
+  subtitle,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  const { text, cardBorder } = useHomeTheme();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-xl px-4 py-3 text-left transition-opacity active:opacity-70"
+      style={{
+        border: `1px solid ${cardBorder}`,
+        backgroundColor: "transparent",
+        color: text,
+        fontFamily: UI,
+      }}
+    >
+      <div style={{ fontSize: 14, fontWeight: 600 }}>{title}</div>
+      <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>{subtitle}</div>
+    </button>
+  );
+}
+
+function EmergencyConfirmSheet({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { text, bg, borderCol } = useHomeTheme();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-t-3xl px-5 pb-8 pt-5"
+        style={{ backgroundColor: bg, border: `1px solid ${borderCol}`, borderBottom: "none" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div aria-hidden className="mx-auto mb-4 rounded-full" style={{ width: 36, height: 4, backgroundColor: text, opacity: 0.18 }} />
+        <h3 style={{ fontFamily: UI, fontSize: 18, fontWeight: 600, color: text, margin: 0 }}>
+          Call emergency services?
+        </h3>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 13, lineHeight: 1.5, textAlign: "left" }}>
+          This will dial 911 immediately.
+        </p>
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-xl py-3 transition-opacity active:opacity-70"
+            style={{
+              border: `1px solid ${borderCol}`,
+              backgroundColor: "transparent",
+              color: text,
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 rounded-xl py-3 transition-transform active:scale-[0.99]"
+            style={{
+              backgroundColor: DESTRUCTIVE,
+              color: "#F0EBD8",
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 700,
+            }}
+          >
+            Call 911
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
