@@ -326,253 +326,449 @@ function NoBookingsBody({ nextFutureBookingLabel }: { nextFutureBookingLabel?: s
   );
 }
 
-function SingleBookingHero({ booking }: { booking: Booking }) {
+/* ---------------- Up Next card (reference-matching) ---------------- */
+
+function UpNextCard({ booking }: { booking: Booking }) {
   return (
-    <Card>
-      <SingleBookingBody booking={booking} />
-    </Card>
+    <CardTheme>
+      <UpNextInner booking={booking} />
+    </CardTheme>
   );
 }
 
-function SingleBookingBody({ booking }: { booking: Booking }) {
-  const { text } = useHomeTheme();
+function UpNextInner({ booking }: { booking: Booking }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  const startsIn = booking.startsInMin;
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <Eyebrow>Today</Eyebrow>
-        <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
-          {booking.startsAt} · {booking.durationMin} min
-        </span>
+    <div
+      className="rounded-3xl p-5"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 16px 32px -20px rgba(6,28,39,0.25)",
+      }}
+    >
+      {/* Header row: status pill + time */}
+      <div className="flex items-start justify-between">
+        {typeof startsIn === "number" ? (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
+            style={{
+              backgroundColor: ORANGE_SOFT,
+              color: ORANGE,
+              fontFamily: UI,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            <span
+              aria-hidden
+              className="rounded-full"
+              style={{
+                width: 6,
+                height: 6,
+                backgroundColor: ORANGE,
+                animation: "ewa-up-next-pulse 1800ms ease-in-out infinite",
+              }}
+            />
+            Starts in {startsIn} min
+          </span>
+        ) : (
+          <span
+            className="inline-flex rounded-full px-2.5 py-1"
+            style={{
+              backgroundColor: "rgba(6,28,39,0.06)",
+              color: text,
+              opacity: 0.7,
+              fontFamily: UI,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            Up next
+          </span>
+        )}
+        <div className="flex flex-col items-end leading-none">
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 18,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.01em",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {formatTime12(booking.startsAt)}
+          </span>
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 12,
+              color: text,
+              opacity: 0.55,
+              marginTop: 4,
+            }}
+          >
+            {booking.durationMin} min session
+          </span>
+        </div>
       </div>
-      <div className="mt-3 flex items-center gap-3">
-        <Avatar initial={booking.clientInitial} />
+
+      {/* Client */}
+      <div className="mt-5 flex items-center gap-3.5">
+        <Avatar initial={booking.clientInitial} hue={booking.avatarHue} size={56} />
         <div className="min-w-0 flex-1">
-          <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
+          <div
+            className="truncate"
+            style={{
+              fontFamily: UI,
+              fontSize: 20,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.01em",
+            }}
+          >
             {booking.clientName}
           </div>
-          <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 2 }}>
+          <div
+            className="truncate"
+            style={{ fontFamily: UI, fontSize: 14, color: text, opacity: 0.6, marginTop: 2 }}
+          >
             {booking.service}
           </div>
         </div>
       </div>
-      {booking.address ? <AddressRow address={booking.address} /> : null}
-      <button
-        type="button"
-        className="mt-3 self-start text-left transition-opacity active:opacity-60"
-        style={{ fontFamily: UI, fontSize: 13, color: "inherit", fontWeight: 600 }}
-      >
-        Details →
-      </button>
-    </>
-  );
-}
 
-function MultiBookingHero({ booking, totalToday }: { booking: Booking; totalToday: number }) {
-  return (
-    <Card>
-      <MultiBookingBody booking={booking} totalToday={totalToday} />
-    </Card>
-  );
-}
-
-function MultiBookingBody({ booking, totalToday }: { booking: Booking; totalToday: number }) {
-  const { text } = useHomeTheme();
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        <Eyebrow>
-          Today <span style={{ marginLeft: 6, opacity: 0.65 }}>· {totalToday} bookings</span>
-        </Eyebrow>
-        <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
-          {booking.startsAt} · {booking.durationMin} min
-        </span>
-      </div>
-      <div className="mt-3 flex items-center gap-3">
-        <Avatar initial={booking.clientInitial} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
-            {booking.clientName}
-          </div>
-          <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 2 }}>
-            {booking.service}
-          </div>
+      {/* Inset address row */}
+      {booking.shortAddress || booking.address ? (
+        <div
+          className="mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5"
+          style={{ backgroundColor: "rgba(6,28,39,0.045)" }}
+        >
+          <span style={{ color: text, opacity: 0.55 }}>
+            <PinIcon size={14} />
+          </span>
+          <span
+            className="min-w-0 flex-1 truncate"
+            style={{ fontFamily: UI, fontSize: 13.5, color: text, fontWeight: 500 }}
+          >
+            {booking.shortAddress ?? booking.address}
+          </span>
+          {booking.distance ? (
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 12.5,
+                color: text,
+                opacity: 0.55,
+                fontWeight: 500,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {booking.distance}
+            </span>
+          ) : null}
         </div>
-      </div>
-      {booking.address ? <AddressRow address={booking.address} /> : null}
+      ) : null}
+
+      {/* Primary CTA: full-width orange */}
       <button
         type="button"
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 transition-transform active:scale-[0.99]"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 transition-transform active:scale-[0.99]"
         style={{
           backgroundColor: ORANGE,
           color: "#061C27",
           fontFamily: UI,
-          fontSize: 14,
-          fontWeight: 600,
+          fontSize: 15,
+          fontWeight: 700,
+          letterSpacing: "-0.005em",
         }}
       >
-        <PinIcon size={14} />
-        Navigate
+        <NavArrowIcon size={16} />
+        Start navigation
       </button>
-    </>
-  );
-}
 
-function RemainingBookings({ bookings, scrollable }: { bookings: Booking[]; scrollable: boolean }) {
-  if (bookings.length === 0) return null;
-  return (
-    <section className="mt-4">
-      <div
-        style={{
-          fontFamily: UI,
-          fontSize: 10.5,
-          letterSpacing: "1.4px",
-          textTransform: "uppercase",
-          fontWeight: 700,
-          opacity: 0.55,
-          marginBottom: 6,
-        }}
-      >
-        Later today
+      {/* Secondary row: outlined Message + Call */}
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+        <SecondaryButton icon={<ChatIcon size={14} />} label="Message" />
+        <SecondaryButton icon={<PhoneIcon size={14} />} label="Call" />
       </div>
-      <div
-        className={scrollable ? "flex flex-col gap-2 overflow-y-auto" : "flex flex-col gap-2"}
-        style={scrollable ? { maxHeight: 280 } : undefined}
-      >
-        {bookings.map((b) => (
-          <CardTheme key={b.id}>
-            <RemainingBookingRow booking={b} />
-          </CardTheme>
-        ))}
-      </div>
-    </section>
-  );
-}
 
-function RemainingBookingRow({ booking }: { booking: Booking }) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
-  return (
-    <div
-      className="flex items-center gap-3 rounded-xl px-3 py-2.5"
-      style={{
-        backgroundColor: cardSurface,
-        border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.06)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: UI,
-          fontSize: 12,
-          fontWeight: 700,
-          color: text,
-          width: 48,
-          flexShrink: 0,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {booking.startsAt}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate" style={{ fontFamily: UI, fontSize: 13.5, fontWeight: 600, color: text }}>
-          {booking.clientName}
-        </div>
-        <div className="truncate" style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, marginTop: 1 }}>
-          {booking.service}
-        </div>
-      </div>
+      <style>{`
+        @keyframes ewa-up-next-pulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.35; }
+        }
+      `}</style>
     </div>
   );
 }
 
-/* ---------------- Earnings glance ---------------- */
-
-function EarningsGlance({
-  todayUsd,
-  weekToDateUsd,
-  weekProjectedUsd,
-  sticky,
-}: {
-  todayUsd: number;
-  weekToDateUsd: number;
-  weekProjectedUsd?: number;
-  sticky?: boolean;
-}) {
-  return (
-    <div className={sticky ? "mt-auto" : ""}>
-      <CardTheme>
-        <EarningsGlanceInner
-          todayUsd={todayUsd}
-          weekToDateUsd={weekToDateUsd}
-          weekProjectedUsd={weekProjectedUsd}
-        />
-      </CardTheme>
-    </div>
-  );
-}
-
-function EarningsGlanceInner({
-  todayUsd,
-  weekToDateUsd,
-  weekProjectedUsd,
-}: {
-  todayUsd: number;
-  weekToDateUsd: number;
-  weekProjectedUsd?: number;
-}) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
-  const showPace =
-    typeof weekProjectedUsd === "number" && weekProjectedUsd > weekToDateUsd && weekToDateUsd > 0;
+function SecondaryButton({ icon, label }: { icon: React.ReactNode; label: string }) {
+  const { text } = useHomeTheme();
   return (
     <button
       type="button"
-      aria-label="Open earnings"
-      className="mt-3 flex w-full items-center gap-2 rounded-2xl text-left transition-opacity active:opacity-70"
+      className="flex items-center justify-center gap-1.5 rounded-2xl py-3 transition-opacity active:opacity-70"
+      style={{
+        border: `1px solid rgba(6,28,39,0.12)`,
+        backgroundColor: "transparent",
+        color: text,
+        fontFamily: UI,
+        fontSize: 14,
+        fontWeight: 600,
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+/* ---------------- "X more today" compact row ---------------- */
+
+function MoreTodayRow({ remaining }: { remaining: Booking[] }) {
+  return (
+    <CardTheme>
+      <MoreTodayInner remaining={remaining} />
+    </CardTheme>
+  );
+}
+
+function MoreTodayInner({ remaining }: { remaining: Booking[] }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  const next = remaining[0];
+  return (
+    <button
+      type="button"
+      aria-label={`${remaining.length} more bookings today`}
+      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-opacity active:opacity-70"
       style={{
         backgroundColor: cardSurface,
         border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-        padding: "12px 14px",
+        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
       }}
     >
+      <AvatarStack bookings={remaining.slice(0, 2)} />
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span
-            style={{
-              fontFamily: UI,
-              fontSize: 10,
-              letterSpacing: "1.4px",
-              textTransform: "uppercase",
-              color: text,
-              opacity: 0.5,
-              fontWeight: 700,
-            }}
-          >
-            Today
-          </span>
-          <span
-            style={{ fontFamily: UI, fontSize: 17, fontWeight: 700, color: text, letterSpacing: "-0.02em" }}
-          >
-            {formatUsd(todayUsd)}
-          </span>
+        <div
+          className="truncate"
+          style={{ fontFamily: UI, fontSize: 14, fontWeight: 700, color: text, letterSpacing: "-0.005em" }}
+        >
+          {remaining.length} more today
         </div>
         <div
           className="truncate"
-          style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500, marginTop: 2 }}
+          style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.6, marginTop: 2 }}
         >
-          This week: <span style={{ fontWeight: 600, opacity: 1 }}>{formatUsd(weekToDateUsd)}</span>
-          {showPace ? (
-            <>
-              {" "}
-              <span style={{ color: SUCCESS, fontWeight: 600 }}>
-                on pace for {formatUsd(weekProjectedUsd!)}
-              </span>
-            </>
-          ) : null}
+          Next at {formatTime12(next.startsAt)} · {shortLocation(next.location)}
         </div>
       </div>
       <ChevronIcon />
     </button>
   );
+}
+
+function AvatarStack({ bookings }: { bookings: Booking[] }) {
+  return (
+    <div className="flex shrink-0 items-center" style={{ width: bookings.length === 1 ? 32 : 50 }}>
+      {bookings.map((b, i) => (
+        <Avatar
+          key={b.id}
+          initial={b.clientInitial}
+          hue={b.avatarHue}
+          size={32}
+          stackOffset={i > 0 ? -10 : 0}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ---------------- Earnings + goal card ---------------- */
+
+function EarningsGoalCard({
+  todayUsd,
+  weekToDateUsd,
+  weekGoalUsd,
+  weekProjectedUsd,
+}: {
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekGoalUsd?: number;
+  weekProjectedUsd?: number;
+}) {
+  return (
+    <CardTheme>
+      <EarningsGoalInner
+        todayUsd={todayUsd}
+        weekToDateUsd={weekToDateUsd}
+        weekGoalUsd={weekGoalUsd}
+        weekProjectedUsd={weekProjectedUsd}
+      />
+    </CardTheme>
+  );
+}
+
+function EarningsGoalInner({
+  todayUsd,
+  weekToDateUsd,
+  weekGoalUsd,
+  weekProjectedUsd,
+}: {
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekGoalUsd?: number;
+  weekProjectedUsd?: number;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  const goal = weekGoalUsd && weekGoalUsd > 0 ? weekGoalUsd : undefined;
+  const pct = goal ? Math.min(1, weekToDateUsd / goal) : 0;
+  const projected = weekProjectedUsd ?? weekToDateUsd;
+  const aheadBy = goal && projected > goal ? projected - goal : 0;
+  const onPace = goal ? projected >= goal : false;
+
+  return (
+    <div
+      className="rounded-3xl p-5"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 16px 32px -20px rgba(6,28,39,0.25)",
+      }}
+    >
+      <div className="flex items-start justify-between">
+        <Eyebrow>Today</Eyebrow>
+        <button
+          type="button"
+          aria-label="Edit weekly goal"
+          className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+          style={{
+            width: 32,
+            height: 32,
+            border: "1px solid rgba(6,28,39,0.12)",
+            color: text,
+            opacity: 0.7,
+          }}
+        >
+          <EditIcon size={13} />
+        </button>
+      </div>
+
+      <div
+        className="mt-1"
+        style={{
+          fontFamily: UI,
+          fontSize: 44,
+          fontWeight: 700,
+          color: text,
+          letterSpacing: "-0.035em",
+          lineHeight: 1.05,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {formatUsd(todayUsd)}
+      </div>
+
+      {goal ? (
+        <>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: text,
+                fontWeight: 600,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {formatUsd(weekToDateUsd)} <span style={{ opacity: 0.55, fontWeight: 500 }}>this week</span>
+            </span>
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: text,
+                opacity: 0.65,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              <span style={{ opacity: 0.85, fontWeight: 500 }}>Goal</span>{" "}
+              <span style={{ fontWeight: 700, opacity: 1 }}>{formatUsd(goal)}</span>
+            </span>
+          </div>
+          <div
+            className="mt-2.5 w-full rounded-full"
+            style={{ height: 6, backgroundColor: "rgba(6,28,39,0.08)", overflow: "hidden" }}
+          >
+            <div
+              style={{
+                width: `${pct * 100}%`,
+                height: "100%",
+                backgroundColor: ORANGE,
+                borderRadius: 999,
+                transition: "width 400ms ease",
+              }}
+            />
+          </div>
+          {onPace ? (
+            <div
+              className="mt-3 flex items-center gap-1.5"
+              style={{ color: SUCCESS, fontFamily: UI, fontSize: 13, fontWeight: 600 }}
+            >
+              <TrendUpIcon size={14} />
+              {aheadBy > 0
+                ? `On pace — ahead by ${formatUsd(aheadBy)}`
+                : `On pace for ${formatUsd(projected)}`}
+            </div>
+          ) : (
+            <div
+              className="mt-3"
+              style={{ color: text, opacity: 0.6, fontFamily: UI, fontSize: 13, fontWeight: 500 }}
+            >
+              {goal - projected > 0
+                ? `${formatUsd(goal - projected)} to hit goal`
+                : "Pace updates as bookings come in"}
+            </div>
+          )}
+        </>
+      ) : (
+        <div
+          className="mt-3"
+          style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.65 }}
+        >
+          {formatUsd(weekToDateUsd)} this week
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Local helpers ---------------- */
+
+function formatTime12(t: string): string {
+  // Accepts "10:30" or "13:00" → "10:30 AM" / "1:00 PM". Pass-through if
+  // already formatted.
+  if (/AM|PM/i.test(t)) return t;
+  const m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return t;
+  let h = parseInt(m[1], 10);
+  const mm = m[2];
+  // Treat 1:00–6:59 as PM (matches typical salon afternoon hours in our mocks).
+  let suffix: "AM" | "PM";
+  if (h === 0) { h = 12; suffix = "AM"; }
+  else if (h === 12) { suffix = "PM"; }
+  else if (h > 12) { h -= 12; suffix = "PM"; }
+  else if (h >= 1 && h <= 6) { suffix = "PM"; }
+  else { suffix = "AM"; }
+  return `${h}:${mm} ${suffix}`;
+}
+
+function shortLocation(loc?: string): string {
+  if (!loc) return "Brooklyn";
+  // "Park Slope, Brooklyn" → "Park Slope"
+  return loc.split(",")[0].trim();
 }
 
 /* ---------------- ONLINE body ---------------- */
