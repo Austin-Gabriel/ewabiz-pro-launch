@@ -699,11 +699,11 @@ function InProgress({
       <Header title="In session" />
       <ClientCard booking={booking} />
 
-      <div className="mt-8 flex flex-col items-center">
+      <div className="mt-7 flex flex-col items-center">
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -713,7 +713,7 @@ function InProgress({
         >
           {hh}:{mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Scheduled: {booking.durationMin} min
         </p>
       </div>
@@ -725,13 +725,7 @@ function InProgress({
       <div className="flex-1" />
 
       <PrimaryCta label="End service" onClick={onEnd} />
-      <button
-        type="button"
-        className="mt-3 w-full py-2 transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 13 }}
-      >
-        Message client
-      </button>
+      <MessageOnlyRow />
     </LifecycleColumn>
   );
 }
