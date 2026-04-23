@@ -277,7 +277,15 @@ export const LIVE_DAY_WRAP_UP = {
 export const DAY_NONE = {
   ...LIVE_QUIET_DAY,
   pendingRequests: [] as BookingRequest[],
+  /** Used by Offline empty state: "Your next booking is Thursday at 2pm". */
+  nextFutureBookingLabel: "Thursday at 2:00 PM",
   liveStatus: { kind: "idle" } as LiveStatus,
+};
+
+/** Truly empty — no future bookings on the books. Used as a fallback. */
+export const DAY_TRULY_EMPTY = {
+  ...LIVE_FIRST_TIME,
+  nextFutureBookingLabel: undefined as string | undefined,
 };
 
 /** Offline + 1 booking today. */

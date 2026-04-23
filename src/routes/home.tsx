@@ -4,7 +4,7 @@ import { HomeShell } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { StateMidOnboarding } from "@/home/state-mid-onboarding";
 import { StatePending } from "@/home/state-pending";
-import { StateLive } from "@/home/state-live";
+import { StateHome } from "@/home/state-home";
 import {
   LIVE_FIRST_TIME,
   LIVE_QUIET_DAY,
@@ -13,14 +13,12 @@ import {
   LIVE_DAY_HEADS_UP,
   LIVE_DAY_IN_PROGRESS,
   LIVE_DAY_WRAP_UP,
-  INCOMING_REQUEST_EXAMPLE,
   DAY_NONE,
   DAY_ONE,
   DAY_MULTIPLE,
   DAY_FULL,
   ONLINE_IDLE,
 } from "@/data/mock-data";
-import type { LiveStatus } from "@/data/mock-data";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/onboarding/onboarding-context";
@@ -110,23 +108,7 @@ function HomePage() {
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
 
-  // Derive live-state overrides from the ?live= query param so designers can
-  // preview In Progress / En Route / Incoming Request screens.
-  const liveStatus: LiveStatus | undefined =
-    livePreview === "in-progress"
-      ? { kind: "in-progress", elapsedMin: 24 }
-      : livePreview === "en-route"
-        ? { kind: "en-route", etaMin: 12 }
-        : livePreview === "heads-up"
-          ? { kind: "heads-up", leaveInMin: 5 }
-          : livePreview === "morning"
-            ? { kind: "morning" }
-            : livePreview === "wrap-up"
-              ? { kind: "wrap-up", completedCount: 3, completedTotalUsd: 515 }
-              : undefined;
-  const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
-
-  // Apply data-density override by remapping which mock dataset feeds StateLive.
+  // Apply data-density override by remapping which mock dataset feeds Home.
   const liveData = pickLiveData(
     resolved.kind,
     dev.dataDensity,
@@ -135,6 +117,14 @@ function HomePage() {
     dev.dayContext,
     dev.onlineStatus,
   );
+
+  // Resolve the on-screen Mode. Dev "auto" defaults to offline (the working-day
+  // surface). When dev forces online, we render the dispatch surface.
+  const homeMode = dev.mode === "online" ? "online" : dev.mode === "offline" ? "offline" : "offline";
+  // Pending requests count drives the bell badge. Hidden when online (no
+  // scheduled-list pending in dispatch mode).
+  const unreadCount =
+    homeMode === "offline" ? (("pendingRequests" in liveData) ? (liveData as { pendingRequests: unknown[] }).pendingRequests.length : 0) : 0;
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -154,28 +144,21 @@ function HomePage() {
         />
       ) : null}
 
-      {resolved.kind === "live-first" ? (
-        <StateLive
-          {...liveData}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
-          liveStatus={liveStatus ?? liveData.liveStatus}
-          incomingRequest={incomingRequest}
-        />
-      ) : null}
-      {resolved.kind === "live-quiet" ? (
-        <StateLive
-          {...liveData}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
-          liveStatus={liveStatus ?? liveData.liveStatus}
-          incomingRequest={incomingRequest}
-        />
-      ) : null}
-      {resolved.kind === "live-active" ? (
-        <StateLive
-          {...liveData}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
-          liveStatus={liveStatus ?? liveData.liveStatus}
-          incomingRequest={incomingRequest}
+      {!isHardGate ? (
+        <StateHome
+          mode={homeMode}
+          dayContext={dev.dayContext}
+          onlineStatus={dev.onlineStatus}
+          bookingsToday={liveData.bookingsToday ?? []}
+          nextFutureBookingLabel={
+            "nextFutureBookingLabel" in liveData
+              ? (liveData as { nextFutureBookingLabel?: string }).nextFutureBookingLabel
+              : undefined
+          }
+          todayEarningsUsd={liveData.todayEarningsUsd ?? 0}
+          weekToDateUsd={liveData.weekToDateUsd ?? 0}
+          weekProjectedUsd={liveData.weekProjectedUsd}
+          unreadCount={unreadCount}
         />
       ) : null}
 
