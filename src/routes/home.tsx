@@ -14,12 +14,24 @@ import {
   LIVE_DAY_IN_PROGRESS,
   LIVE_DAY_WRAP_UP,
   INCOMING_REQUEST_EXAMPLE,
+  DAY_NONE,
+  DAY_ONE,
+  DAY_MULTIPLE,
+  DAY_FULL,
+  ONLINE_IDLE,
 } from "@/data/mock-data";
 import type { LiveStatus } from "@/data/mock-data";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/onboarding/onboarding-context";
-import { useDevState, type DevDataDensity, type DevProState } from "@/dev-state/dev-state-context";
+import {
+  useDevState,
+  type DevDataDensity,
+  type DevProState,
+  type DevMode,
+  type DevDayContext,
+  type DevOnlineStatus,
+} from "@/dev-state/dev-state-context";
 import { RequireAuth } from "@/auth/require-auth";
 import { ProfileSheet } from "@/home/profile-sheet";
 
@@ -115,7 +127,14 @@ function HomePage() {
   const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
 
   // Apply data-density override by remapping which mock dataset feeds StateLive.
-  const liveData = pickLiveData(resolved.kind, dev.dataDensity, livePreview);
+  const liveData = pickLiveData(
+    resolved.kind,
+    dev.dataDensity,
+    livePreview,
+    dev.mode,
+    dev.dayContext,
+    dev.onlineStatus,
+  );
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -263,7 +282,24 @@ function pickLiveData(
   kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
   density: DevDataDensity,
   livePreview?: LivePreview,
+  mode: DevMode = "auto",
+  dayContext: DevDayContext = "auto",
+  onlineStatus: DevOnlineStatus = "auto",
 ) {
+  // Mode + Day Context + Online Status take priority over density when set.
+  if (mode === "online") {
+    if (onlineStatus === "idle" || onlineStatus === "auto") return ONLINE_IDLE;
+    // "incoming" + "active" lifecycle datasets are placeholders for now.
+    if (onlineStatus === "incoming") return ONLINE_IDLE;
+    if (onlineStatus === "active") return ONLINE_IDLE;
+  }
+  if (mode === "offline") {
+    if (dayContext === "none") return DAY_NONE;
+    if (dayContext === "one") return DAY_ONE;
+    if (dayContext === "multiple") return DAY_MULTIPLE;
+    if (dayContext === "full") return DAY_FULL;
+  }
+
   // When previewing a specific time-of-day live state, pin to its dataset.
   if (livePreview === "morning") return LIVE_DAY_MORNING;
   if (livePreview === "heads-up") return LIVE_DAY_HEADS_UP;
