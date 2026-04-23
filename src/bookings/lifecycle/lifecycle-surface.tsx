@@ -413,13 +413,7 @@ function EnRoute({
       <div className="flex-1" />
 
       <PrimaryCta label="I've arrived" onClick={onArrived} />
-      <button
-        type="button"
-        className="mt-3 w-full py-2 transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 13 }}
-      >
-        Message client
-      </button>
+      <MessageCallRow />
     </LifecycleColumn>
   );
 }
