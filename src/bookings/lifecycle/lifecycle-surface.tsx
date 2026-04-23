@@ -18,6 +18,7 @@ import { LIFECYCLE_BOOKING, type LifecycleBooking } from "./lifecycle-data";
 
 const UI = `Inter, ${HOME_SANS}`;
 const ORANGE = "#FF823F";
+const SUCCESS = "#16A34A";
 
 /** Inner kind that we *render*. Includes branches not present in DevLifecycle. */
 type LifecycleKind =
@@ -758,7 +759,7 @@ function Complete({
             fontFamily: UI,
             fontSize: 64,
             fontWeight: 700,
-            color: ORANGE,
+            color: SUCCESS,
             letterSpacing: "-0.03em",
             fontVariantNumeric: "tabular-nums",
             lineHeight: 1,
@@ -772,7 +773,7 @@ function Complete({
             style={{
               fontFamily: UI,
               fontSize: 13,
-              color: ORANGE,
+              color: SUCCESS,
               marginTop: 4,
               fontWeight: 600,
               fontVariantNumeric: "tabular-nums",
