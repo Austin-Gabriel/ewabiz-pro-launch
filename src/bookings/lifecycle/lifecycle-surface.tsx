@@ -59,6 +59,11 @@ export function LifecycleSurface() {
   // Internal "kind" tracks dev.lifecycle plus any branch screens (decline,
   // cancel-confirm, no-show) the user opens from inside a state.
   const [kind, setKind] = useState<LifecycleKind>(devToKind(dev.lifecycle));
+  // Safety bottom-sheet state. Lives at the surface root so it can overlay
+  // any lifecycle screen without each child managing its own modal.
+  const [safetyOpen, setSafetyOpen] = useState(false);
+  const [emergencyConfirm, setEmergencyConfirm] = useState(false);
+  const openSafety = () => setSafetyOpen(true);
 
   // Sync external dev-toggle changes into our local kind.
   useEffect(() => {
@@ -85,11 +90,16 @@ export function LifecycleSurface() {
           booking={booking}
           onStartRoute={() => setLifecycle("en-route")}
           onCancel={() => setKind("cancel-confirm")}
+          onSafety={openSafety}
         />
       ) : null}
 
       {kind === "en-route" ? (
-        <EnRoute booking={booking} onArrived={() => setLifecycle("arrived")} />
+        <EnRoute
+          booking={booking}
+          onArrived={() => setLifecycle("arrived")}
+          onSafety={openSafety}
+        />
       ) : null}
 
       {kind === "arrived" ? (
@@ -97,11 +107,16 @@ export function LifecycleSurface() {
           booking={booking}
           onSuccess={() => setLifecycle("in-progress")}
           onClientNotHere={() => setKind("no-show")}
+          onSafety={openSafety}
         />
       ) : null}
 
       {kind === "in-progress" ? (
-        <InProgress booking={booking} onEnd={() => setLifecycle("complete")} />
+        <InProgress
+          booking={booking}
+          onEnd={() => setLifecycle("complete")}
+          onSafety={openSafety}
+        />
       ) : null}
 
       {kind === "complete" ? (
@@ -121,6 +136,25 @@ export function LifecycleSurface() {
 
       {kind === "no-show" ? (
         <NoShow booking={booking} onMarkNoShow={exitToHome} />
+      ) : null}
+
+      {safetyOpen ? (
+        <SafetySheet
+          onClose={() => setSafetyOpen(false)}
+          onCall911={() => {
+            setSafetyOpen(false);
+            setEmergencyConfirm(true);
+          }}
+        />
+      ) : null}
+      {emergencyConfirm ? (
+        <EmergencyConfirmSheet
+          onCancel={() => setEmergencyConfirm(false)}
+          onConfirm={() => {
+            setEmergencyConfirm(false);
+            // In production: window.location.href = "tel:911"
+          }}
+        />
       ) : null}
     </SurfaceRoot>
   );
