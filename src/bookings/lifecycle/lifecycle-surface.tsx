@@ -1238,18 +1238,18 @@ function MessageCallRow() {
   const { text, cardBorder } = useHomeTheme();
   const baseStyle: React.CSSProperties = {
     flex: 1,
-    height: 44,
+    height: 42,
     borderRadius: 12,
     border: `1px solid ${cardBorder}`,
     backgroundColor: "transparent",
     color: text,
     fontFamily: UI,
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 600,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 7,
   };
   return (
     <div className="mt-3 flex items-stretch gap-2">
@@ -1272,6 +1272,39 @@ function MessageCallRow() {
         Call
       </button>
     </div>
+  );
+}
+
+/**
+ * Single-button outlined Message action. Used on In Progress where calling
+ * mid-session breaks the rhythm of the appointment but messaging is still OK.
+ * Same visual weight as MessageCallRow for consistency across lifecycle.
+ */
+function MessageOnlyRow() {
+  const { text, cardBorder } = useHomeTheme();
+  return (
+    <button
+      type="button"
+      aria-label="Message client"
+      className="mt-3 w-full transition-opacity active:opacity-60"
+      style={{
+        height: 42,
+        borderRadius: 12,
+        border: `1px solid ${cardBorder}`,
+        backgroundColor: "transparent",
+        color: text,
+        fontFamily: UI,
+        fontSize: 12.5,
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 7,
+      }}
+    >
+      <ChatBubbleIcon />
+      Message
+    </button>
   );
 }
 
