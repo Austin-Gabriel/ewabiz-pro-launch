@@ -1087,6 +1087,24 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
+function IncomingMessageBox({ message }: { message: string }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="mt-5 rounded-xl px-4 py-3"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+      }}
+    >
+      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.8, lineHeight: 1.5 }}>
+        "{message}"
+      </p>
+    </div>
+  );
+}
+
 function StatInner({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
