@@ -799,180 +799,211 @@ function PendingRequestRow({
 
 /* ---------------- Today at a glance ---------------- */
 
-function TodayGlance({
-  remainingCount,
-  projectedRemainingUsd,
-}: {
-  remainingCount: number;
-  projectedRemainingUsd: number;
-}) {
-  if (remainingCount === 0 && projectedRemainingUsd === 0) return null;
-  return (
-    <CardTheme>
-      <TodayGlanceInner
-        remainingCount={remainingCount}
-        projectedRemainingUsd={projectedRemainingUsd}
-      />
-    </CardTheme>
-  );
-}
+/* ---------------- Earnings glance (single line) ---------------- */
 
-function TodayGlanceInner({
-  remainingCount,
-  projectedRemainingUsd,
-}: {
-  remainingCount: number;
-  projectedRemainingUsd: number;
-}) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
-
-  const label =
-    remainingCount === 0
-      ? "All wrapped for today"
-      : `${remainingCount} more ${remainingCount === 1 ? "job" : "jobs"} today`;
-  const right =
-    projectedRemainingUsd > 0 ? `· ${formatUsd(projectedRemainingUsd)} projected` : "";
-
-  return (
-    <button
-      type="button"
-      className="mt-3 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 transition-opacity active:opacity-70"
-      style={{
-        backgroundColor: cardSurface,
-        border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-      }}
-      aria-label="Open today's calendar"
-    >
-      <span style={{ fontFamily: UI, fontSize: 12.5, color: text, fontWeight: 500 }}>
-        {label} <span style={{ opacity: 0.55 }}>{right}</span>
-      </span>
-      <ChevronIcon />
-    </button>
-  );
-}
-
-/* ---------------- Quick stats ---------------- */
-
-function QuickStats({
-  ratingValue,
-  ratingCount,
-  completionPct,
-  todayEarningsUsd,
+function EarningsGlance({
+  todayUsd,
+  weekToDateUsd,
+  weekProjectedUsd,
   onEditTip,
 }: {
-  ratingValue: number;
-  ratingCount: number;
-  completionPct: number;
-  todayEarningsUsd: number;
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekProjectedUsd?: number;
   onEditTip: () => void;
 }) {
   return (
     <CardTheme>
-      <QuickStatsInner
-        ratingValue={ratingValue}
-        ratingCount={ratingCount}
-        completionPct={completionPct}
-        todayEarningsUsd={todayEarningsUsd}
+      <EarningsGlanceInner
+        todayUsd={todayUsd}
+        weekToDateUsd={weekToDateUsd}
+        weekProjectedUsd={weekProjectedUsd}
         onEditTip={onEditTip}
       />
     </CardTheme>
   );
 }
 
-function QuickStatsInner({
-  ratingValue,
-  ratingCount,
-  completionPct,
-  todayEarningsUsd,
+function EarningsGlanceInner({
+  todayUsd,
+  weekToDateUsd,
+  weekProjectedUsd,
   onEditTip,
 }: {
-  ratingValue: number;
-  ratingCount: number;
-  completionPct: number;
-  todayEarningsUsd: number;
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekProjectedUsd?: number;
   onEditTip: () => void;
 }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
-
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: cardSurface,
-    border: `1px solid ${cardBorder}`,
-    boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-    borderRadius: 14,
-    padding: "10px 12px",
-    minHeight: 70,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontFamily: UI,
-    fontSize: 10,
-    letterSpacing: "1.2px",
-    textTransform: "uppercase",
-    color: text,
-    opacity: 0.5,
-    fontWeight: 600,
-  };
-
-  const valueStyle: React.CSSProperties = {
-    fontFamily: UI,
-    fontSize: 18,
-    fontWeight: 600,
-    color: text,
-    letterSpacing: "-0.02em",
-    lineHeight: 1,
-  };
+  const showPace =
+    typeof weekProjectedUsd === "number" && weekProjectedUsd > weekToDateUsd && weekToDateUsd > 0;
 
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2">
-      <div style={cardStyle}>
-        <div style={labelStyle}>Rating</div>
-        <div className="flex items-baseline gap-1">
-          <span style={valueStyle}>
-            {ratingValue > 0 ? ratingValue.toFixed(1) : "—"}
-          </span>
-          <span style={{ color: ORANGE, fontSize: 13, lineHeight: 1 }}>★</span>
-        </div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          {ratingCount > 0 ? `${ratingCount} reviews` : "No reviews yet"}
-        </div>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={labelStyle}>Completion</div>
-        <div style={valueStyle}>{completionPct}%</div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          Last 30 days
-        </div>
-      </div>
-
-      <div style={cardStyle}>
-        <div className="flex items-center justify-between">
-          <span style={labelStyle}>Today</span>
-          <button
-            type="button"
-            onClick={onEditTip}
-            aria-label="Log cash tip"
-            className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+    <div
+      className="mt-3 flex items-center gap-2 rounded-2xl"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+        padding: "12px 14px",
+      }}
+    >
+      <button
+        type="button"
+        aria-label="Open earnings"
+        className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left transition-opacity active:opacity-70"
+      >
+        <div className="flex items-baseline gap-2">
+          <span
             style={{
-              width: 18,
-              height: 18,
-              border: `1px solid ${cardBorder}`,
+              fontFamily: UI,
+              fontSize: 10,
+              letterSpacing: "1.4px",
+              textTransform: "uppercase",
               color: text,
-              opacity: 0.7,
+              opacity: 0.5,
+              fontWeight: 700,
             }}
           >
-            <PencilIcon />
-          </button>
+            Today
+          </span>
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 17,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {formatUsd(todayUsd)}
+          </span>
         </div>
-        <div style={valueStyle}>{formatUsd(todayEarningsUsd)}</div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          Earnings
+        <div
+          className="truncate"
+          style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}
+        >
+          This week: <span style={{ fontWeight: 600, opacity: 1 }}>{formatUsd(weekToDateUsd)}</span>
+          {showPace ? (
+            <>
+              {" "}
+              <span style={{ color: ORANGE, fontWeight: 600, opacity: 1 }}>
+                on pace for {formatUsd(weekProjectedUsd!)}
+              </span>
+            </>
+          ) : null}
         </div>
-      </div>
+      </button>
+      <button
+        type="button"
+        onClick={onEditTip}
+        aria-label="Log cash tip"
+        className="flex shrink-0 items-center justify-center rounded-full transition-opacity active:opacity-60"
+        style={{
+          width: 28,
+          height: 28,
+          border: `1px solid ${cardBorder}`,
+          color: text,
+          opacity: 0.75,
+        }}
+      >
+        <PencilIcon />
+      </button>
+      <ChevronIcon />
+    </div>
+  );
+}
+
+/* ---------------- Contextual action card ---------------- */
+
+/**
+ * Renders ONE useful nudge for the current moment, or nothing. Hidden on
+ * busy days (3+ bookings or any in-progress/heads-up state) to keep the
+ * dashboard quiet when the pro is heads-down.
+ */
+function ContextualAction({
+  liveStatus,
+  bookingsTodayCount,
+  pendingCount,
+  ratingCount,
+  bookingLink,
+}: {
+  liveStatus: LiveStatus;
+  bookingsTodayCount: number;
+  pendingCount: number;
+  ratingCount: number;
+  bookingLink?: string;
+}) {
+  // Quiet when the pro is heads-down with work
+  if (
+    liveStatus.kind === "in-progress" ||
+    liveStatus.kind === "heads-up" ||
+    liveStatus.kind === "en-route"
+  ) {
+    return null;
+  }
+  if (bookingsTodayCount >= 3) return null;
+
+  // Pick the single most relevant nudge for right now
+  let label = "";
+  let cta = "";
+  if (ratingCount === 0 && bookingsTodayCount === 0 && pendingCount === 0) {
+    label = "New here? Share your booking link to get your first request.";
+    cta = bookingLink ? `Share ${bookingLink}` : "Share booking link";
+  } else if (liveStatus.kind === "wrap-up") {
+    label = "Tomorrow's only 20% booked. Open a slot to fill it?";
+    cta = "Open more availability";
+  } else if (bookingsTodayCount === 0 && pendingCount === 0) {
+    label = "Today's open. Share your link or open a flash slot to fill it.";
+    cta = "Add a flash slot";
+  } else {
+    return null;
+  }
+
+  return (
+    <CardTheme>
+      <ContextualActionInner label={label} cta={cta} />
+    </CardTheme>
+  );
+}
+
+function ContextualActionInner({ label, cta }: { label: string; cta: string }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="mt-3 rounded-2xl px-4 py-3.5"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+      }}
+    >
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: text,
+          opacity: 0.85,
+          lineHeight: 1.45,
+          margin: 0,
+        }}
+      >
+        {label}
+      </p>
+      <button
+        type="button"
+        className="mt-2 flex items-center gap-1 text-left transition-opacity active:opacity-60"
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          fontWeight: 600,
+          color: ORANGE,
+        }}
+      >
+        {cta}
+        <ChevronIcon />
+      </button>
     </div>
   );
 }
