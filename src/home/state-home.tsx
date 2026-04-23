@@ -21,6 +21,16 @@ import type { DevDayContext, DevMode, DevOnlineStatus } from "@/dev-state/dev-st
 const UI = `Inter, ${HOME_SANS}`;
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
+const ORANGE_SOFT = "rgba(255,130,63,0.14)";
+
+/** Avatar tint palette for "more today" stack + hero avatar. */
+const AVATAR_HUES: Record<string, { bg: string; fg: string; border: string }> = {
+  peach:  { bg: "rgba(255,130,63,0.18)", fg: "#7A2E0E", border: "rgba(255,130,63,0.35)" },
+  blue:   { bg: "rgba(59,130,246,0.16)", fg: "#1E3A8A", border: "rgba(59,130,246,0.30)" },
+  green:  { bg: "rgba(34,197,94,0.18)",  fg: "#14532D", border: "rgba(34,197,94,0.30)" },
+  violet: { bg: "rgba(139,92,246,0.16)", fg: "#3B1F70", border: "rgba(139,92,246,0.30)" },
+  amber:  { bg: "rgba(234,179,8,0.18)",  fg: "#5B3A06", border: "rgba(234,179,8,0.30)" },
+};
 
 export interface StateHomeProps {
   /** Dev-state controls. "auto" is treated as the default for the chosen mode. */
