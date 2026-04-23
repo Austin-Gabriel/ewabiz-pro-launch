@@ -1004,7 +1004,7 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
       aria-label="Incoming booking request"
     >
       {/* Countdown bar */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: "rgba(240,235,216,0.08)" }}>
+      <div className="h-1.5 w-full" style={{ backgroundColor: borderCol }}>
         <div
           className="h-full"
           style={{
