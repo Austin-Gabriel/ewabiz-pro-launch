@@ -167,12 +167,17 @@ function Header({ unreadCount }: { unreadCount: number }) {
 /* ---------------- Status bar ---------------- */
 
 function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void }) {
-  const { text, borderCol } = useHomeTheme();
+  const { text, borderCol, surface, isDark } = useHomeTheme();
+  // Off-state track must be visible against BOTH cream (light) and navy (dark)
+  // page backgrounds. Use a tint of the inverse-of-surface color so the track
+  // always reads as a filled pill, never blends into the page.
+  const offTrackBg = isDark ? "rgba(240,235,216,0.22)" : "rgba(6,28,39,0.28)";
+  const thumbColor = isDark ? "#061C27" : "#F0EBD8";
   return (
     <div
       className="mt-2 flex items-center justify-between rounded-2xl px-3 py-2.5"
       style={{
-        backgroundColor: "rgba(240,235,216,0.04)",
+        backgroundColor: surface,
         border: `1px solid ${borderCol}`,
       }}
     >
@@ -188,7 +193,7 @@ function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void
             width: 34,
             height: 20,
             padding: 2,
-            backgroundColor: online ? ORANGE : "rgba(240,235,216,0.18)",
+            backgroundColor: online ? ORANGE : offTrackBg,
             transition: "background-color 200ms ease",
           }}
         >
@@ -197,9 +202,13 @@ function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void
             style={{
               width: 16,
               height: 16,
-              backgroundColor: "#061C27",
+              // When ON: navy thumb on orange — high contrast in both modes.
+              // When OFF: thumb is the page-bg color so it reads as the
+              // "knob" cut out of the filled track on either background.
+              backgroundColor: online ? "#061C27" : thumbColor,
               transform: online ? "translateX(14px)" : "translateX(0)",
-              transition: "transform 200ms ease",
+              transition: "transform 200ms ease, background-color 200ms ease",
+              boxShadow: "0 1px 2px rgba(6,28,39,0.25)",
             }}
           />
         </span>
