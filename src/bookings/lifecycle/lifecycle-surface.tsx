@@ -1067,24 +1067,27 @@ function NoShow({
  * ================================================================= */
 
 function LifecycleColumn({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-1 flex-col px-5 pt-7 pb-6">{children}</div>;
+  return <div className="flex flex-1 flex-col px-5 pt-5 pb-5">{children}</div>;
 }
 
 function Header({ title }: { title: string }) {
   const { text } = useHomeTheme();
   return (
-    <h1
-      style={{
-        fontFamily: UI,
-        fontSize: 22,
-        fontWeight: 700,
-        color: text,
-        letterSpacing: "-0.02em",
-        margin: 0,
-      }}
-    >
-      {title}
-    </h1>
+    <div className="flex items-center justify-between">
+      <h1
+        style={{
+          fontFamily: UI,
+          fontSize: 17,
+          fontWeight: 600,
+          color: text,
+          letterSpacing: "-0.01em",
+          margin: 0,
+        }}
+      >
+        {title}
+      </h1>
+      <EwaMark size={22} />
+    </div>
   );
 }
 
