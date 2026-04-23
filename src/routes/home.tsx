@@ -127,7 +127,14 @@ function HomePage() {
   const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
 
   // Apply data-density override by remapping which mock dataset feeds StateLive.
-  const liveData = pickLiveData(resolved.kind, dev.dataDensity, livePreview);
+  const liveData = pickLiveData(
+    resolved.kind,
+    dev.dataDensity,
+    livePreview,
+    dev.mode,
+    dev.dayContext,
+    dev.onlineStatus,
+  );
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
