@@ -83,19 +83,16 @@ const DevStateContext = createContext<Ctx | null>(null);
 
 function readEnabled(): boolean {
   if (typeof window === "undefined") return false;
-  try {
-    if (import.meta.env.DEV) return true;
-  } catch {
-    /* ignore */
-  }
+  // Pre-launch: always on. Opt-out with ?dev=0 or localStorage "ewa.devTools"="0".
+  // Before shipping to real users, re-gate this to import.meta.env.DEV only.
   try {
     const url = new URL(window.location.href);
-    if (url.searchParams.get("dev") === "1") return true;
-    if (window.localStorage.getItem("ewa.devTools") === "1") return true;
+    if (url.searchParams.get("dev") === "0") return false;
+    if (window.localStorage.getItem("ewa.devTools") === "0") return false;
   } catch {
     /* ignore */
   }
-  return false;
+  return true;
 }
 
 function readPersisted(): DevState {
