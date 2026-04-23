@@ -993,18 +993,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AddressRow({ address }: { address: string }) {
-  const { text } = useHomeTheme();
-  return (
-    <div className="mt-2 flex items-start gap-1.5" style={{ color: text, opacity: 0.7 }}>
-      <span style={{ marginTop: 1 }}>
-        <PinIcon size={12} />
-      </span>
-      <span style={{ fontFamily: UI, fontSize: 12, lineHeight: 1.35 }}>{address}</span>
-    </div>
-  );
-}
-
 function Avatar({
   initial,
   hue = "peach",
