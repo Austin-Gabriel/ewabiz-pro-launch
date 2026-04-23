@@ -282,7 +282,24 @@ function pickLiveData(
   kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
   density: DevDataDensity,
   livePreview?: LivePreview,
+  mode: DevMode = "auto",
+  dayContext: DevDayContext = "auto",
+  onlineStatus: DevOnlineStatus = "auto",
 ) {
+  // Mode + Day Context + Online Status take priority over density when set.
+  if (mode === "online") {
+    if (onlineStatus === "idle" || onlineStatus === "auto") return ONLINE_IDLE;
+    // "incoming" + "active" lifecycle datasets are placeholders for now.
+    if (onlineStatus === "incoming") return ONLINE_IDLE;
+    if (onlineStatus === "active") return ONLINE_IDLE;
+  }
+  if (mode === "offline") {
+    if (dayContext === "none") return DAY_NONE;
+    if (dayContext === "one") return DAY_ONE;
+    if (dayContext === "multiple") return DAY_MULTIPLE;
+    if (dayContext === "full") return DAY_FULL;
+  }
+
   // When previewing a specific time-of-day live state, pin to its dataset.
   if (livePreview === "morning") return LIVE_DAY_MORNING;
   if (livePreview === "heads-up") return LIVE_DAY_HEADS_UP;
