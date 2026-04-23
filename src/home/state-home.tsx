@@ -47,6 +47,8 @@ export interface StateHomeProps {
   todayEarningsUsd: number;
   weekToDateUsd: number;
   weekProjectedUsd?: number;
+  /** Optional weekly target. Drives the goal progress bar. */
+  weekGoalUsd?: number;
 
   /** Unread notification count (drives bell badge). */
   unreadCount?: number;
@@ -90,6 +92,7 @@ export function StateHome(props: StateHomeProps) {
             todayEarningsUsd={props.todayEarningsUsd}
             weekToDateUsd={props.weekToDateUsd}
             weekProjectedUsd={props.weekProjectedUsd}
+            weekGoalUsd={props.weekGoalUsd}
             onGoOnline={() => setOnline(true)}
           />
         )}
