@@ -32,7 +32,13 @@ export interface BookingRequest {
   distance?: string;
 }
 
-export type LiveStateKind = "in-progress" | "en-route" | "idle";
+export type LiveStateKind =
+  | "morning"      // start of day, first booking is hours away
+  | "heads-up"     // next booking starts in <= 15 min — "head out in N min"
+  | "en-route"     // pro is driving to the client
+  | "in-progress"  // currently with a client
+  | "wrap-up"      // last booking just ended — end-of-day summary
+  | "idle";        // nothing scheduled, no active job
 
 export interface LiveStatus {
   kind: LiveStateKind;
@@ -40,6 +46,11 @@ export interface LiveStatus {
   elapsedMin?: number;
   /** When en-route, ETA string. */
   etaMin?: number;
+  /** When heads-up, minutes until pro should leave. */
+  leaveInMin?: number;
+  /** When wrap-up, count + total of bookings completed today. */
+  completedCount?: number;
+  completedTotalUsd?: number;
 }
 
 export interface IncomingRequest extends BookingRequest {
