@@ -1005,19 +1005,34 @@ function AddressRow({ address }: { address: string }) {
   );
 }
 
-function Avatar({ initial }: { initial: string }) {
+function Avatar({
+  initial,
+  hue = "peach",
+  size = 40,
+  stackOffset = 0,
+}: {
+  initial: string;
+  hue?: "blue" | "green" | "peach" | "violet" | "amber";
+  size?: number;
+  /** Negative left margin for stacking inside <AvatarStack>. */
+  stackOffset?: number;
+}) {
+  const palette = AVATAR_HUES[hue] ?? AVATAR_HUES.peach;
+  const fontSize = Math.max(11, Math.round(size * 0.36));
   return (
     <div
       className="flex shrink-0 items-center justify-center rounded-full"
       style={{
-        width: 40,
-        height: 40,
-        backgroundColor: "rgba(255,130,63,0.14)",
-        border: "1px solid rgba(255,130,63,0.40)",
-        color: "#061C27",
+        width: size,
+        height: size,
+        marginLeft: stackOffset,
+        backgroundColor: palette.bg,
+        border: `1.5px solid ${stackOffset ? "#FFFFFF" : palette.border}`,
+        color: palette.fg,
         fontFamily: UI,
-        fontSize: 16,
+        fontSize,
         fontWeight: 700,
+        letterSpacing: "-0.01em",
       }}
     >
       {initial}
@@ -1055,6 +1070,43 @@ function ChevronIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
       <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+function NavArrowIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
+      <path d="M3.5 11.2 20 4l-7.2 16.5-2-7.3-7.3-2z" />
+    </svg>
+  );
+}
+function ChatIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5A8 8 0 1 1 21 12z" />
+    </svg>
+  );
+}
+function PhoneIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 4h3l2 5-2 1a12 12 0 0 0 6 6l1-2 5 2v3a2 2 0 0 1-2 2A18 18 0 0 1 3 6a2 2 0 0 1 2-2z" />
+    </svg>
+  );
+}
+function EditIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  );
+}
+function TrendUpIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 17 10 10l4 4 7-8" />
+      <path d="M14 5h7v7" />
     </svg>
   );
 }
