@@ -3,7 +3,9 @@
 ## Core
 Cards: pure WHITE bg + navy (#061C27) text in BOTH light and dark mode. Apply on every screen, current and future. Page bg stays navy/cream.
 Code lives in domain folders under src/ (auth, onboarding, home, dev-state, bookings, etc.). Routes stay flat in src/routes/. Cross-domain shared UI in src/components/, mock data in src/data/.
+Every component must remain visible & legible in BOTH dark and light mode — no hardcoded mode-specific colors, toggles always show their state, text always has contrast against current surface.
 
 ## Memories
 - [Card surfaces](mem://design/card-surfaces) — White cards w/ navy text in both themes; use `<CardTheme>` from home-shell or shadcn Card; chrome stays translucent
 - [Folder structure](mem://architecture/folder-structure) — Domain folders under src/; routes stay flat; placeholder domains have README only
+- [Visibility & contrast](mem://design/visibility-contrast) — Use theme tokens not hardcoded cream rgba; read theme INSIDE CardTheme; toggle off-state must be visible on both bgs
