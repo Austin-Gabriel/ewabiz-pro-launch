@@ -32,6 +32,7 @@ import {
 } from "@/dev-state/dev-state-context";
 import { RequireAuth } from "@/auth/require-auth";
 import { ProfileSheet } from "@/home/profile-sheet";
+import { LifecycleSurface } from "@/bookings/lifecycle/lifecycle-surface";
 
 /**
  * Home is state-aware. The same URL renders one of five surfaces:
@@ -107,6 +108,10 @@ function HomePage() {
   });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
+  // When the dev panel forces a lifecycle state, replace Home entirely with
+  // the lifecycle takeover and hide the bottom tab bar — the pro is focused
+  // on this one booking.
+  const lifecycleActive = dev.lifecycle !== "none";
 
   // Apply data-density override by remapping which mock dataset feeds Home.
   const liveData = pickLiveData(
