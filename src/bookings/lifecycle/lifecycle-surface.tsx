@@ -775,7 +775,7 @@ function Complete({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 64,
+            fontSize: 48,
             fontWeight: 700,
             color: SUCCESS,
             letterSpacing: "-0.03em",
@@ -785,7 +785,7 @@ function Complete({
         >
           ${booking.payoutUsd}
         </span>
-        <p style={{ ...subline(text), marginTop: 8, fontSize: 13 }}>Paid out Friday</p>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>Paid out Friday</p>
         {booking.tipUsd > 0 ? (
           <p
             style={{
