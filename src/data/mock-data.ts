@@ -266,3 +266,78 @@ export const LIVE_DAY_WRAP_UP = {
     completedTotalUsd: 515,
   } as LiveStatus,
 };
+
+/* --------- Day-context variants (drives the Home dashboard density) --------- */
+
+/**
+ * Offline + 0 bookings today. Used when dev "Day context" = none.
+ * Mirrors LIVE_QUIET_DAY shape but with no pending requests so the empty
+ * state reads cleanly.
+ */
+export const DAY_NONE = {
+  ...LIVE_QUIET_DAY,
+  pendingRequests: [] as BookingRequest[],
+  liveStatus: { kind: "idle" } as LiveStatus,
+};
+
+/** Offline + 1 booking today. */
+export const DAY_ONE = {
+  ...LIVE_ACTIVE_DAY,
+  bookingsToday: [LIVE_ACTIVE_DAY.bookingsToday[0]] as Booking[],
+  pendingRequests: [] as BookingRequest[],
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 140,
+  liveStatus: { kind: "morning" } as LiveStatus,
+};
+
+/** Offline + 3-4 bookings today (the existing active-day dataset has 3). */
+export const DAY_MULTIPLE = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "morning" } as LiveStatus,
+};
+
+/** Offline + 5+ bookings today. Stacked back-to-back. */
+export const DAY_FULL = {
+  ...LIVE_ACTIVE_DAY,
+  bookingsToday: [
+    ...LIVE_ACTIVE_DAY.bookingsToday,
+    {
+      id: "b4",
+      clientName: "Imani O.",
+      clientInitial: "I",
+      service: "Wash & blow-dry",
+      startsAt: "7:00",
+      durationMin: 60,
+      priceUsd: 75,
+      location: "Crown Heights, Brooklyn",
+      address: "1100 Bedford Ave, Brooklyn, NY",
+    },
+    {
+      id: "b5",
+      clientName: "Zara P.",
+      clientInitial: "Z",
+      service: "Cornrows · 8",
+      startsAt: "8:30",
+      durationMin: 75,
+      priceUsd: 110,
+      isNewClient: true,
+      location: "Bed-Stuy, Brooklyn",
+      address: "320 Tompkins Ave, Brooklyn, NY",
+    },
+  ] as Booking[],
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 725,
+  liveStatus: { kind: "morning" } as LiveStatus,
+};
+
+/* --------- Online (dispatch) variants --------- */
+
+/** Online + idle — waiting for dispatch. */
+export const ONLINE_IDLE = {
+  ...LIVE_QUIET_DAY,
+  bookingsToday: [] as Booking[],
+  pendingRequests: [] as BookingRequest[],
+  liveStatus: { kind: "idle" } as LiveStatus,
+};
