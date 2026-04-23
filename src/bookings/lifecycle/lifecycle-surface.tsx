@@ -243,11 +243,11 @@ function IncomingRequest({
 
   return (
     <div className="flex flex-1 flex-col px-5 pt-5 pb-5">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center gap-2.5">
+        <EwaMark size={22} />
         <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: text, opacity: 0.55, letterSpacing: "0.08em", textTransform: "uppercase" }}>
           New request
         </span>
-        <EwaMark size={22} />
       </div>
       <div className="flex flex-col items-center">
         <CountdownRing secondsLeft={secondsLeft} total={TOTAL} />
@@ -283,7 +283,7 @@ function IncomingRequest({
         </span>
 
         <CardTheme>
-          <AddressBox address={booking.address} />
+          <AddressBox address={booking.neighborhood} />
         </CardTheme>
       </div>
 

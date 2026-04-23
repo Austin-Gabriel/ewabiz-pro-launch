@@ -435,8 +435,9 @@ function UpNextInner({ booking }: { booking: Booking }) {
         </div>
       </div>
 
-      {/* Inset address row */}
-      {booking.shortAddress || booking.address ? (
+      {/* Inset location row — neighborhood only until the pro enters Get Ready.
+          Full street address is revealed inside the lifecycle takeover. */}
+      {booking.location ? (
         <div
           className="mt-4 flex items-center gap-2 rounded-xl px-3 py-2.5"
           style={{ backgroundColor: "rgba(6,28,39,0.045)" }}
@@ -448,7 +449,7 @@ function UpNextInner({ booking }: { booking: Booking }) {
             className="min-w-0 flex-1 truncate"
             style={{ fontFamily: UI, fontSize: 13.5, color: text, fontWeight: 500 }}
           >
-            {booking.shortAddress ?? booking.address}
+            {booking.location}
           </span>
           {booking.distance ? (
             <span
