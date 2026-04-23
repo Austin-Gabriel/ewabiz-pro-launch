@@ -326,11 +326,11 @@ function GetReady({
       <Header title="Get ready" />
       <ClientCard booking={booking} />
 
-      <div className="mt-8 flex flex-col items-center">
+      <div className="mt-7 flex flex-col items-center">
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -340,10 +340,10 @@ function GetReady({
         >
           {mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Leave by {booking.leaveByAt}
         </p>
-        <p style={{ ...subline(text), marginTop: 4, fontSize: 12, opacity: 0.55 }}>
+        <p style={{ ...subline(text), marginTop: 3, fontSize: 11, opacity: 0.55 }}>
           You set {booking.prepMin} min prep · client expects you by {booking.arrivalAt}
         </p>
       </div>
