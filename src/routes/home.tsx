@@ -210,3 +210,48 @@ function firstNameOf(...candidates: (string | undefined)[]): string {
   }
   return "friend";
 }
+
+/**
+ * Translate the dev "Pro state" radio into the existing PreviewState
+ * vocabulary that resolveState() already understands.
+ */
+function mapDevProState(p: DevProState): PreviewState | undefined {
+  switch (p) {
+    case "auto":
+      return undefined;
+    case "new":
+      // "No signup yet" surfaces the mid-onboarding gate at step 1.
+      return "mid-onboarding";
+    case "mid-onboarding":
+      return "mid-onboarding";
+    case "mid-pending":
+      return "pending";
+    case "live-first":
+      return "live-first";
+    case "live-quiet":
+      return "live-quiet";
+    case "live-active":
+      return "live-active";
+  }
+}
+
+/**
+ * Pick which mock dataset feeds StateLive based on the dev data-density
+ * override. "auto" keeps whichever dataset matches the resolved pro state.
+ */
+function pickLiveData(
+  kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
+  density: DevDataDensity,
+) {
+  const base =
+    kind === "live-active"
+      ? LIVE_ACTIVE_DAY
+      : kind === "live-quiet"
+        ? LIVE_QUIET_DAY
+        : LIVE_FIRST_TIME;
+
+  if (density === "auto") return base;
+  if (density === "empty") return LIVE_FIRST_TIME;
+  if (density === "sparse") return LIVE_QUIET_DAY;
+  return LIVE_ACTIVE_DAY; // rich
+}
