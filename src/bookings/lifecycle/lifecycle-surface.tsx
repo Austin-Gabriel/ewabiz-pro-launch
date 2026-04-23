@@ -5,6 +5,7 @@ import {
   type DevLifecycle,
 } from "@/dev-state/dev-state-context";
 import { LIFECYCLE_BOOKING, type LifecycleBooking } from "./lifecycle-data";
+import { EwaMark } from "@/components/ewa-logo";
 
 /**
  * Booking lifecycle takeover. Replaces Home (and hides the bottom tab bar)
