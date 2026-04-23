@@ -71,10 +71,13 @@ export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps)
 
   const text = isDark ? "#F0EBD8" : "#061C27";
   const bg = isDark ? "#061C27" : "#F0EBD8";
-  const surface = isDark ? "rgba(240,235,216,0.04)" : "rgba(6,28,39,0.035)";
-  const surfaceElevated = isDark ? "rgba(240,235,216,0.06)" : "rgba(255,255,255,0.55)";
-  const borderCol = isDark ? "rgba(240,235,216,0.10)" : "rgba(6,28,39,0.10)";
-  const borderSoft = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.06)";
+  // Card surfaces: pure white in dark mode (with navy text) for crisp,
+  // physical-feeling objects on the page; cream/translucent in light mode.
+  // See mem://design/card-surfaces.
+  const surface = isDark ? "#FFFFFF" : "rgba(6,28,39,0.035)";
+  const surfaceElevated = isDark ? "#FFFFFF" : "rgba(255,255,255,0.55)";
+  const borderCol = isDark ? "rgba(6,28,39,0.10)" : "rgba(6,28,39,0.10)";
+  const borderSoft = isDark ? "rgba(6,28,39,0.06)" : "rgba(6,28,39,0.06)";
   const squiggleOpacity = isDark ? 0.045 : 0.06;
   const grainOpacity = isDark ? 0.14 : 0.18;
 
