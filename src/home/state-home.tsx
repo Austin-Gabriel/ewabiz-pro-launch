@@ -849,7 +849,7 @@ function OnlineIdle({ todayEarningsUsd }: { todayEarningsUsd: number }) {
           letterSpacing: "0.01em",
         }}
       >
-        Average wait in your area: 8–12 min
+        Most requests come in under 10 min
       </p>
 
       <style>{`
