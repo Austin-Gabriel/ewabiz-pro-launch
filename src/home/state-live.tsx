@@ -251,11 +251,13 @@ function LiveStateCard({
   liveStatus,
   nextBooking,
   nextOpenSlot,
+  totalToday,
 }: {
   online: boolean;
   liveStatus: LiveStatus;
   nextBooking?: Booking;
   nextOpenSlot?: string;
+  totalToday: number;
 }) {
   // 1) IN-PROGRESS — orange-accented hero with timer + Go to Appointment
   if (liveStatus.kind === "in-progress" && nextBooking) {
@@ -299,16 +301,51 @@ function LiveStateCard({
     );
   }
 
-  // 3) UP NEXT — there's something on the books
-  if (nextBooking) {
+  // 3) HEADS-UP — appointment is imminent, time to leave
+  if (liveStatus.kind === "heads-up" && nextBooking) {
     return (
-      <Card>
-        <UpNextBody nextBooking={nextBooking} />
+      <Card emphasis="primary">
+        <Eyebrow color={ORANGE}>
+          <PulseDot /> Head out in {liveStatus.leaveInMin ?? 5} min
+        </Eyebrow>
+        <Headline>{nextBooking.clientName}</Headline>
+        <SubLine>
+          {nextBooking.service} · starts {nextBooking.startsAt}
+        </SubLine>
+        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+        <PrimaryAction label="Open Navigation" icon="map" />
+        <SecondaryStrip
+          actions={[
+            { label: "Message client", icon: "msg" },
+            { label: "Running late", icon: "check" },
+          ]}
+        />
       </Card>
     );
   }
 
-  // 4) Quiet empty state — no fake content
+  // 4) WRAP-UP — last booking just completed, end-of-day summary
+  if (liveStatus.kind === "wrap-up") {
+    return (
+      <Card>
+        <WrapUpBody
+          completedCount={liveStatus.completedCount ?? 0}
+          completedTotalUsd={liveStatus.completedTotalUsd ?? 0}
+        />
+      </Card>
+    );
+  }
+
+  // 5) UP NEXT — there's something on the books (morning/idle with bookings)
+  if (nextBooking) {
+    return (
+      <Card>
+        <UpNextBody nextBooking={nextBooking} totalToday={totalToday} />
+      </Card>
+    );
+  }
+
+  // 6) Quiet empty state — no fake content
   return (
     <Card>
       <EmptyTodayBody online={online} nextOpenSlot={nextOpenSlot} />
@@ -322,12 +359,20 @@ function LiveStateCard({
  * Without this indirection, the parent's useHomeTheme() captures the page
  * palette (cream text in dark mode) and the copy disappears against white.
  */
-function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
+function UpNextBody({ nextBooking, totalToday }: { nextBooking: Booking; totalToday: number }) {
   const { text } = useHomeTheme();
+  const moreCount = Math.max(0, totalToday - 1);
   return (
     <>
       <div className="flex items-center justify-between">
-        <Eyebrow>Up Next</Eyebrow>
+        <Eyebrow>
+          Up Next
+          {totalToday > 0 ? (
+            <span style={{ marginLeft: 8, opacity: 0.65, letterSpacing: "1.2px" }}>
+              · {totalToday} {totalToday === 1 ? "booking" : "bookings"} today
+            </span>
+          ) : null}
+        </Eyebrow>
         <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
           {nextBooking.startsAt} · {nextBooking.durationMin} min
         </span>
@@ -349,9 +394,41 @@ function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
       <SecondaryStrip
         actions={[
           { label: "Message", icon: "msg" },
-          { label: "Mark done", icon: "check" },
+          { label: moreCount > 0 ? `+${moreCount} more today` : "Mark done", icon: "check" },
         ]}
       />
+    </>
+  );
+}
+
+function WrapUpBody({
+  completedCount,
+  completedTotalUsd,
+}: {
+  completedCount: number;
+  completedTotalUsd: number;
+}) {
+  const { text } = useHomeTheme();
+  return (
+    <>
+      <Eyebrow color={ORANGE}>You're done</Eyebrow>
+      <Headline>
+        {completedCount} {completedCount === 1 ? "booking" : "bookings"} ·{" "}
+        {formatUsd(completedTotalUsd)}
+      </Headline>
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: text,
+          opacity: 0.7,
+          marginTop: 6,
+          lineHeight: 1.5,
+        }}
+      >
+        Nice day's work. Tomorrow's schedule is ready when you are.
+      </p>
+      <PrimaryAction label="See tomorrow" subtle />
     </>
   );
 }
