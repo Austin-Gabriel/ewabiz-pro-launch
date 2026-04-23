@@ -188,21 +188,27 @@ function IncomingRequest({
   }, [secondsLeft, onDecline]);
 
   return (
-    <div className="flex flex-1 flex-col px-5 pt-8 pb-6">
+    <div className="flex flex-1 flex-col px-5 pt-5 pb-5">
+      <div className="mb-2 flex items-center justify-between">
+        <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: text, opacity: 0.55, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          New request
+        </span>
+        <EwaMark size={22} />
+      </div>
       <div className="flex flex-col items-center">
         <CountdownRing secondsLeft={secondsLeft} total={TOTAL} />
         <Avatar initial={booking.clientInitial} size={68} />
-        <h1 style={{ ...heading(text), marginTop: 16, fontSize: 24 }}>
+        <h1 style={{ ...heading(text), marginTop: 14, fontSize: 20 }}>
           {booking.clientName}
         </h1>
-        <p style={{ ...subline(text), marginTop: 6, fontSize: 14 }}>
+        <p style={{ ...subline(text), marginTop: 4, fontSize: 12.5 }}>
           {booking.service} · {booking.durationMin} min
         </p>
         <p
           style={{
             ...subline(text),
-            marginTop: 4,
-            fontSize: 13,
+            marginTop: 3,
+            fontSize: 12,
             fontVariantNumeric: "tabular-nums",
           }}
         >
@@ -211,11 +217,11 @@ function IncomingRequest({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 36,
+            fontSize: 30,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.02em",
-            marginTop: 14,
+            marginTop: 12,
             fontVariantNumeric: "tabular-nums",
           }}
         >
