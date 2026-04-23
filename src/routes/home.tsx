@@ -4,7 +4,7 @@ import { HomeShell } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { StateMidOnboarding } from "@/home/state-mid-onboarding";
 import { StatePending } from "@/home/state-pending";
-import { StateLive } from "@/home/state-live";
+import { StateHome } from "@/home/state-home";
 import {
   LIVE_FIRST_TIME,
   LIVE_QUIET_DAY,
@@ -20,7 +20,6 @@ import {
   DAY_FULL,
   ONLINE_IDLE,
 } from "@/data/mock-data";
-import type { LiveStatus } from "@/data/mock-data";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/onboarding/onboarding-context";
