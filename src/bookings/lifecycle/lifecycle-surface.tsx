@@ -20,6 +20,26 @@ import { EwaMark } from "@/components/ewa-logo";
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
+const DESTRUCTIVE = "#B4493A";
+
+/**
+ * Lifecycle states where the client's full street address is exposed to the
+ * pro. Pre-commitment states (incoming, get-ready, complete) only show
+ * neighborhood-level location for client privacy.
+ */
+const ADDRESS_REVEALED: ReadonlySet<LifecycleKind> = new Set([
+  "en-route",
+  "arrived",
+  "in-progress",
+]);
+
+/** Lifecycle states that show the Safety tools shield in the header. */
+const SAFETY_VISIBLE: ReadonlySet<LifecycleKind> = new Set([
+  "get-ready",
+  "en-route",
+  "arrived",
+  "in-progress",
+]);
 
 /** Inner kind that we *render*. Includes branches not present in DevLifecycle. */
 type LifecycleKind =
