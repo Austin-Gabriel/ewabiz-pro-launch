@@ -70,6 +70,7 @@ export const LIVE_FIRST_TIME = {
   greetingName: "Amara",
   weekToDateUsd: 0,
   monthToDateUsd: 0,
+  weekProjectedUsd: 0,
   bookingsToday: [] as Booking[],
   pendingRequests: [] as BookingRequest[],
   bookingLink: "ewa.app/amara",
@@ -85,6 +86,7 @@ export const LIVE_QUIET_DAY = {
   greetingName: "Amara",
   weekToDateUsd: 480,
   monthToDateUsd: 2140,
+  weekProjectedUsd: 720,
   bookingsToday: [] as Booking[],
   pendingRequests: [
     {
@@ -112,6 +114,7 @@ export const LIVE_ACTIVE_DAY = {
   greetingName: "Amara",
   weekToDateUsd: 1240,
   monthToDateUsd: 4680,
+  weekProjectedUsd: 1800,
   bookingsToday: [
     {
       id: "b1",
@@ -177,7 +180,7 @@ export const LIVE_ACTIVE_DAY = {
   todayEarningsUsd: 420,
   todayProjectedUsd: 540,
   /** Default to a "Up Next" framing — home.tsx can override via ?live=in-progress|en-route. */
-  liveStatus: { kind: "idle" } as LiveStatus,
+  liveStatus: { kind: "morning" } as LiveStatus,
 };
 
 /* --------- Incoming request modal example --------- */
