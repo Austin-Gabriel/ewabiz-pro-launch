@@ -20,6 +20,7 @@ import type { DevDayContext, DevMode, DevOnlineStatus } from "@/dev-state/dev-st
 
 const UI = `Inter, ${HOME_SANS}`;
 const ORANGE = "#FF823F";
+const SUCCESS = "#16A34A";
 
 export interface StateHomeProps {
   /** Dev-state controls. "auto" is treated as the default for the chosen mode. */
@@ -249,7 +250,7 @@ function OfflineBody({
           type="button"
           onClick={onGoOnline}
           className="mt-4 self-start text-left transition-opacity active:opacity-60"
-          style={{ fontFamily: UI, fontSize: 13, color: ORANGE, fontWeight: 500 }}
+          style={{ fontFamily: UI, fontSize: 13, color: "inherit", fontWeight: 600, opacity: 0.85 }}
         >
           Go online to take immediate requests →
         </button>
@@ -356,7 +357,7 @@ function SingleBookingBody({ booking }: { booking: Booking }) {
       <button
         type="button"
         className="mt-3 self-start text-left transition-opacity active:opacity-60"
-        style={{ fontFamily: UI, fontSize: 13, color: ORANGE, fontWeight: 600 }}
+        style={{ fontFamily: UI, fontSize: 13, color: "inherit", fontWeight: 600 }}
       >
         Details →
       </button>
@@ -560,7 +561,7 @@ function EarningsGlanceInner({
           {showPace ? (
             <>
               {" "}
-              <span style={{ color: ORANGE, fontWeight: 600 }}>
+              <span style={{ color: SUCCESS, fontWeight: 600 }}>
                 on pace for {formatUsd(weekProjectedUsd!)}
               </span>
             </>
@@ -723,7 +724,8 @@ function OnlinePlaceholder({ label }: { label: string }) {
           fontSize: 10,
           letterSpacing: "1.6px",
           textTransform: "uppercase",
-          color: ORANGE,
+          color: text,
+          opacity: 0.5,
           fontWeight: 700,
         }}
       >
