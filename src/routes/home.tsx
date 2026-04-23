@@ -9,6 +9,10 @@ import {
   LIVE_FIRST_TIME,
   LIVE_QUIET_DAY,
   LIVE_ACTIVE_DAY,
+  LIVE_DAY_MORNING,
+  LIVE_DAY_HEADS_UP,
+  LIVE_DAY_IN_PROGRESS,
+  LIVE_DAY_WRAP_UP,
   INCOMING_REQUEST_EXAMPLE,
 } from "@/data/mock-data";
 import type { LiveStatus } from "@/data/mock-data";
@@ -32,7 +36,14 @@ import { ProfileSheet } from "@/home/profile-sheet";
  */
 
 type PreviewState = "auto" | "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active";
-type LivePreview = "default" | "in-progress" | "en-route" | "incoming";
+type LivePreview =
+  | "default"
+  | "morning"
+  | "heads-up"
+  | "in-progress"
+  | "en-route"
+  | "wrap-up"
+  | "incoming";
 
 export const Route = createFileRoute("/home")({
   head: () => ({ meta: [{ title: "Home — Ewà Biz" }] }),
@@ -50,6 +61,9 @@ export const Route = createFileRoute("/home")({
       out.state = s;
     }
     if (live === "in-progress" || live === "en-route" || live === "incoming") {
+      out.live = live;
+    }
+    if (live === "morning" || live === "heads-up" || live === "wrap-up") {
       out.live = live;
     }
     return out;
@@ -91,11 +105,17 @@ function HomePage() {
       ? { kind: "in-progress", elapsedMin: 24 }
       : livePreview === "en-route"
         ? { kind: "en-route", etaMin: 12 }
-        : undefined;
+        : livePreview === "heads-up"
+          ? { kind: "heads-up", leaveInMin: 5 }
+          : livePreview === "morning"
+            ? { kind: "morning" }
+            : livePreview === "wrap-up"
+              ? { kind: "wrap-up", completedCount: 3, completedTotalUsd: 515 }
+              : undefined;
   const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
 
   // Apply data-density override by remapping which mock dataset feeds StateLive.
-  const liveData = pickLiveData(resolved.kind, dev.dataDensity);
+  const liveData = pickLiveData(resolved.kind, dev.dataDensity, livePreview);
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -242,7 +262,14 @@ function mapDevProState(p: DevProState): PreviewState | undefined {
 function pickLiveData(
   kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
   density: DevDataDensity,
+  livePreview?: LivePreview,
 ) {
+  // When previewing a specific time-of-day live state, pin to its dataset.
+  if (livePreview === "morning") return LIVE_DAY_MORNING;
+  if (livePreview === "heads-up") return LIVE_DAY_HEADS_UP;
+  if (livePreview === "in-progress") return LIVE_DAY_IN_PROGRESS;
+  if (livePreview === "wrap-up") return LIVE_DAY_WRAP_UP;
+
   const base =
     kind === "live-active"
       ? LIVE_ACTIVE_DAY

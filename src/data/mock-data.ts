@@ -32,7 +32,13 @@ export interface BookingRequest {
   distance?: string;
 }
 
-export type LiveStateKind = "in-progress" | "en-route" | "idle";
+export type LiveStateKind =
+  | "morning"      // start of day, first booking is hours away
+  | "heads-up"     // next booking starts in <= 15 min — "head out in N min"
+  | "en-route"     // pro is driving to the client
+  | "in-progress"  // currently with a client
+  | "wrap-up"      // last booking just ended — end-of-day summary
+  | "idle";        // nothing scheduled, no active job
 
 export interface LiveStatus {
   kind: LiveStateKind;
@@ -40,6 +46,11 @@ export interface LiveStatus {
   elapsedMin?: number;
   /** When en-route, ETA string. */
   etaMin?: number;
+  /** When heads-up, minutes until pro should leave. */
+  leaveInMin?: number;
+  /** When wrap-up, count + total of bookings completed today. */
+  completedCount?: number;
+  completedTotalUsd?: number;
 }
 
 export interface IncomingRequest extends BookingRequest {
@@ -59,6 +70,7 @@ export const LIVE_FIRST_TIME = {
   greetingName: "Amara",
   weekToDateUsd: 0,
   monthToDateUsd: 0,
+  weekProjectedUsd: 0,
   bookingsToday: [] as Booking[],
   pendingRequests: [] as BookingRequest[],
   bookingLink: "ewa.app/amara",
@@ -74,6 +86,7 @@ export const LIVE_QUIET_DAY = {
   greetingName: "Amara",
   weekToDateUsd: 480,
   monthToDateUsd: 2140,
+  weekProjectedUsd: 720,
   bookingsToday: [] as Booking[],
   pendingRequests: [
     {
@@ -101,6 +114,7 @@ export const LIVE_ACTIVE_DAY = {
   greetingName: "Amara",
   weekToDateUsd: 1240,
   monthToDateUsd: 4680,
+  weekProjectedUsd: 1800,
   bookingsToday: [
     {
       id: "b1",
@@ -166,7 +180,7 @@ export const LIVE_ACTIVE_DAY = {
   todayEarningsUsd: 420,
   todayProjectedUsd: 540,
   /** Default to a "Up Next" framing — home.tsx can override via ?live=in-progress|en-route. */
-  liveStatus: { kind: "idle" } as LiveStatus,
+  liveStatus: { kind: "morning" } as LiveStatus,
 };
 
 /* --------- Incoming request modal example --------- */
@@ -204,3 +218,51 @@ export function formatUsd(n: number): string {
   if (n === 0) return "$0";
   return "$" + n.toLocaleString("en-US");
 }
+
+/* --------- Time-of-day variants of the active day --------- */
+
+/**
+ * Fresh start of the day. First booking is at 10:30, three on the books.
+ * No earnings yet. Used to demo the morning Up Next state.
+ */
+export const LIVE_DAY_MORNING = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "morning" } as LiveStatus,
+};
+
+/**
+ * 10:25 AM — Maya's appointment is in 5 minutes. Pro should head out now.
+ */
+export const LIVE_DAY_HEADS_UP = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "heads-up", leaveInMin: 5 } as LiveStatus,
+};
+
+/**
+ * 11:00 AM — pro is mid-appointment with Maya. Two more booked.
+ */
+export const LIVE_DAY_IN_PROGRESS = {
+  ...LIVE_ACTIVE_DAY,
+  todayEarningsUsd: 0,
+  todayProjectedUsd: 540,
+  liveStatus: { kind: "in-progress", elapsedMin: 32 } as LiveStatus,
+};
+
+/**
+ * 7:15 PM — Renée's appointment just wrapped. Day is done.
+ */
+export const LIVE_DAY_WRAP_UP = {
+  ...LIVE_ACTIVE_DAY,
+  bookingsToday: [] as Booking[],
+  todayEarningsUsd: 515,
+  todayProjectedUsd: 515,
+  liveStatus: {
+    kind: "wrap-up",
+    completedCount: 3,
+    completedTotalUsd: 515,
+  } as LiveStatus,
+};

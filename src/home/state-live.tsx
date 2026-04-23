@@ -32,6 +32,8 @@ export interface StateLiveProps {
   greetingName: string;
   weekToDateUsd: number;
   monthToDateUsd: number;
+  /** Projected end-of-week earnings ("on pace for $X"). */
+  weekProjectedUsd?: number;
   bookingsToday: Booking[];
   pendingRequests: BookingRequest[];
   bookingLink?: string;
@@ -51,9 +53,10 @@ export function StateLive({
   bookingsToday,
   pendingRequests,
   nextOpenSlot,
-  ratingValue = 0,
+  weekToDateUsd,
+  weekProjectedUsd,
+  bookingLink,
   ratingCount = 0,
-  completionPct = 100,
   todayEarningsUsd = 0,
   todayProjectedUsd = 0,
   liveStatus = { kind: "idle" },
@@ -67,8 +70,7 @@ export function StateLive({
   const incoming = online ? incomingRequest : undefined;
 
   const nextBooking = bookingsToday[0];
-  const remainingCount = Math.max(0, bookingsToday.length - 1);
-  const projectedRemaining = Math.max(0, todayProjectedUsd - todayEarningsUsd);
+  const totalToday = bookingsToday.length;
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
@@ -81,25 +83,26 @@ export function StateLive({
         liveStatus={liveStatus}
         nextBooking={nextBooking}
         nextOpenSlot={nextOpenSlot}
+        totalToday={totalToday}
       />
 
       {online && pendingRequests.length > 0 ? (
         <PendingRequests requests={pendingRequests} />
       ) : null}
 
-      {bookingsToday.length > 0 ? (
-        <TodayGlance
-          remainingCount={remainingCount}
-          projectedRemainingUsd={projectedRemaining}
-        />
-      ) : null}
-
-      <QuickStats
-        ratingValue={ratingValue}
-        ratingCount={ratingCount}
-        completionPct={completionPct}
-        todayEarningsUsd={todayEarningsUsd + tipsLogged}
+      <EarningsGlance
+        todayUsd={todayEarningsUsd + tipsLogged}
+        weekToDateUsd={weekToDateUsd}
+        weekProjectedUsd={weekProjectedUsd}
         onEditTip={() => setShowTipModal(true)}
+      />
+
+      <ContextualAction
+        liveStatus={liveStatus}
+        bookingsTodayCount={totalToday}
+        pendingCount={pendingRequests.length}
+        ratingCount={ratingCount}
+        bookingLink={bookingLink}
       />
 
       {showTipModal ? (
@@ -248,11 +251,13 @@ function LiveStateCard({
   liveStatus,
   nextBooking,
   nextOpenSlot,
+  totalToday,
 }: {
   online: boolean;
   liveStatus: LiveStatus;
   nextBooking?: Booking;
   nextOpenSlot?: string;
+  totalToday: number;
 }) {
   // 1) IN-PROGRESS — orange-accented hero with timer + Go to Appointment
   if (liveStatus.kind === "in-progress" && nextBooking) {
@@ -296,16 +301,51 @@ function LiveStateCard({
     );
   }
 
-  // 3) UP NEXT — there's something on the books
-  if (nextBooking) {
+  // 3) HEADS-UP — appointment is imminent, time to leave
+  if (liveStatus.kind === "heads-up" && nextBooking) {
     return (
-      <Card>
-        <UpNextBody nextBooking={nextBooking} />
+      <Card emphasis="primary">
+        <Eyebrow color={ORANGE}>
+          <PulseDot /> Head out in {liveStatus.leaveInMin ?? 5} min
+        </Eyebrow>
+        <Headline>{nextBooking.clientName}</Headline>
+        <SubLine>
+          {nextBooking.service} · starts {nextBooking.startsAt}
+        </SubLine>
+        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+        <PrimaryAction label="Open Navigation" icon="map" />
+        <SecondaryStrip
+          actions={[
+            { label: "Message client", icon: "msg" },
+            { label: "Running late", icon: "check" },
+          ]}
+        />
       </Card>
     );
   }
 
-  // 4) Quiet empty state — no fake content
+  // 4) WRAP-UP — last booking just completed, end-of-day summary
+  if (liveStatus.kind === "wrap-up") {
+    return (
+      <Card>
+        <WrapUpBody
+          completedCount={liveStatus.completedCount ?? 0}
+          completedTotalUsd={liveStatus.completedTotalUsd ?? 0}
+        />
+      </Card>
+    );
+  }
+
+  // 5) UP NEXT — there's something on the books (morning/idle with bookings)
+  if (nextBooking) {
+    return (
+      <Card>
+        <UpNextBody nextBooking={nextBooking} totalToday={totalToday} />
+      </Card>
+    );
+  }
+
+  // 6) Quiet empty state — no fake content
   return (
     <Card>
       <EmptyTodayBody online={online} nextOpenSlot={nextOpenSlot} />
@@ -319,12 +359,20 @@ function LiveStateCard({
  * Without this indirection, the parent's useHomeTheme() captures the page
  * palette (cream text in dark mode) and the copy disappears against white.
  */
-function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
+function UpNextBody({ nextBooking, totalToday }: { nextBooking: Booking; totalToday: number }) {
   const { text } = useHomeTheme();
+  const moreCount = Math.max(0, totalToday - 1);
   return (
     <>
       <div className="flex items-center justify-between">
-        <Eyebrow>Up Next</Eyebrow>
+        <Eyebrow>
+          Up Next
+          {totalToday > 0 ? (
+            <span style={{ marginLeft: 8, opacity: 0.65, letterSpacing: "1.2px" }}>
+              · {totalToday} {totalToday === 1 ? "booking" : "bookings"} today
+            </span>
+          ) : null}
+        </Eyebrow>
         <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
           {nextBooking.startsAt} · {nextBooking.durationMin} min
         </span>
@@ -346,9 +394,41 @@ function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
       <SecondaryStrip
         actions={[
           { label: "Message", icon: "msg" },
-          { label: "Mark done", icon: "check" },
+          { label: moreCount > 0 ? `+${moreCount} more today` : "Mark done", icon: "check" },
         ]}
       />
+    </>
+  );
+}
+
+function WrapUpBody({
+  completedCount,
+  completedTotalUsd,
+}: {
+  completedCount: number;
+  completedTotalUsd: number;
+}) {
+  const { text } = useHomeTheme();
+  return (
+    <>
+      <Eyebrow color={ORANGE}>You're done</Eyebrow>
+      <Headline>
+        {completedCount} {completedCount === 1 ? "booking" : "bookings"} ·{" "}
+        {formatUsd(completedTotalUsd)}
+      </Headline>
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: text,
+          opacity: 0.7,
+          marginTop: 6,
+          lineHeight: 1.5,
+        }}
+      >
+        Nice day's work. Tomorrow's schedule is ready when you are.
+      </p>
+      <PrimaryAction label="See tomorrow" subtle />
     </>
   );
 }
@@ -719,180 +799,211 @@ function PendingRequestRow({
 
 /* ---------------- Today at a glance ---------------- */
 
-function TodayGlance({
-  remainingCount,
-  projectedRemainingUsd,
-}: {
-  remainingCount: number;
-  projectedRemainingUsd: number;
-}) {
-  if (remainingCount === 0 && projectedRemainingUsd === 0) return null;
-  return (
-    <CardTheme>
-      <TodayGlanceInner
-        remainingCount={remainingCount}
-        projectedRemainingUsd={projectedRemainingUsd}
-      />
-    </CardTheme>
-  );
-}
+/* ---------------- Earnings glance (single line) ---------------- */
 
-function TodayGlanceInner({
-  remainingCount,
-  projectedRemainingUsd,
-}: {
-  remainingCount: number;
-  projectedRemainingUsd: number;
-}) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
-
-  const label =
-    remainingCount === 0
-      ? "All wrapped for today"
-      : `${remainingCount} more ${remainingCount === 1 ? "job" : "jobs"} today`;
-  const right =
-    projectedRemainingUsd > 0 ? `· ${formatUsd(projectedRemainingUsd)} projected` : "";
-
-  return (
-    <button
-      type="button"
-      className="mt-3 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 transition-opacity active:opacity-70"
-      style={{
-        backgroundColor: cardSurface,
-        border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-      }}
-      aria-label="Open today's calendar"
-    >
-      <span style={{ fontFamily: UI, fontSize: 12.5, color: text, fontWeight: 500 }}>
-        {label} <span style={{ opacity: 0.55 }}>{right}</span>
-      </span>
-      <ChevronIcon />
-    </button>
-  );
-}
-
-/* ---------------- Quick stats ---------------- */
-
-function QuickStats({
-  ratingValue,
-  ratingCount,
-  completionPct,
-  todayEarningsUsd,
+function EarningsGlance({
+  todayUsd,
+  weekToDateUsd,
+  weekProjectedUsd,
   onEditTip,
 }: {
-  ratingValue: number;
-  ratingCount: number;
-  completionPct: number;
-  todayEarningsUsd: number;
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekProjectedUsd?: number;
   onEditTip: () => void;
 }) {
   return (
     <CardTheme>
-      <QuickStatsInner
-        ratingValue={ratingValue}
-        ratingCount={ratingCount}
-        completionPct={completionPct}
-        todayEarningsUsd={todayEarningsUsd}
+      <EarningsGlanceInner
+        todayUsd={todayUsd}
+        weekToDateUsd={weekToDateUsd}
+        weekProjectedUsd={weekProjectedUsd}
         onEditTip={onEditTip}
       />
     </CardTheme>
   );
 }
 
-function QuickStatsInner({
-  ratingValue,
-  ratingCount,
-  completionPct,
-  todayEarningsUsd,
+function EarningsGlanceInner({
+  todayUsd,
+  weekToDateUsd,
+  weekProjectedUsd,
   onEditTip,
 }: {
-  ratingValue: number;
-  ratingCount: number;
-  completionPct: number;
-  todayEarningsUsd: number;
+  todayUsd: number;
+  weekToDateUsd: number;
+  weekProjectedUsd?: number;
   onEditTip: () => void;
 }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
-
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: cardSurface,
-    border: `1px solid ${cardBorder}`,
-    boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-    borderRadius: 14,
-    padding: "10px 12px",
-    minHeight: 70,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontFamily: UI,
-    fontSize: 10,
-    letterSpacing: "1.2px",
-    textTransform: "uppercase",
-    color: text,
-    opacity: 0.5,
-    fontWeight: 600,
-  };
-
-  const valueStyle: React.CSSProperties = {
-    fontFamily: UI,
-    fontSize: 18,
-    fontWeight: 600,
-    color: text,
-    letterSpacing: "-0.02em",
-    lineHeight: 1,
-  };
+  const showPace =
+    typeof weekProjectedUsd === "number" && weekProjectedUsd > weekToDateUsd && weekToDateUsd > 0;
 
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2">
-      <div style={cardStyle}>
-        <div style={labelStyle}>Rating</div>
-        <div className="flex items-baseline gap-1">
-          <span style={valueStyle}>
-            {ratingValue > 0 ? ratingValue.toFixed(1) : "—"}
-          </span>
-          <span style={{ color: ORANGE, fontSize: 13, lineHeight: 1 }}>★</span>
-        </div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          {ratingCount > 0 ? `${ratingCount} reviews` : "No reviews yet"}
-        </div>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={labelStyle}>Completion</div>
-        <div style={valueStyle}>{completionPct}%</div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          Last 30 days
-        </div>
-      </div>
-
-      <div style={cardStyle}>
-        <div className="flex items-center justify-between">
-          <span style={labelStyle}>Today</span>
-          <button
-            type="button"
-            onClick={onEditTip}
-            aria-label="Log cash tip"
-            className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+    <div
+      className="mt-3 flex items-center gap-2 rounded-2xl"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+        padding: "12px 14px",
+      }}
+    >
+      <button
+        type="button"
+        aria-label="Open earnings"
+        className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left transition-opacity active:opacity-70"
+      >
+        <div className="flex items-baseline gap-2">
+          <span
             style={{
-              width: 18,
-              height: 18,
-              border: `1px solid ${cardBorder}`,
+              fontFamily: UI,
+              fontSize: 10,
+              letterSpacing: "1.4px",
+              textTransform: "uppercase",
               color: text,
-              opacity: 0.7,
+              opacity: 0.5,
+              fontWeight: 700,
             }}
           >
-            <PencilIcon />
-          </button>
+            Today
+          </span>
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 17,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            {formatUsd(todayUsd)}
+          </span>
         </div>
-        <div style={valueStyle}>{formatUsd(todayEarningsUsd)}</div>
-        <div style={{ fontFamily: UI, fontSize: 10.5, color: text, opacity: 0.5 }}>
-          Earnings
+        <div
+          className="truncate"
+          style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}
+        >
+          This week: <span style={{ fontWeight: 600, opacity: 1 }}>{formatUsd(weekToDateUsd)}</span>
+          {showPace ? (
+            <>
+              {" "}
+              <span style={{ color: ORANGE, fontWeight: 600, opacity: 1 }}>
+                on pace for {formatUsd(weekProjectedUsd!)}
+              </span>
+            </>
+          ) : null}
         </div>
-      </div>
+      </button>
+      <button
+        type="button"
+        onClick={onEditTip}
+        aria-label="Log cash tip"
+        className="flex shrink-0 items-center justify-center rounded-full transition-opacity active:opacity-60"
+        style={{
+          width: 28,
+          height: 28,
+          border: `1px solid ${cardBorder}`,
+          color: text,
+          opacity: 0.75,
+        }}
+      >
+        <PencilIcon />
+      </button>
+      <ChevronIcon />
+    </div>
+  );
+}
+
+/* ---------------- Contextual action card ---------------- */
+
+/**
+ * Renders ONE useful nudge for the current moment, or nothing. Hidden on
+ * busy days (3+ bookings or any in-progress/heads-up state) to keep the
+ * dashboard quiet when the pro is heads-down.
+ */
+function ContextualAction({
+  liveStatus,
+  bookingsTodayCount,
+  pendingCount,
+  ratingCount,
+  bookingLink,
+}: {
+  liveStatus: LiveStatus;
+  bookingsTodayCount: number;
+  pendingCount: number;
+  ratingCount: number;
+  bookingLink?: string;
+}) {
+  // Quiet when the pro is heads-down with work
+  if (
+    liveStatus.kind === "in-progress" ||
+    liveStatus.kind === "heads-up" ||
+    liveStatus.kind === "en-route"
+  ) {
+    return null;
+  }
+  if (bookingsTodayCount >= 3) return null;
+
+  // Pick the single most relevant nudge for right now
+  let label = "";
+  let cta = "";
+  if (ratingCount === 0 && bookingsTodayCount === 0 && pendingCount === 0) {
+    label = "New here? Share your booking link to get your first request.";
+    cta = bookingLink ? `Share ${bookingLink}` : "Share booking link";
+  } else if (liveStatus.kind === "wrap-up") {
+    label = "Tomorrow's only 20% booked. Open a slot to fill it?";
+    cta = "Open more availability";
+  } else if (bookingsTodayCount === 0 && pendingCount === 0) {
+    label = "Today's open. Share your link or open a flash slot to fill it.";
+    cta = "Add a flash slot";
+  } else {
+    return null;
+  }
+
+  return (
+    <CardTheme>
+      <ContextualActionInner label={label} cta={cta} />
+    </CardTheme>
+  );
+}
+
+function ContextualActionInner({ label, cta }: { label: string; cta: string }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="mt-3 rounded-2xl px-4 py-3.5"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+      }}
+    >
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: text,
+          opacity: 0.85,
+          lineHeight: 1.45,
+          margin: 0,
+        }}
+      >
+        {label}
+      </p>
+      <button
+        type="button"
+        className="mt-2 flex items-center gap-1 text-left transition-opacity active:opacity-60"
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          fontWeight: 600,
+          color: ORANGE,
+        }}
+      >
+        {cta}
+        <ChevronIcon />
+      </button>
     </div>
   );
 }
