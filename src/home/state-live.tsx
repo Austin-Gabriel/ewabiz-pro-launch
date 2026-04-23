@@ -21,11 +21,11 @@ import {
  *   5. Glance  — "N more jobs · $X projected"
  *   6. Stats   — Rating · Completion · Today's earnings (with cash-tip edit)
  *
- * Industrial type discipline: Inter only, no serif, no italics. Flat cards
- * with subtle borders — no ambient glows, no decorative gradients.
+ * Industrial type discipline: Uncut Sans only, no serif, no italics. Flat
+ * cards with subtle borders — no ambient glows, no decorative gradients.
  */
 
-const UI = `Inter, ${HOME_SANS}`;
+const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 
 export interface StateLiveProps {

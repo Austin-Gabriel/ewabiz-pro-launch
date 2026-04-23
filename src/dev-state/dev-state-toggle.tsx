@@ -18,7 +18,7 @@ import {
  * localStorage so they survive reloads in the session.
  */
 
-const SANS = 'Inter, "Uncut Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+const SANS = '"Uncut Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
 const ORANGE = "#FF823F";
 
 const PRO_STATES: { value: DevProState; label: string; hint: string }[] = [

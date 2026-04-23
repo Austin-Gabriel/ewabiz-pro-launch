@@ -9,14 +9,14 @@ import { LIFECYCLE_BOOKING, type LifecycleBooking } from "./lifecycle-data";
 /**
  * Booking lifecycle takeover. Replaces Home (and hides the bottom tab bar)
  * whenever dev.lifecycle is anything other than "none". Single working
- * surface, one primary CTA per state, industrial Inter typography, white
- * cards on dark / cream-elevated on light.
+ * surface, one primary CTA per state, industrial Uncut Sans typography,
+ * white cards on dark / cream-elevated on light.
  *
  * State transitions slide horizontally 300ms — the screen tracks one focused
  * booking from dispatch to complete.
  */
 
-const UI = `Inter, ${HOME_SANS}`;
+const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 

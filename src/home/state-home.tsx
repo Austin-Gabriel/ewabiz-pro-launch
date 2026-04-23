@@ -14,11 +14,11 @@ import type { DevDayContext, DevMode, DevOnlineStatus } from "@/dev-state/dev-st
  *           onlineStatus (idle / incoming / active). Idle is fully built;
  *           incoming + active are placeholder until the lifecycle pass.
  *
- * Industrial Inter-only typography. White cards on dark, cream-elevated on
+ * Industrial Uncut Sans typography. White cards on dark, cream-elevated on
  * light. No greetings, no "waiting on you" copy.
  */
 
-const UI = `Inter, ${HOME_SANS}`;
+const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 const ORANGE_SOFT = "rgba(255,130,63,0.14)";
