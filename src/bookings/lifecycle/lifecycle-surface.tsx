@@ -497,11 +497,12 @@ function ArrivedPin({
   return (
     <LifecycleColumn>
       <Header title="Enter client's PIN" />
-      <p style={{ ...subline(text), marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
+      <ClientCard booking={booking} />
+      <p style={{ ...subline(text), marginTop: 14, fontSize: 12.5, lineHeight: 1.5, textAlign: "left" }}>
         Ask {booking.clientName.split(" ")[0]} for their 4-digit code. They received it when the booking confirmed.
       </p>
 
-      <div className="mt-10 flex justify-center gap-3">
+      <div className="mt-6 flex justify-center gap-2.5">
         {digits.map((d, i) => {
           const active = i === digits.findIndex((x) => x === "");
           const filledThis = d.length === 1;
@@ -518,15 +519,15 @@ function ArrivedPin({
               autoFocus={i === 0}
               aria-label={`PIN digit ${i + 1}`}
               style={{
-                width: 56,
-                height: 64,
-                borderRadius: 14,
+                width: 52,
+                height: 60,
+                borderRadius: 12,
                 textAlign: "center",
                 backgroundColor: "transparent",
                 border: `1.5px solid ${active && !filledThis ? ORANGE : "rgba(240,235,216,0.18)"}`,
                 color: text,
                 fontFamily: UI,
-                fontSize: 30,
+                fontSize: 26,
                 fontWeight: 700,
                 outline: "none",
                 fontVariantNumeric: "tabular-nums",
@@ -541,10 +542,10 @@ function ArrivedPin({
         <p
           style={{
             fontFamily: UI,
-            fontSize: 12.5,
+            fontSize: 12,
             color: ORANGE,
             textAlign: "center",
-            marginTop: 14,
+            marginTop: 12,
             fontWeight: 500,
           }}
         >
@@ -552,11 +553,25 @@ function ArrivedPin({
         </p>
       ) : null}
 
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 10.5,
+          color: text,
+          opacity: 0.45,
+          textAlign: "center",
+          marginTop: 10,
+          letterSpacing: "0.04em",
+        }}
+      >
+        DEMO PIN · {booking.pin}
+      </p>
+
       <button
         type="button"
         onClick={() => setHelpOpen(true)}
-        className="mt-6 self-center transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 12.5 }}
+        className="mt-3 self-center transition-opacity active:opacity-60"
+        style={{ ...tertiaryLink(text), fontSize: 12 }}
       >
         Can't get the PIN?
       </button>
@@ -564,6 +579,7 @@ function ArrivedPin({
       <div className="flex-1" />
 
       <PrimaryCta label="Start service" onClick={submit} disabled={!filled} />
+      <MessageCallRow />
 
       {helpOpen ? (
         <PinHelpSheet
