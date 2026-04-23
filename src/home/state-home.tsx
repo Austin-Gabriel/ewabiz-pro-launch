@@ -234,6 +234,7 @@ function OfflineBody({
   todayEarningsUsd,
   weekToDateUsd,
   weekProjectedUsd,
+  weekGoalUsd,
   onGoOnline,
 }: {
   dayContext: DevDayContext;
@@ -242,27 +243,26 @@ function OfflineBody({
   todayEarningsUsd: number;
   weekToDateUsd: number;
   weekProjectedUsd?: number;
+  weekGoalUsd?: number;
   onGoOnline: () => void;
 }) {
   const count = bookingsToday.length;
-  const isFull = dayContext === "full" || count >= 5;
-  const isMulti = !isFull && (dayContext === "multiple" || count >= 2);
-  const isSingle = !isFull && !isMulti && count === 1;
 
   // None case: no bookings today
   if (count === 0) {
     return (
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col gap-3 pt-2">
         <NoBookingsHero nextFutureBookingLabel={nextFutureBookingLabel} />
-        <EarningsGlance
+        <EarningsGoalCard
           todayUsd={todayEarningsUsd}
           weekToDateUsd={weekToDateUsd}
+          weekGoalUsd={weekGoalUsd}
           weekProjectedUsd={weekProjectedUsd}
         />
         <button
           type="button"
           onClick={onGoOnline}
-          className="mt-4 self-start text-left transition-opacity active:opacity-60"
+          className="mt-2 self-start text-left transition-opacity active:opacity-60"
           style={{ fontFamily: UI, fontSize: 13, color: "inherit", fontWeight: 600, opacity: 0.85 }}
         >
           Go online to take immediate requests →
@@ -271,30 +271,19 @@ function OfflineBody({
     );
   }
 
-  // 1 scheduled today
-  if (isSingle) {
-    return (
-      <div className="flex flex-1 flex-col">
-        <SingleBookingHero booking={bookingsToday[0]} />
-        <EarningsGlance
-          todayUsd={todayEarningsUsd}
-          weekToDateUsd={weekToDateUsd}
-          weekProjectedUsd={weekProjectedUsd}
-        />
-      </div>
-    );
-  }
-
-  // Multiple (3-4) or Full (5+)
+  // 1+ scheduled today — same hero treatment, only the "more today" row
+  // appears when there are additional bookings on the books.
+  const next = bookingsToday[0];
+  const rest = bookingsToday.slice(1);
   return (
-    <div className="flex flex-1 flex-col">
-      <MultiBookingHero booking={bookingsToday[0]} totalToday={count} />
-      <RemainingBookings bookings={bookingsToday.slice(1)} scrollable={isFull} />
-      <EarningsGlance
+    <div className="flex flex-1 flex-col gap-3 pt-2">
+      <UpNextCard booking={next} />
+      {rest.length > 0 ? <MoreTodayRow remaining={rest} /> : null}
+      <EarningsGoalCard
         todayUsd={todayEarningsUsd}
         weekToDateUsd={weekToDateUsd}
+        weekGoalUsd={weekGoalUsd}
         weekProjectedUsd={weekProjectedUsd}
-        sticky={isFull}
       />
     </div>
   );
