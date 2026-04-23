@@ -8,6 +8,7 @@ import {
   type DevMode,
   type DevDayContext,
   type DevOnlineStatus,
+  type DevLifecycle,
 } from "@/dev-state/dev-state-context";
 
 /**
@@ -64,6 +65,16 @@ const ONLINE_STATUSES: { value: DevOnlineStatus; label: string; hint: string }[]
   { value: "active", label: "Active booking", hint: "Coming in lifecycle pass" },
 ];
 
+const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "No lifecycle takeover" },
+  { value: "incoming", label: "Incoming request", hint: "Online dispatch · 90s timer" },
+  { value: "get-ready", label: "Get Ready", hint: "Accepted — prep countdown" },
+  { value: "en-route", label: "En Route", hint: "Driving to client" },
+  { value: "arrived", label: "Arrived (PIN entry)", hint: "4-digit code from client" },
+  { value: "in-progress", label: "In Progress", hint: "Service running" },
+  { value: "complete", label: "Complete", hint: "Done — earnings + rating" },
+];
+
 export function DevStateToggle() {
   const {
     enabled,
@@ -74,6 +85,7 @@ export function DevStateToggle() {
     setMode,
     setDayContext,
     setOnlineStatus,
+    setLifecycle,
     reset,
   } = useDevState();
   const [open, setOpen] = useState(false);
