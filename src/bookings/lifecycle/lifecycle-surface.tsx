@@ -1022,7 +1022,7 @@ function NoShow({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -1032,7 +1032,7 @@ function NoShow({
         >
           {mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Auto-pinging {booking.clientName.split(" ")[0]} at 3 and 6 min
         </p>
         <ul style={{ marginTop: 14, padding: 0, listStyle: "none", textAlign: "center" }}>
