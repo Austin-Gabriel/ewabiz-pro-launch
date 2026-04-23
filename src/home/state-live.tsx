@@ -120,7 +120,7 @@ export function StateLive({
 /* ---------------- Header ---------------- */
 
 function Header({ unreadCount }: { unreadCount: number }) {
-  const { text, borderCol, bg } = useHomeTheme();
+  const { text, borderCol, bg, surface } = useHomeTheme();
   return (
     <div className="flex items-center justify-between" style={{ height: 48 }}>
       <EwaMark size={26} />
@@ -131,7 +131,7 @@ function Header({ unreadCount }: { unreadCount: number }) {
         style={{
           width: 36,
           height: 36,
-          backgroundColor: "rgba(240,235,216,0.04)",
+          backgroundColor: surface,
           border: `1px solid ${borderCol}`,
           color: text,
         }}
