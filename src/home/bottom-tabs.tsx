@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useHomeTheme, HOME_SANS } from "./home-shell";
 
-export type TabKey = "home" | "calendar" | "earnings" | "profile";
+export type TabKey = "home" | "bookings" | "calendar" | "earnings" | "profile";
 
 interface Props {
   active: TabKey;
@@ -11,11 +11,13 @@ interface Props {
 }
 
 /**
- * Persistent bottom tab bar. Floating pill, glassy, sits above safe-area.
- * Only rendered for the LIVE pro state — hard gate before that.
+ * Persistent bottom tab bar. Flat, edge-to-edge, native-app feel — no
+ * floating pill, no gradient, no glassy backdrop. A solid surface with a
+ * single hairline divider on top, sitting flush against the safe-area
+ * inset. Only rendered for the LIVE pro state — hard gate before that.
  */
 export function BottomTabs({ active, onSelect, badge }: Props) {
-  const { isDark, text, borderCol } = useHomeTheme();
+  const { isDark, text, borderCol, bg } = useHomeTheme();
 
   const tabs: { key: TabKey; label: string; icon: ReactElement }[] = [
     {
@@ -25,6 +27,16 @@ export function BottomTabs({ active, onSelect, badge }: Props) {
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 11l9-8 9 8" />
           <path d="M5 10v10h14V10" />
+        </svg>
+      ),
+    },
+    {
+      key: "bookings",
+      label: "Bookings",
+      icon: (
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 7h16M4 12h16M4 17h10" />
+          <circle cx="19" cy="17" r="2.2" />
         </svg>
       ),
     },
@@ -61,27 +73,15 @@ export function BottomTabs({ active, onSelect, badge }: Props) {
 
   return (
     <nav
-      className="fixed inset-x-0 z-20 flex justify-center"
+      className="fixed inset-x-0 bottom-0 z-20"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)",
-        pointerEvents: "none",
+        backgroundColor: bg,
+        borderTop: `1px solid ${borderCol}`,
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
       aria-label="Primary"
     >
-      <div
-        className="flex items-center gap-1 rounded-full px-2 py-1.5"
-        style={{
-          pointerEvents: "auto",
-          backgroundColor: isDark ? "rgba(10,31,46,0.78)" : "rgba(247,243,230,0.82)",
-          backdropFilter: "blur(20px) saturate(140%)",
-          WebkitBackdropFilter: "blur(20px) saturate(140%)",
-          border: `1px solid ${borderCol}`,
-          boxShadow: isDark
-            ? "0 12px 40px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.04) inset"
-            : "0 12px 40px rgba(6,28,39,0.10), 0 0 0 0.5px rgba(255,255,255,0.5) inset",
-          transition: "background-color 600ms ease, border-color 600ms ease",
-        }}
-      >
+      <div className="mx-auto flex w-full max-w-md items-stretch justify-between px-2 pt-1.5 pb-1">
         {tabs.map((t) => {
           const isActive = active === t.key;
           const showBadge = badge?.tab === t.key && badge.count > 0;
@@ -92,18 +92,17 @@ export function BottomTabs({ active, onSelect, badge }: Props) {
               onClick={() => onSelect?.(t.key)}
               aria-label={t.label}
               aria-current={isActive ? "page" : undefined}
-              className="relative flex flex-col items-center justify-center rounded-full transition-all duration-300 active:scale-95"
+              className="relative flex flex-1 flex-col items-center justify-center transition-opacity active:opacity-60"
               style={{
-                width: 64,
-                height: 48,
+                minHeight: 52,
                 color: isActive ? "#FF823F" : text,
                 opacity: isActive ? 1 : 0.55,
-                backgroundColor: isActive ? "rgba(255,130,63,0.12)" : "transparent",
+                backgroundColor: "transparent",
                 fontFamily: HOME_SANS,
               }}
             >
               {t.icon}
-              <span style={{ fontSize: 9.5, fontWeight: 600, marginTop: 2, letterSpacing: "0.02em" }}>
+              <span style={{ fontSize: 10, fontWeight: 600, marginTop: 3, letterSpacing: "0.01em" }}>
                 {t.label}
               </span>
               {showBadge ? (
@@ -112,7 +111,7 @@ export function BottomTabs({ active, onSelect, badge }: Props) {
                   className="absolute"
                   style={{
                     top: 4,
-                    right: 10,
+                    right: "26%",
                     minWidth: 16,
                     height: 16,
                     padding: "0 4px",
@@ -124,7 +123,7 @@ export function BottomTabs({ active, onSelect, badge }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 0 0 2px rgba(10,31,46,0.78)",
+                    boxShadow: `0 0 0 2px ${isDark ? "#061C27" : "#F0EBD8"}`,
                   }}
                 >
                   {badge!.count}
