@@ -1154,16 +1154,30 @@ function Header({
   );
 }
 
-function ClientCard({ booking }: { booking: LifecycleBooking }) {
+function ClientCard({
+  booking,
+  kind,
+}: {
+  booking: LifecycleBooking;
+  kind: LifecycleKind;
+}) {
   return (
     <CardTheme>
-      <ClientCardInner booking={booking} />
+      <ClientCardInner booking={booking} kind={kind} />
     </CardTheme>
   );
 }
 
-function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
+function ClientCardInner({
+  booking,
+  kind,
+}: {
+  booking: LifecycleBooking;
+  kind: LifecycleKind;
+}) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
+  const showFullAddress = ADDRESS_REVEALED.has(kind);
+  const locationLine = showFullAddress ? booking.address : booking.neighborhood;
   return (
     <div
       className="mt-4 rounded-2xl px-4 py-3.5"
@@ -1198,7 +1212,7 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
           <PinIcon size={11} />
         </span>
         <div className="min-w-0 flex-1">
-          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{booking.address}</div>
+          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{locationLine}</div>
           <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
             {booking.distance} · {booking.etaMin} min away
           </div>
