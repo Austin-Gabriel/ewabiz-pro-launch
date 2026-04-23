@@ -120,7 +120,7 @@ export function StateLive({
 /* ---------------- Header ---------------- */
 
 function Header({ unreadCount }: { unreadCount: number }) {
-  const { text, borderCol, bg } = useHomeTheme();
+  const { text, borderCol, bg, surface } = useHomeTheme();
   return (
     <div className="flex items-center justify-between" style={{ height: 48 }}>
       <EwaMark size={26} />
@@ -131,7 +131,7 @@ function Header({ unreadCount }: { unreadCount: number }) {
         style={{
           width: 36,
           height: 36,
-          backgroundColor: "rgba(240,235,216,0.04)",
+          backgroundColor: surface,
           border: `1px solid ${borderCol}`,
           color: text,
         }}
@@ -167,12 +167,17 @@ function Header({ unreadCount }: { unreadCount: number }) {
 /* ---------------- Status bar ---------------- */
 
 function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void }) {
-  const { text, borderCol } = useHomeTheme();
+  const { text, borderCol, surface, isDark } = useHomeTheme();
+  // Off-state track must be visible against BOTH cream (light) and navy (dark)
+  // page backgrounds. Use a tint of the inverse-of-surface color so the track
+  // always reads as a filled pill, never blends into the page.
+  const offTrackBg = isDark ? "rgba(240,235,216,0.22)" : "rgba(6,28,39,0.28)";
+  const thumbColor = isDark ? "#061C27" : "#F0EBD8";
   return (
     <div
       className="mt-2 flex items-center justify-between rounded-2xl px-3 py-2.5"
       style={{
-        backgroundColor: "rgba(240,235,216,0.04)",
+        backgroundColor: surface,
         border: `1px solid ${borderCol}`,
       }}
     >
@@ -188,7 +193,7 @@ function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void
             width: 34,
             height: 20,
             padding: 2,
-            backgroundColor: online ? ORANGE : "rgba(240,235,216,0.18)",
+            backgroundColor: online ? ORANGE : offTrackBg,
             transition: "background-color 200ms ease",
           }}
         >
@@ -197,9 +202,13 @@ function StatusBar({ online, onToggle }: { online: boolean; onToggle: () => void
             style={{
               width: 16,
               height: 16,
-              backgroundColor: "#061C27",
+              // When ON: navy thumb on orange — high contrast in both modes.
+              // When OFF: thumb is the page-bg color so it reads as the
+              // "knob" cut out of the filled track on either background.
+              backgroundColor: online ? "#061C27" : thumbColor,
               transform: online ? "translateX(14px)" : "translateX(0)",
-              transition: "transform 200ms ease",
+              transition: "transform 200ms ease, background-color 200ms ease",
+              boxShadow: "0 1px 2px rgba(6,28,39,0.25)",
             }}
           />
         </span>
@@ -245,8 +254,6 @@ function LiveStateCard({
   nextBooking?: Booking;
   nextOpenSlot?: string;
 }) {
-  const { text, borderCol } = useHomeTheme();
-
   // 1) IN-PROGRESS — orange-accented hero with timer + Go to Appointment
   if (liveStatus.kind === "in-progress" && nextBooking) {
     return (
@@ -293,32 +300,7 @@ function LiveStateCard({
   if (nextBooking) {
     return (
       <Card>
-        <div className="flex items-center justify-between">
-          <Eyebrow>Up Next</Eyebrow>
-          <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.55, fontWeight: 500 }}>
-            {nextBooking.startsAt} · {nextBooking.durationMin} min
-          </span>
-        </div>
-        <div className="mt-2 flex items-center gap-3">
-          <Avatar initial={nextBooking.clientInitial} />
-          <div className="min-w-0 flex-1">
-            <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
-              {nextBooking.clientName}
-              {nextBooking.isNewClient ? <NewBadge /> : null}
-            </div>
-            <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.65, marginTop: 2 }}>
-              {nextBooking.service}
-            </div>
-          </div>
-        </div>
-        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
-        <PrimaryAction label="Navigate" icon="map" />
-        <SecondaryStrip
-          actions={[
-            { label: "Message", icon: "msg" },
-            { label: "Mark done", icon: "check" },
-          ]}
-        />
+        <UpNextBody nextBooking={nextBooking} />
       </Card>
     );
   }
@@ -326,11 +308,60 @@ function LiveStateCard({
   // 4) Quiet empty state — no fake content
   return (
     <Card>
+      <EmptyTodayBody online={online} nextOpenSlot={nextOpenSlot} />
+    </Card>
+  );
+}
+
+/**
+ * Body components for LiveStateCard branches. They live inside <Card> →
+ * <CardTheme>, so useHomeTheme() resolves to navy-on-white card palette.
+ * Without this indirection, the parent's useHomeTheme() captures the page
+ * palette (cream text in dark mode) and the copy disappears against white.
+ */
+function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
+  const { text } = useHomeTheme();
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <Eyebrow>Up Next</Eyebrow>
+        <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
+          {nextBooking.startsAt} · {nextBooking.durationMin} min
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <Avatar initial={nextBooking.clientInitial} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
+            {nextBooking.clientName}
+            {nextBooking.isNewClient ? <NewBadge /> : null}
+          </div>
+          <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 2 }}>
+            {nextBooking.service}
+          </div>
+        </div>
+      </div>
+      {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+      <PrimaryAction label="Navigate" icon="map" />
+      <SecondaryStrip
+        actions={[
+          { label: "Message", icon: "msg" },
+          { label: "Mark done", icon: "check" },
+        ]}
+      />
+    </>
+  );
+}
+
+function EmptyTodayBody({ online, nextOpenSlot }: { online: boolean; nextOpenSlot?: string }) {
+  const { text } = useHomeTheme();
+  return (
+    <>
       <Eyebrow>Today</Eyebrow>
       <p style={{ fontFamily: UI, fontSize: 17, fontWeight: 500, color: text, marginTop: 8, letterSpacing: "-0.01em" }}>
         {online ? "No bookings today." : "You're offline."}
       </p>
-      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.6, marginTop: 4 }}>
+      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 4 }}>
         {online
           ? nextOpenSlot
             ? `Your next open slot is ${nextOpenSlot}.`
@@ -338,7 +369,7 @@ function LiveStateCard({
           : "Toggle online to start accepting new requests."}
       </p>
       {online ? <PrimaryAction label="Open more availability" subtle /> : null}
-    </Card>
+    </>
   );
 }
 
@@ -973,7 +1004,7 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
       aria-label="Incoming booking request"
     >
       {/* Countdown bar */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: "rgba(240,235,216,0.08)" }}>
+      <div className="h-1.5 w-full" style={{ backgroundColor: borderCol }}>
         <div
           className="h-full"
           style={{
