@@ -7,7 +7,6 @@ import {
   type DevThemeOverride,
   type DevMode,
   type DevDayContext,
-  type DevOnlineStatus,
   type DevLifecycle,
 } from "@/dev-state/dev-state-context";
 
@@ -23,12 +22,9 @@ const ORANGE = "#FF823F";
 
 const PRO_STATES: { value: DevProState; label: string; hint: string }[] = [
   { value: "auto", label: "Auto", hint: "Use real auth + KYC state" },
-  { value: "new", label: "NEW", hint: "No signup yet" },
   { value: "mid-onboarding", label: "MID — onboarding", hint: "Signup incomplete" },
   { value: "mid-pending", label: "MID — pending approval", hint: "KYC submitted" },
-  { value: "live-first", label: "LIVE — first time", hint: "Just approved" },
-  { value: "live-quiet", label: "LIVE — empty day", hint: "No bookings today" },
-  { value: "live-active", label: "LIVE — active day", hint: "Bookings + requests" },
+  { value: "live", label: "LIVE", hint: "Approved — use Day context for density" },
 ];
 
 const DATA_STATES: { value: DevDataDensity; label: string; hint: string }[] = [
@@ -58,13 +54,6 @@ const DAY_CONTEXTS: { value: DevDayContext; label: string; hint: string }[] = [
   { value: "full", label: "Full day (5+)", hint: "Stacked back-to-back" },
 ];
 
-const ONLINE_STATUSES: { value: DevOnlineStatus; label: string; hint: string }[] = [
-  { value: "auto", label: "Auto", hint: "Default — idle" },
-  { value: "idle", label: "Idle", hint: "Waiting for dispatch" },
-  { value: "incoming", label: "Incoming request", hint: "Use Lifecycle → Incoming" },
-  { value: "active", label: "Active booking", hint: "Use Lifecycle → In Progress" },
-];
-
 const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
   { value: "none", label: "None", hint: "No lifecycle takeover" },
   { value: "incoming", label: "Incoming request", hint: "Online dispatch · 90s timer" },
@@ -84,7 +73,6 @@ export function DevStateToggle() {
     setTheme,
     setMode,
     setDayContext,
-    setOnlineStatus,
     setLifecycle,
     reset,
   } = useDevState();
@@ -210,14 +198,6 @@ export function DevStateToggle() {
                   value={state.dayContext}
                   options={DAY_CONTEXTS}
                   onChange={(v) => setDayContext(v as DevDayContext)}
-                />
-              ) : null}
-              {state.mode === "online" ? (
-                <Group
-                  title="Online status"
-                  value={state.onlineStatus}
-                  options={ONLINE_STATUSES}
-                  onChange={(v) => setOnlineStatus(v as DevOnlineStatus)}
                 />
               ) : null}
               <Group

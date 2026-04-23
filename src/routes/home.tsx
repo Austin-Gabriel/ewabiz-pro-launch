@@ -17,7 +17,6 @@ import {
   DAY_ONE,
   DAY_MULTIPLE,
   DAY_FULL,
-  ONLINE_IDLE,
 } from "@/data/mock-data";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
@@ -28,25 +27,22 @@ import {
   type DevProState,
   type DevMode,
   type DevDayContext,
-  type DevOnlineStatus,
 } from "@/dev-state/dev-state-context";
 import { RequireAuth } from "@/auth/require-auth";
 import { ProfileSheet } from "@/home/profile-sheet";
 import { LifecycleSurface } from "@/bookings/lifecycle/lifecycle-surface";
 
 /**
- * Home is state-aware. The same URL renders one of five surfaces:
+ * Home is state-aware. The same URL renders one of three surfaces:
  *
  *   1. mid-onboarding — pro hasn't finished signup or KYC. Hard gate, no tabs.
  *   2. pending        — KYC submitted, waiting on verifier. Hard gate, no tabs.
- *   3. live-first     — verified, no bookings yet. Tabs visible.
- *   4. live-quiet     — verified, no bookings today, some pending requests.
- *   5. live-active    — verified, full day, multiple requests.
+ *   3. live           — verified. Tabs visible. Day density driven by Day Context.
  *
  * `?state=` query param overrides the auto-detected state for design preview.
  */
 
-type PreviewState = "auto" | "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active";
+type PreviewState = "auto" | "mid-onboarding" | "pending" | "live";
 type LivePreview =
   | "default"
   | "morning"
@@ -62,13 +58,7 @@ export const Route = createFileRoute("/home")({
     const s = search.state;
     const live = search.live;
     const out: { state?: PreviewState; live?: LivePreview } = {};
-    if (
-      s === "mid-onboarding" ||
-      s === "pending" ||
-      s === "live-first" ||
-      s === "live-quiet" ||
-      s === "live-active"
-    ) {
+    if (s === "mid-onboarding" || s === "pending" || s === "live") {
       out.state = s;
     }
     if (live === "in-progress" || live === "en-route" || live === "incoming") {
@@ -123,7 +113,6 @@ function HomePage() {
     livePreview,
     dev.mode,
     dev.dayContext,
-    dev.onlineStatus,
   );
 
   // Resolve the on-screen Mode. Dev "auto" defaults to offline (the working-day
@@ -156,7 +145,6 @@ function HomePage() {
         <StateHome
           mode={homeMode}
           dayContext={dev.dayContext}
-          onlineStatus={dev.onlineStatus}
           bookingsToday={liveData.bookingsToday ?? []}
           nextFutureBookingLabel={
             "nextFutureBookingLabel" in liveData
@@ -175,7 +163,13 @@ function HomePage() {
         <BottomTabs
           active={activeTab}
           onSelect={setActiveTab}
-          badge={resolved.kind === "live-active" ? { tab: "calendar", count: 2 } : resolved.kind === "live-quiet" ? { tab: "calendar", count: 1 } : undefined}
+          badge={
+            resolved.kind === "live" && dev.dayContext === "full"
+              ? { tab: "calendar", count: 2 }
+              : resolved.kind === "live" && (dev.dayContext === "multiple" || dev.dayContext === "one")
+                ? { tab: "calendar", count: 1 }
+                : undefined
+          }
         />
       ) : null}
       <ProfileSheet
@@ -193,9 +187,7 @@ function HomePage() {
 type Resolved =
   | { kind: "mid-onboarding"; resumeStep: number; resumeTo: "onboarding" | "kyc" }
   | { kind: "pending" }
-  | { kind: "live-first" }
-  | { kind: "live-quiet" }
-  | { kind: "live-active" };
+  | { kind: "live" };
 
 function resolveState({
   forcedState,
@@ -213,9 +205,7 @@ function resolveState({
       return { kind: "mid-onboarding", resumeStep: onboarding.furthestStep ?? 4, resumeTo: "onboarding" };
     }
     if (forcedState === "pending") return { kind: "pending" };
-    if (forcedState === "live-first") return { kind: "live-first" };
-    if (forcedState === "live-quiet") return { kind: "live-quiet" };
-    if (forcedState === "live-active") return { kind: "live-active" };
+    if (forcedState === "live") return { kind: "live" };
   }
 
   // Auto-detect from real state
@@ -231,8 +221,7 @@ function resolveState({
     };
   }
 
-  // Active + approved — pick the richest live preview by default
-  return { kind: "live-active" };
+  return { kind: "live" };
 }
 
 function firstNameOf(...candidates: (string | undefined)[]): string {
@@ -252,42 +241,29 @@ function mapDevProState(p: DevProState): PreviewState | undefined {
   switch (p) {
     case "auto":
       return undefined;
-    case "new":
-      // "No signup yet" surfaces the mid-onboarding gate at step 1.
-      return "mid-onboarding";
     case "mid-onboarding":
       return "mid-onboarding";
     case "mid-pending":
       return "pending";
-    case "live-first":
-      return "live-first";
-    case "live-quiet":
-      return "live-quiet";
-    case "live-active":
-      return "live-active";
+    case "live":
+      return "live";
   }
 }
 
 /**
- * Pick which mock dataset feeds StateLive based on the dev data-density
- * override. "auto" keeps whichever dataset matches the resolved pro state.
+ * Pick which mock dataset feeds Home. Day Context and the ?live= preview
+ * take priority; Data Density falls back to a sensible default.
  */
 function pickLiveData(
-  kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
+  kind: "mid-onboarding" | "pending" | "live",
   density: DevDataDensity,
   livePreview?: LivePreview,
   mode: DevMode = "auto",
   dayContext: DevDayContext = "auto",
-  onlineStatus: DevOnlineStatus = "auto",
 ) {
-  // Mode + Day Context + Online Status take priority over density when set.
-  if (mode === "online") {
-    if (onlineStatus === "idle" || onlineStatus === "auto") return ONLINE_IDLE;
-    // "incoming" + "active" lifecycle datasets are placeholders for now.
-    if (onlineStatus === "incoming") return ONLINE_IDLE;
-    if (onlineStatus === "active") return ONLINE_IDLE;
-  }
-  if (mode === "offline") {
+  void kind;
+  // Day Context drives offline density when explicitly set.
+  if (mode !== "online") {
     if (dayContext === "none") return DAY_NONE;
     if (dayContext === "one") return DAY_ONE;
     if (dayContext === "multiple") return DAY_MULTIPLE;
@@ -300,15 +276,8 @@ function pickLiveData(
   if (livePreview === "in-progress") return LIVE_DAY_IN_PROGRESS;
   if (livePreview === "wrap-up") return LIVE_DAY_WRAP_UP;
 
-  const base =
-    kind === "live-active"
-      ? LIVE_ACTIVE_DAY
-      : kind === "live-quiet"
-        ? LIVE_QUIET_DAY
-        : LIVE_FIRST_TIME;
-
-  if (density === "auto") return base;
   if (density === "empty") return LIVE_FIRST_TIME;
   if (density === "sparse") return LIVE_QUIET_DAY;
-  return LIVE_ACTIVE_DAY; // rich
+  if (density === "rich") return LIVE_ACTIVE_DAY;
+  return LIVE_ACTIVE_DAY; // auto default
 }

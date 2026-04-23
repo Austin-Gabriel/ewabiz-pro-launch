@@ -9,14 +9,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
  * when ?dev=1 is in the URL (handy on preview builds).
  */
 
-export type DevProState =
-  | "auto"
-  | "new"
-  | "mid-onboarding"
-  | "mid-pending"
-  | "live-first"
-  | "live-quiet"
-  | "live-active";
+/**
+ * Persona axis only. Day density is driven by DevDayContext; density of mock
+ * data by DevDataDensity. Dispatch phase by DevLifecycle.
+ */
+export type DevProState = "auto" | "mid-onboarding" | "mid-pending" | "live";
 
 export type DevDataDensity = "auto" | "empty" | "sparse" | "rich";
 export type DevThemeOverride = "system" | "dark" | "light";
@@ -26,9 +23,6 @@ export type DevMode = "auto" | "offline" | "online";
 
 /** Used when DevMode = "offline" — how full is today's calendar. */
 export type DevDayContext = "auto" | "none" | "one" | "multiple" | "full";
-
-/** Used when DevMode = "online" — current dispatch lifecycle phase. */
-export type DevOnlineStatus = "auto" | "idle" | "incoming" | "active";
 
 /**
  * Booking lifecycle takeover state. When set to anything other than "none",
@@ -50,7 +44,6 @@ export interface DevState {
   theme: DevThemeOverride;
   mode: DevMode;
   dayContext: DevDayContext;
-  onlineStatus: DevOnlineStatus;
   lifecycle: DevLifecycle;
 }
 
@@ -60,7 +53,6 @@ const DEFAULT_STATE: DevState = {
   theme: "system",
   mode: "auto",
   dayContext: "auto",
-  onlineStatus: "auto",
   lifecycle: "none",
 };
 
@@ -74,7 +66,6 @@ interface Ctx {
   setTheme: (v: DevThemeOverride) => void;
   setMode: (v: DevMode) => void;
   setDayContext: (v: DevDayContext) => void;
-  setOnlineStatus: (v: DevOnlineStatus) => void;
   setLifecycle: (v: DevLifecycle) => void;
   reset: () => void;
 }
@@ -130,13 +121,12 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((v: DevThemeOverride) => setState((s) => ({ ...s, theme: v })), []);
   const setMode = useCallback((v: DevMode) => setState((s) => ({ ...s, mode: v })), []);
   const setDayContext = useCallback((v: DevDayContext) => setState((s) => ({ ...s, dayContext: v })), []);
-  const setOnlineStatus = useCallback((v: DevOnlineStatus) => setState((s) => ({ ...s, onlineStatus: v })), []);
   const setLifecycle = useCallback((v: DevLifecycle) => setState((s) => ({ ...s, lifecycle: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
-    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, setLifecycle, reset }),
-    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, setLifecycle, reset],
+    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset }),
+    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset],
   );
 
   return <DevStateContext.Provider value={value}>{children}</DevStateContext.Provider>;
@@ -153,7 +143,6 @@ export function useDevState(): Ctx {
       setTheme: () => {},
       setMode: () => {},
       setDayContext: () => {},
-      setOnlineStatus: () => {},
       setLifecycle: () => {},
       reset: () => {},
     };

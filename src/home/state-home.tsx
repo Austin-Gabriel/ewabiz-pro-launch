@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
-import type { DevDayContext, DevMode, DevOnlineStatus } from "@/dev-state/dev-state-context";
+import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -10,9 +10,8 @@ import type { DevDayContext, DevMode, DevOnlineStatus } from "@/dev-state/dev-st
  *
  * Offline → working surface that surfaces the day. Sub-state varies by
  *           dayContext (none / one / multiple / full).
- * Online  → ready surface for immediate dispatch. Sub-state varies by
- *           onlineStatus (idle / incoming / active). Idle is fully built;
- *           incoming + active are placeholder until the lifecycle pass.
+ * Online  → ready surface for immediate dispatch. Dispatch phase itself is
+ *           rendered by the Lifecycle takeover, not here.
  *
  * Industrial Uncut Sans typography. White cards on dark, cream-elevated on
  * light. No greetings, no "waiting on you" copy.
@@ -36,7 +35,6 @@ export interface StateHomeProps {
   /** Dev-state controls. "auto" is treated as the default for the chosen mode. */
   mode: DevMode;
   dayContext: DevDayContext;
-  onlineStatus: DevOnlineStatus;
 
   // Offline data
   bookingsToday: Booking[];
@@ -80,10 +78,7 @@ export function StateHome(props: StateHomeProps) {
         }}
       >
         {online ? (
-          <OnlineBody
-            onlineStatus={props.onlineStatus}
-            todayEarningsUsd={props.todayEarningsUsd}
-          />
+          <OnlineBody todayEarningsUsd={props.todayEarningsUsd} />
         ) : (
           <OfflineBody
             dayContext={props.dayContext}
@@ -773,17 +768,9 @@ function shortLocation(loc?: string): string {
 
 /* ---------------- ONLINE body ---------------- */
 
-function OnlineBody({
-  onlineStatus,
-  todayEarningsUsd,
-}: {
-  onlineStatus: DevOnlineStatus;
-  todayEarningsUsd: number;
-}) {
-  // Online ambient state. "incoming" + "active" sub-states are now rendered
-  // by the lifecycle takeover (toggled via dev → Lifecycle State), not here.
-  // This body only ever shows the idle/listening surface.
-  void onlineStatus;
+function OnlineBody({ todayEarningsUsd }: { todayEarningsUsd: number }) {
+  // Online ambient state. Dispatch phases (incoming / active) are rendered by
+  // the Lifecycle takeover, not here — this body is always the idle surface.
   return <OnlineIdle todayEarningsUsd={todayEarningsUsd} />;
 }
 
