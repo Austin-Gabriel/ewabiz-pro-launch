@@ -6,7 +6,13 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      className={cn(
+        // Card surfaces are PURE WHITE in both light and dark mode, with
+        // navy text on top, for crisp physical-object contrast against the
+        // page background. See mem://design/card-surfaces.
+        "rounded-xl border bg-white text-[#061C27] shadow-[0_1px_2px_rgba(6,28,39,0.06),0_8px_24px_-12px_rgba(6,28,39,0.18)] border-[rgba(6,28,39,0.10)]",
+        className,
+      )}
       {...props}
     />
   ),
