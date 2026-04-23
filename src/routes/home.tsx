@@ -15,6 +15,7 @@ import type { LiveStatus } from "@/components/home/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { useKyc } from "@/lib/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/lib/onboarding-context";
+import { useDevState, type DevDataDensity, type DevProState } from "@/lib/dev-state-context";
 import { RequireAuth } from "@/components/require-auth";
 import { ProfileSheet } from "@/components/home/profile-sheet";
 
@@ -69,10 +70,17 @@ function HomePage() {
   const auth = useAuth();
   const { data: kyc } = useKyc();
   const { data: onboarding } = useOnboarding();
+  const { state: dev } = useDevState();
   const [activeTab, setActiveTab] = useState<TabKey>("home");
 
-  // Resolve which surface to render
-  const resolved = resolveState({ forcedState, auth, kyc, onboarding });
+  // Dev toggle wins over ?state= which wins over auto-detection.
+  const devForced = mapDevProState(dev.proState);
+  const resolved = resolveState({
+    forcedState: devForced ?? forcedState,
+    auth,
+    kyc,
+    onboarding,
+  });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
 
@@ -85,6 +93,9 @@ function HomePage() {
         ? { kind: "en-route", etaMin: 12 }
         : undefined;
   const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
+
+  // Apply data-density override by remapping which mock dataset feeds StateLive.
+  const liveData = pickLiveData(resolved.kind, dev.dataDensity);
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -106,25 +117,25 @@ function HomePage() {
 
       {resolved.kind === "live-first" ? (
         <StateLive
-          {...LIVE_FIRST_TIME}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_FIRST_TIME.greetingName)}
-          liveStatus={liveStatus ?? LIVE_FIRST_TIME.liveStatus}
+          {...liveData}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
+          liveStatus={liveStatus ?? liveData.liveStatus}
           incomingRequest={incomingRequest}
         />
       ) : null}
       {resolved.kind === "live-quiet" ? (
         <StateLive
-          {...LIVE_QUIET_DAY}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_QUIET_DAY.greetingName)}
-          liveStatus={liveStatus ?? LIVE_QUIET_DAY.liveStatus}
+          {...liveData}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
+          liveStatus={liveStatus ?? liveData.liveStatus}
           incomingRequest={incomingRequest}
         />
       ) : null}
       {resolved.kind === "live-active" ? (
         <StateLive
-          {...LIVE_ACTIVE_DAY}
-          greetingName={firstNameOf(auth.displayName, onboarding.firstName, LIVE_ACTIVE_DAY.greetingName)}
-          liveStatus={liveStatus ?? LIVE_ACTIVE_DAY.liveStatus}
+          {...liveData}
+          greetingName={firstNameOf(auth.displayName, onboarding.firstName, liveData.greetingName)}
+          liveStatus={liveStatus ?? liveData.liveStatus}
           incomingRequest={incomingRequest}
         />
       ) : null}
