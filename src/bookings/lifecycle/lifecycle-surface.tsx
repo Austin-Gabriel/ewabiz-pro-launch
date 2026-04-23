@@ -1213,6 +1213,69 @@ function Avatar({ initial, size = 40 }: { initial: string; size?: number }) {
   );
 }
 
+/**
+ * Two-button secondary row: Message + Call. Sits below the primary CTA
+ * on lifecycle states where reaching the client matters (Get Ready,
+ * En Route, Arrived). Matches the Message/Call style on Home's Up Next
+ * card — outlined neutral, no fill, never orange.
+ */
+function MessageCallRow() {
+  const { text, cardBorder } = useHomeTheme();
+  const baseStyle: React.CSSProperties = {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    border: `1px solid ${cardBorder}`,
+    backgroundColor: "transparent",
+    color: text,
+    fontFamily: UI,
+    fontSize: 13,
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  };
+  return (
+    <div className="mt-3 flex items-stretch gap-2">
+      <button
+        type="button"
+        aria-label="Message client"
+        className="transition-opacity active:opacity-60"
+        style={baseStyle}
+      >
+        <ChatBubbleIcon />
+        Message
+      </button>
+      <button
+        type="button"
+        aria-label="Call client"
+        className="transition-opacity active:opacity-60"
+        style={baseStyle}
+      >
+        <PhoneIcon />
+        Call
+      </button>
+    </div>
+  );
+}
+
+function ChatBubbleIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z" />
+    </svg>
+  );
+}
+
+function PhoneIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+    </svg>
+  );
+}
+
 /* ---------------- Style helpers ---------------- */
 
 function heading(color: string): React.CSSProperties {
