@@ -25,6 +25,10 @@ interface ThemeCtx {
   surfaceElevated: string;
   borderCol: string;
   borderSoft: string;
+  cardSurface: string;
+  cardText: string;
+  cardBorder: string;
+  cardBorderSoft: string;
   sans: string;
   serif: string;
 }
@@ -71,19 +75,23 @@ export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps)
 
   const text = isDark ? "#F0EBD8" : "#061C27";
   const bg = isDark ? "#061C27" : "#F0EBD8";
-  // Card surfaces: pure white in dark mode (with navy text) for crisp,
-  // physical-feeling objects on the page; cream/translucent in light mode.
-  // See mem://design/card-surfaces.
-  const surface = isDark ? "#FFFFFF" : "rgba(6,28,39,0.035)";
-  const surfaceElevated = isDark ? "#FFFFFF" : "rgba(255,255,255,0.55)";
-  const borderCol = isDark ? "rgba(6,28,39,0.10)" : "rgba(6,28,39,0.10)";
-  const borderSoft = isDark ? "rgba(6,28,39,0.06)" : "rgba(6,28,39,0.06)";
+  // Page-chrome tints (status bar, nav chips, progress tracks). Quiet.
+  const surface = isDark ? "rgba(240,235,216,0.04)" : "rgba(6,28,39,0.035)";
+  const surfaceElevated = isDark ? "rgba(240,235,216,0.06)" : "rgba(255,255,255,0.55)";
+  const borderCol = isDark ? "rgba(240,235,216,0.10)" : "rgba(6,28,39,0.10)";
+  const borderSoft = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.06)";
+  // Card surfaces: pure WHITE in both modes — crisp, physical objects on the
+  // page. Text on cards is always navy. See mem://design/card-surfaces.
+  const cardSurface = "#FFFFFF";
+  const cardText = "#061C27";
+  const cardBorder = "rgba(6,28,39,0.10)";
+  const cardBorderSoft = "rgba(6,28,39,0.06)";
   const squiggleOpacity = isDark ? 0.045 : 0.06;
   const grainOpacity = isDark ? 0.14 : 0.18;
 
   return (
     <ThemeContext.Provider
-      value={{ isDark, setIsDark, text, bg, surface, surfaceElevated, borderCol, borderSoft, sans: SANS, serif: SERIF }}
+      value={{ isDark, setIsDark, text, bg, surface, surfaceElevated, borderCol, borderSoft, cardSurface, cardText, cardBorder, cardBorderSoft, sans: SANS, serif: SERIF }}
     >
       <div
         className="relative flex min-h-screen w-full flex-col overflow-hidden"
