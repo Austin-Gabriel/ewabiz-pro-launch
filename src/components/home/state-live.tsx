@@ -695,8 +695,25 @@ function TodayGlance({
   remainingCount: number;
   projectedRemainingUsd: number;
 }) {
-  const { text, borderCol } = useHomeTheme();
   if (remainingCount === 0 && projectedRemainingUsd === 0) return null;
+  return (
+    <CardTheme>
+      <TodayGlanceInner
+        remainingCount={remainingCount}
+        projectedRemainingUsd={projectedRemainingUsd}
+      />
+    </CardTheme>
+  );
+}
+
+function TodayGlanceInner({
+  remainingCount,
+  projectedRemainingUsd,
+}: {
+  remainingCount: number;
+  projectedRemainingUsd: number;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
 
   const label =
     remainingCount === 0
@@ -710,8 +727,9 @@ function TodayGlance({
       type="button"
       className="mt-3 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 transition-opacity active:opacity-70"
       style={{
-        backgroundColor: "rgba(240,235,216,0.035)",
-        border: `1px solid ${borderCol}`,
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
       aria-label="Open today's calendar"
     >
@@ -738,11 +756,38 @@ function QuickStats({
   todayEarningsUsd: number;
   onEditTip: () => void;
 }) {
-  const { text, borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <QuickStatsInner
+        ratingValue={ratingValue}
+        ratingCount={ratingCount}
+        completionPct={completionPct}
+        todayEarningsUsd={todayEarningsUsd}
+        onEditTip={onEditTip}
+      />
+    </CardTheme>
+  );
+}
+
+function QuickStatsInner({
+  ratingValue,
+  ratingCount,
+  completionPct,
+  todayEarningsUsd,
+  onEditTip,
+}: {
+  ratingValue: number;
+  ratingCount: number;
+  completionPct: number;
+  todayEarningsUsd: number;
+  onEditTip: () => void;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
 
   const cardStyle: React.CSSProperties = {
-    backgroundColor: "rgba(240,235,216,0.04)",
-    border: `1px solid ${borderCol}`,
+    backgroundColor: cardSurface,
+    border: `1px solid ${cardBorder}`,
+    boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
     borderRadius: 14,
     padding: "10px 12px",
     minHeight: 70,
@@ -804,7 +849,7 @@ function QuickStats({
             style={{
               width: 18,
               height: 18,
-              border: `1px solid ${borderCol}`,
+              border: `1px solid ${cardBorder}`,
               color: text,
               opacity: 0.7,
             }}
