@@ -108,10 +108,13 @@ function HomePage() {
   });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
-  // When the dev panel forces a lifecycle state, replace Home entirely with
-  // the lifecycle takeover and hide the bottom tab bar — the pro is focused
-  // on this one booking.
+  // Lifecycle states render as a takeover on the Home tab. The bottom tab
+  // bar is hidden ONLY for the Incoming Request state — that's a focused
+  // 60s decision moment. All other lifecycle states (Get Ready, En Route,
+  // Arrived, In Progress, Complete) keep the tab bar visible so the pro can
+  // jump to Bookings/Calendar/Earnings/Profile mid-session and come back.
   const lifecycleActive = dev.lifecycle !== "none";
+  const lifecycleHidesTabs = dev.lifecycle === "incoming";
 
   // Apply data-density override by remapping which mock dataset feeds Home.
   const liveData = pickLiveData(
@@ -132,7 +135,7 @@ function HomePage() {
     homeMode === "offline" ? (("pendingRequests" in liveData) ? (liveData as { pendingRequests: unknown[] }).pendingRequests.length : 0) : 0;
 
   return (
-    <HomeShell noTabBarSpacing={isHardGate || lifecycleActive}>
+    <HomeShell noTabBarSpacing={isHardGate || lifecycleHidesTabs}>
       {resolved.kind === "mid-onboarding" ? (
         <StateMidOnboarding
           firstName={firstNameOf(auth.displayName, onboarding.firstName)}
@@ -168,7 +171,7 @@ function HomePage() {
         />
       ) : null}
 
-      {!isHardGate && !lifecycleActive ? (
+      {!isHardGate && !lifecycleHidesTabs ? (
         <BottomTabs
           active={activeTab}
           onSelect={setActiveTab}
@@ -176,7 +179,7 @@ function HomePage() {
         />
       ) : null}
       <ProfileSheet
-        open={!isHardGate && !lifecycleActive && activeTab === "profile"}
+        open={!isHardGate && !lifecycleHidesTabs && activeTab === "profile"}
         onClose={() => setActiveTab("home")}
       />
 
