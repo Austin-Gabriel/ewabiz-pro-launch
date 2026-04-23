@@ -4,6 +4,8 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { OnboardingProvider } from "@/lib/onboarding-context";
 import { KycProvider } from "@/lib/kyc-context";
+import { DevStateProvider } from "@/lib/dev-state-context";
+import { DevStateToggle } from "@/components/dev/dev-state-toggle";
 
 function NotFoundComponent() {
   return (
@@ -75,12 +77,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        <KycProvider>
-          <Outlet />
-        </KycProvider>
-      </OnboardingProvider>
-    </AuthProvider>
+    <DevStateProvider>
+      <AuthProvider>
+        <OnboardingProvider>
+          <KycProvider>
+            <Outlet />
+            <DevStateToggle />
+          </KycProvider>
+        </OnboardingProvider>
+      </AuthProvider>
+    </DevStateProvider>
   );
 }
