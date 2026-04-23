@@ -780,13 +780,10 @@ function OnlineBody({
   onlineStatus: DevOnlineStatus;
   todayEarningsUsd: number;
 }) {
-  if (onlineStatus === "incoming") {
-    return <OnlinePlaceholder label="Incoming request" />;
-  }
-  if (onlineStatus === "active") {
-    return <OnlinePlaceholder label="Active booking" />;
-  }
-  // "auto" + "idle" both render the idle/listening surface.
+  // Online ambient state. "incoming" + "active" sub-states are now rendered
+  // by the lifecycle takeover (toggled via dev → Lifecycle State), not here.
+  // This body only ever shows the idle/listening surface.
+  void onlineStatus;
   return <OnlineIdle todayEarningsUsd={todayEarningsUsd} />;
 }
 
@@ -908,42 +905,6 @@ function OnlineEarningsLine({ todayUsd }: { todayUsd: number }) {
       >
         {formatUsd(todayUsd)}
       </span>
-    </div>
-  );
-}
-
-function OnlinePlaceholder({ label }: { label: string }) {
-  const { text } = useHomeTheme();
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
-      <span
-        style={{
-          fontFamily: UI,
-          fontSize: 10,
-          letterSpacing: "1.6px",
-          textTransform: "uppercase",
-          color: text,
-          opacity: 0.5,
-          fontWeight: 700,
-        }}
-      >
-        {label}
-      </span>
-      <p
-        style={{
-          fontFamily: UI,
-          fontSize: 18,
-          fontWeight: 600,
-          color: text,
-          letterSpacing: "-0.01em",
-          marginTop: 10,
-        }}
-      >
-        Coming in lifecycle pass
-      </p>
-      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.6, marginTop: 8, maxWidth: 260 }}>
-        This screen will be built once the request lifecycle (incoming → accept → active → complete) is wired up.
-      </p>
     </div>
   );
 }
