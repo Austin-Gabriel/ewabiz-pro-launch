@@ -1103,7 +1103,7 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
-      className="mt-4 rounded-2xl px-4 py-4"
+      className="mt-4 rounded-2xl px-4 py-3.5"
       style={{
         backgroundColor: cardSurface,
         border: `1px solid ${cardBorder}`,
@@ -1111,35 +1111,36 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
       }}
     >
       <div className="flex items-center gap-3">
-        <Avatar initial={booking.clientInitial} size={44} />
+        <Avatar initial={booking.clientInitial} size={40} />
         <div className="min-w-0 flex-1">
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: text }}
+            style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: text, letterSpacing: "-0.005em" }}
           >
             {booking.clientName}
           </div>
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 2 }}
+            style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, marginTop: 1, fontVariantNumeric: "tabular-nums" }}
           >
-            {booking.service}
+            {booking.service} · {booking.durationMin} min · ${booking.priceUsd}
           </div>
         </div>
       </div>
-      <div className="mt-3 flex items-start gap-1.5" style={{ color: text, opacity: 0.7 }}>
-        <span style={{ marginTop: 2 }}>
+      <div
+        className="mt-3 flex items-start gap-1.5 rounded-lg px-2.5 py-2"
+        style={{ color: text, backgroundColor: "rgba(6,28,39,0.04)" }}
+      >
+        <span style={{ marginTop: 2, opacity: 0.7 }}>
           <PinIcon size={11} />
         </span>
-        <span style={{ fontFamily: UI, fontSize: 12, lineHeight: 1.4 }}>{booking.address}</span>
+        <div className="min-w-0 flex-1">
+          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{booking.address}</div>
+          <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
+            {booking.distance} · {booking.etaMin} min away
+          </div>
+        </div>
       </div>
-      <button
-        type="button"
-        className="mt-3 transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 12.5 }}
-      >
-        Message client
-      </button>
     </div>
   );
 }
