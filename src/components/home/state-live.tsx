@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { HOME_SANS, useHomeTheme } from "./home-shell";
+import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import {
   type Booking,
@@ -345,13 +345,22 @@ function LiveStateCard({
 /* ---------------- Live-card primitives ---------------- */
 
 function Card({ children, emphasis }: { children: React.ReactNode; emphasis?: "primary" }) {
-  const { borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <CardInner emphasis={emphasis}>{children}</CardInner>
+    </CardTheme>
+  );
+}
+
+function CardInner({ children, emphasis }: { children: React.ReactNode; emphasis?: "primary" }) {
+  const { cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
       className="mt-3 rounded-2xl px-4 py-4"
       style={{
-        backgroundColor: "rgba(240,235,216,0.045)",
-        border: `1px solid ${emphasis === "primary" ? "rgba(255,130,63,0.45)" : borderCol}`,
+        backgroundColor: cardSurface,
+        border: `1px solid ${emphasis === "primary" ? "rgba(255,130,63,0.55)" : cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
     >
       {children}
@@ -520,7 +529,6 @@ function SecondaryStrip({
 /* ---------------- Pending requests ---------------- */
 
 function PendingRequests({ requests }: { requests: BookingRequest[] }) {
-  const { text, borderCol } = useHomeTheme();
   const [resolved, setResolved] = useState<Record<string, "accept" | "decline">>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -532,119 +540,149 @@ function PendingRequests({ requests }: { requests: BookingRequest[] }) {
           const state = resolved[r.id];
           const isOpen = expanded === r.id;
           return (
-            <div
-              key={r.id}
-              className="rounded-2xl px-3.5 py-3"
-              style={{
-                backgroundColor: "rgba(240,235,216,0.045)",
-                border: `1px solid ${borderCol}`,
-                opacity: state ? 0.55 : 1,
-                transition: "opacity 250ms ease",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => (v === r.id ? null : r.id))}
-                className="flex w-full items-start gap-3 text-left"
-              >
-                <Avatar initial={r.clientInitial} small />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span
-                      className="truncate"
-                      style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}
-                    >
-                      {r.clientName}
-                    </span>
-                    <span style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}>
-                      {formatUsd(r.priceUsd)}
-                    </span>
-                  </div>
-                  <div
-                    className="truncate"
-                    style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 1 }}
-                  >
-                    {r.service}
-                  </div>
-                  <div
-                    className="flex flex-wrap items-center gap-x-2"
-                    style={{ fontFamily: UI, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 4 }}
-                  >
-                    <span style={{ color: ORANGE, opacity: 1, fontWeight: 600 }}>{r.requestedFor}</span>
-                    {r.location ? <span aria-hidden>·</span> : null}
-                    {r.location ? <span>{r.location}</span> : null}
-                  </div>
-                </div>
-              </button>
-
-              {isOpen && r.message ? (
-                <p
-                  style={{
-                    fontFamily: UI,
-                    fontSize: 12.5,
-                    lineHeight: 1.5,
-                    color: text,
-                    opacity: 0.7,
-                    marginTop: 10,
-                    paddingLeft: 40,
-                  }}
-                >
-                  "{r.message}"
-                </p>
-              ) : null}
-
-              {!state ? (
-                <div className="mt-3 flex items-center gap-2" style={{ paddingLeft: 40 }}>
-                  <button
-                    type="button"
-                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
-                    className="flex-1 rounded-xl py-2 transition-transform active:scale-[0.98]"
-                    style={{
-                      backgroundColor: ORANGE,
-                      color: "#061C27",
-                      fontFamily: UI,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
-                    className="rounded-xl px-3 py-2 transition-opacity active:opacity-60"
-                    style={{
-                      backgroundColor: "transparent",
-                      color: text,
-                      opacity: 0.55,
-                      fontFamily: UI,
-                      fontSize: 12.5,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Decline
-                  </button>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    fontFamily: UI,
-                    fontSize: 11.5,
-                    color: state === "accept" ? ORANGE : text,
-                    opacity: state === "accept" ? 1 : 0.5,
-                    marginTop: 8,
-                    paddingLeft: 40,
-                    fontWeight: 600,
-                  }}
-                >
-                  {state === "accept" ? "Accepted — client notified." : "Declined."}
-                </div>
-              )}
-            </div>
+            <CardTheme key={r.id}>
+              <PendingRequestRow
+                r={r}
+                state={state}
+                isOpen={isOpen}
+                onToggle={() => setExpanded((v) => (v === r.id ? null : r.id))}
+                onAccept={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
+                onDecline={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
+              />
+            </CardTheme>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function PendingRequestRow({
+  r,
+  state,
+  isOpen,
+  onToggle,
+  onAccept,
+  onDecline,
+}: {
+  r: BookingRequest;
+  state: "accept" | "decline" | undefined;
+  isOpen: boolean;
+  onToggle: () => void;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="rounded-2xl px-3.5 py-3"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+        opacity: state ? 0.55 : 1,
+        transition: "opacity 250ms ease",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-start gap-3 text-left"
+      >
+        <Avatar initial={r.clientInitial} small />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span
+              className="truncate"
+              style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}
+            >
+              {r.clientName}
+            </span>
+            <span style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}>
+              {formatUsd(r.priceUsd)}
+            </span>
+          </div>
+          <div
+            className="truncate"
+            style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 1 }}
+          >
+            {r.service}
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-x-2"
+            style={{ fontFamily: UI, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 4 }}
+          >
+            <span style={{ color: ORANGE, opacity: 1, fontWeight: 600 }}>{r.requestedFor}</span>
+            {r.location ? <span aria-hidden>·</span> : null}
+            {r.location ? <span>{r.location}</span> : null}
+          </div>
+        </div>
+      </button>
+
+      {isOpen && r.message ? (
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 12.5,
+            lineHeight: 1.5,
+            color: text,
+            opacity: 0.7,
+            marginTop: 10,
+            paddingLeft: 40,
+          }}
+        >
+          "{r.message}"
+        </p>
+      ) : null}
+
+      {!state ? (
+        <div className="mt-3 flex items-center gap-2" style={{ paddingLeft: 40 }}>
+          <button
+            type="button"
+            onClick={onAccept}
+            className="flex-1 rounded-xl py-2 transition-transform active:scale-[0.98]"
+            style={{
+              backgroundColor: ORANGE,
+              color: "#061C27",
+              fontFamily: UI,
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            onClick={onDecline}
+            className="rounded-xl px-3 py-2 transition-opacity active:opacity-60"
+            style={{
+              backgroundColor: "transparent",
+              color: text,
+              opacity: 0.55,
+              fontFamily: UI,
+              fontSize: 12.5,
+              fontWeight: 500,
+            }}
+          >
+            Decline
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            fontFamily: UI,
+            fontSize: 11.5,
+            color: state === "accept" ? ORANGE : text,
+            opacity: state === "accept" ? 1 : 0.5,
+            marginTop: 8,
+            paddingLeft: 40,
+            fontWeight: 600,
+          }}
+        >
+          {state === "accept" ? "Accepted — client notified." : "Declined."}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -657,8 +695,25 @@ function TodayGlance({
   remainingCount: number;
   projectedRemainingUsd: number;
 }) {
-  const { text, borderCol } = useHomeTheme();
   if (remainingCount === 0 && projectedRemainingUsd === 0) return null;
+  return (
+    <CardTheme>
+      <TodayGlanceInner
+        remainingCount={remainingCount}
+        projectedRemainingUsd={projectedRemainingUsd}
+      />
+    </CardTheme>
+  );
+}
+
+function TodayGlanceInner({
+  remainingCount,
+  projectedRemainingUsd,
+}: {
+  remainingCount: number;
+  projectedRemainingUsd: number;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
 
   const label =
     remainingCount === 0
@@ -672,8 +727,9 @@ function TodayGlance({
       type="button"
       className="mt-3 flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 transition-opacity active:opacity-70"
       style={{
-        backgroundColor: "rgba(240,235,216,0.035)",
-        border: `1px solid ${borderCol}`,
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
       aria-label="Open today's calendar"
     >
@@ -700,11 +756,38 @@ function QuickStats({
   todayEarningsUsd: number;
   onEditTip: () => void;
 }) {
-  const { text, borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <QuickStatsInner
+        ratingValue={ratingValue}
+        ratingCount={ratingCount}
+        completionPct={completionPct}
+        todayEarningsUsd={todayEarningsUsd}
+        onEditTip={onEditTip}
+      />
+    </CardTheme>
+  );
+}
+
+function QuickStatsInner({
+  ratingValue,
+  ratingCount,
+  completionPct,
+  todayEarningsUsd,
+  onEditTip,
+}: {
+  ratingValue: number;
+  ratingCount: number;
+  completionPct: number;
+  todayEarningsUsd: number;
+  onEditTip: () => void;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
 
   const cardStyle: React.CSSProperties = {
-    backgroundColor: "rgba(240,235,216,0.04)",
-    border: `1px solid ${borderCol}`,
+    backgroundColor: cardSurface,
+    border: `1px solid ${cardBorder}`,
+    boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
     borderRadius: 14,
     padding: "10px 12px",
     minHeight: 70,
@@ -766,7 +849,7 @@ function QuickStats({
             style={{
               width: 18,
               height: 18,
-              border: `1px solid ${borderCol}`,
+              border: `1px solid ${cardBorder}`,
               color: text,
               opacity: 0.7,
             }}
@@ -952,17 +1035,9 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
         </div>
 
         {request.message ? (
-          <div
-            className="mt-5 rounded-xl px-4 py-3"
-            style={{
-              backgroundColor: "rgba(240,235,216,0.04)",
-              border: `1px solid ${borderCol}`,
-            }}
-          >
-            <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.8, lineHeight: 1.5 }}>
-              "{request.message}"
-            </p>
-          </div>
+          <CardTheme>
+            <IncomingMessageBox message={request.message} />
+          </CardTheme>
         ) : null}
 
         <div className="flex-1" />
@@ -1005,13 +1080,40 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  const { text, borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <StatInner label={label} value={value} accent={accent} />
+    </CardTheme>
+  );
+}
+
+function IncomingMessageBox({ message }: { message: string }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="mt-5 rounded-xl px-4 py-3"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+      }}
+    >
+      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.8, lineHeight: 1.5 }}>
+        "{message}"
+      </p>
+    </div>
+  );
+}
+
+function StatInner({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
       className="flex flex-col items-center justify-center rounded-xl py-3"
       style={{
-        border: `1px solid ${accent ? "rgba(255,130,63,0.45)" : borderCol}`,
-        backgroundColor: "rgba(240,235,216,0.035)",
+        border: `1px solid ${accent ? "rgba(255,130,63,0.55)" : cardBorder}`,
+        backgroundColor: cardSurface,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
     >
       <span

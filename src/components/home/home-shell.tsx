@@ -25,6 +25,10 @@ interface ThemeCtx {
   surfaceElevated: string;
   borderCol: string;
   borderSoft: string;
+  cardSurface: string;
+  cardText: string;
+  cardBorder: string;
+  cardBorderSoft: string;
   sans: string;
   serif: string;
 }
@@ -38,6 +42,29 @@ export function useHomeTheme(): ThemeCtx {
 
 export const HOME_SANS = SANS;
 export const HOME_SERIF = SERIF;
+
+/**
+ * CardTheme — overrides the surrounding HomeTheme so that anything rendered
+ * inside a card sees: navy text on a white surface, with a soft navy border.
+ * Use this to wrap card primitives so all the existing sub-components that
+ * read `text` / `borderCol` from useHomeTheme() automatically flip to the
+ * card palette without having to be rewritten one by one.
+ *
+ * Cards are PURE WHITE in both light and dark mode. See mem://design/card-surfaces.
+ */
+export function CardTheme({ children }: { children: ReactNode }) {
+  const parent = useHomeTheme();
+  const value: ThemeCtx = {
+    ...parent,
+    text: parent.cardText,
+    bg: parent.cardSurface,
+    surface: "rgba(6,28,39,0.04)",
+    surfaceElevated: "rgba(6,28,39,0.06)",
+    borderCol: parent.cardBorder,
+    borderSoft: parent.cardBorderSoft,
+  };
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
 
 export interface HomeShellProps {
   children: ReactNode;
@@ -71,16 +98,23 @@ export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps)
 
   const text = isDark ? "#F0EBD8" : "#061C27";
   const bg = isDark ? "#061C27" : "#F0EBD8";
+  // Page-chrome tints (status bar, nav chips, progress tracks). Quiet.
   const surface = isDark ? "rgba(240,235,216,0.04)" : "rgba(6,28,39,0.035)";
   const surfaceElevated = isDark ? "rgba(240,235,216,0.06)" : "rgba(255,255,255,0.55)";
   const borderCol = isDark ? "rgba(240,235,216,0.10)" : "rgba(6,28,39,0.10)";
   const borderSoft = isDark ? "rgba(240,235,216,0.06)" : "rgba(6,28,39,0.06)";
+  // Card surfaces: pure WHITE in both modes — crisp, physical objects on the
+  // page. Text on cards is always navy. See mem://design/card-surfaces.
+  const cardSurface = "#FFFFFF";
+  const cardText = "#061C27";
+  const cardBorder = "rgba(6,28,39,0.10)";
+  const cardBorderSoft = "rgba(6,28,39,0.06)";
   const squiggleOpacity = isDark ? 0.045 : 0.06;
   const grainOpacity = isDark ? 0.14 : 0.18;
 
   return (
     <ThemeContext.Provider
-      value={{ isDark, setIsDark, text, bg, surface, surfaceElevated, borderCol, borderSoft, sans: SANS, serif: SERIF }}
+      value={{ isDark, setIsDark, text, bg, surface, surfaceElevated, borderCol, borderSoft, cardSurface, cardText, cardBorder, cardBorderSoft, sans: SANS, serif: SERIF }}
     >
       <div
         className="relative flex min-h-screen w-full flex-col overflow-hidden"
