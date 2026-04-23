@@ -14,12 +14,24 @@ import {
   LIVE_DAY_IN_PROGRESS,
   LIVE_DAY_WRAP_UP,
   INCOMING_REQUEST_EXAMPLE,
+  DAY_NONE,
+  DAY_ONE,
+  DAY_MULTIPLE,
+  DAY_FULL,
+  ONLINE_IDLE,
 } from "@/data/mock-data";
 import type { LiveStatus } from "@/data/mock-data";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { useOnboarding, TOTAL_STEPS } from "@/onboarding/onboarding-context";
-import { useDevState, type DevDataDensity, type DevProState } from "@/dev-state/dev-state-context";
+import {
+  useDevState,
+  type DevDataDensity,
+  type DevProState,
+  type DevMode,
+  type DevDayContext,
+  type DevOnlineStatus,
+} from "@/dev-state/dev-state-context";
 import { RequireAuth } from "@/auth/require-auth";
 import { ProfileSheet } from "@/home/profile-sheet";
 
