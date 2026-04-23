@@ -1035,17 +1035,9 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
         </div>
 
         {request.message ? (
-          <div
-            className="mt-5 rounded-xl px-4 py-3"
-            style={{
-              backgroundColor: "rgba(240,235,216,0.04)",
-              border: `1px solid ${borderCol}`,
-            }}
-          >
-            <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.8, lineHeight: 1.5 }}>
-              "{request.message}"
-            </p>
-          </div>
+          <CardTheme>
+            <IncomingMessageBox message={request.message} />
+          </CardTheme>
         ) : null}
 
         <div className="flex-1" />
@@ -1088,13 +1080,22 @@ function IncomingRequestModal({ request }: { request: IncomingRequest }) {
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  const { text, borderCol } = useHomeTheme();
+  return (
+    <CardTheme>
+      <StatInner label={label} value={value} accent={accent} />
+    </CardTheme>
+  );
+}
+
+function StatInner({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
       className="flex flex-col items-center justify-center rounded-xl py-3"
       style={{
-        border: `1px solid ${accent ? "rgba(255,130,63,0.45)" : borderCol}`,
-        backgroundColor: "rgba(240,235,216,0.035)",
+        border: `1px solid ${accent ? "rgba(255,130,63,0.55)" : cardBorder}`,
+        backgroundColor: cardSurface,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
     >
       <span
