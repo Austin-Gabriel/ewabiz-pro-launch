@@ -115,7 +115,7 @@ function HomePage() {
   const incomingRequest = livePreview === "incoming" ? INCOMING_REQUEST_EXAMPLE : undefined;
 
   // Apply data-density override by remapping which mock dataset feeds StateLive.
-  const liveData = pickLiveData(resolved.kind, dev.dataDensity);
+  const liveData = pickLiveData(resolved.kind, dev.dataDensity, livePreview);
 
   return (
     <HomeShell noTabBarSpacing={isHardGate}>
@@ -262,7 +262,14 @@ function mapDevProState(p: DevProState): PreviewState | undefined {
 function pickLiveData(
   kind: "mid-onboarding" | "pending" | "live-first" | "live-quiet" | "live-active",
   density: DevDataDensity,
+  livePreview?: LivePreview,
 ) {
+  // When previewing a specific time-of-day live state, pin to its dataset.
+  if (livePreview === "morning") return LIVE_DAY_MORNING;
+  if (livePreview === "heads-up") return LIVE_DAY_HEADS_UP;
+  if (livePreview === "in-progress") return LIVE_DAY_IN_PROGRESS;
+  if (livePreview === "wrap-up") return LIVE_DAY_WRAP_UP;
+
   const base =
     kind === "live-active"
       ? LIVE_ACTIVE_DAY
