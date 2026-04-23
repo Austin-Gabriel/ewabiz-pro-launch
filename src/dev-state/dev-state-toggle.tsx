@@ -5,6 +5,9 @@ import {
   type DevDataDensity,
   type DevProState,
   type DevThemeOverride,
+  type DevMode,
+  type DevDayContext,
+  type DevOnlineStatus,
 } from "@/dev-state/dev-state-context";
 
 /**
@@ -40,8 +43,39 @@ const THEMES: { value: DevThemeOverride; label: string }[] = [
   { value: "light", label: "Light" },
 ];
 
+const MODES: { value: DevMode; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Use real online state" },
+  { value: "offline", label: "Offline", hint: "Default — show day overview" },
+  { value: "online", label: "Online", hint: "Available for dispatch" },
+];
+
+const DAY_CONTEXTS: { value: DevDayContext; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Match the chosen pro state" },
+  { value: "none", label: "No bookings today", hint: "Empty calendar" },
+  { value: "one", label: "1 scheduled today", hint: "Single appointment" },
+  { value: "multiple", label: "Multiple (3–4)", hint: "Typical busy day" },
+  { value: "full", label: "Full day (5+)", hint: "Stacked back-to-back" },
+];
+
+const ONLINE_STATUSES: { value: DevOnlineStatus; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Default — idle" },
+  { value: "idle", label: "Idle", hint: "Waiting for dispatch" },
+  { value: "incoming", label: "Incoming request", hint: "Coming in lifecycle pass" },
+  { value: "active", label: "Active booking", hint: "Coming in lifecycle pass" },
+];
+
 export function DevStateToggle() {
-  const { enabled, state, setProState, setDataDensity, setTheme, reset } = useDevState();
+  const {
+    enabled,
+    state,
+    setProState,
+    setDataDensity,
+    setTheme,
+    setMode,
+    setDayContext,
+    setOnlineStatus,
+    reset,
+  } = useDevState();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
