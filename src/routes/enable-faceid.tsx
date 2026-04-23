@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
-import { RequireAuth } from "@/components/require-auth";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton, SecondaryButton } from "@/auth/auth-buttons";
+import { RequireAuth } from "@/auth/require-auth";
 
 export const Route = createFileRoute("/enable-faceid")({
   head: () => ({

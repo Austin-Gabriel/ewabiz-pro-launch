@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
-import { PrimaryButton } from "@/components/auth-buttons";
-import { useKyc } from "@/lib/kyc-context";
-import { useAuth } from "@/lib/auth-context";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
+import { PrimaryButton } from "@/auth/auth-buttons";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
+import { useAuth } from "@/auth/auth-context";
 
 export const Route = createFileRoute("/kyc/approved")({
   head: () => ({ meta: [{ title: "You're verified — Ewà Biz" }] }),

@@ -1,11 +1,11 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/lib/auth-context";
-import { OnboardingProvider } from "@/lib/onboarding-context";
-import { KycProvider } from "@/lib/kyc-context";
-import { DevStateProvider } from "@/lib/dev-state-context";
-import { DevStateToggle } from "@/components/dev/dev-state-toggle";
+import { AuthProvider } from "@/auth/auth-context";
+import { OnboardingProvider } from "@/onboarding/onboarding-context";
+import { KycProvider } from "@/onboarding-states/kyc/kyc-context";
+import { DevStateProvider } from "@/dev-state/dev-state-context";
+import { DevStateToggle } from "@/dev-state/dev-state-toggle";
 
 function NotFoundComponent() {
   return (

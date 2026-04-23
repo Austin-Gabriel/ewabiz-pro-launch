@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import { EwaLockup } from "@/components/ewa-logo";
-import { PrimaryButton, SecondaryButton } from "@/components/auth-buttons";
-import { useAuth } from "@/lib/auth-context";
+import { PrimaryButton, SecondaryButton } from "@/auth/auth-buttons";
+import { useAuth } from "@/auth/auth-context";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/welcome")({

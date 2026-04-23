@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import { EwaMark } from "@/components/ewa-logo";
-import { useAuth } from "@/lib/auth-context";
-import { RequireAuth } from "@/components/require-auth";
+import { useAuth } from "@/auth/auth-context";
+import { RequireAuth } from "@/auth/require-auth";
 
 export const Route = createFileRoute("/biometric")({
   head: () => ({ meta: [{ title: "Unlock — Ewà Biz" }] }),

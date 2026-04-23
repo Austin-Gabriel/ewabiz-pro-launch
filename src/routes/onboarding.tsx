@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { getOnboardingSnapshot } from "@/lib/onboarding-context";
-import { RequireAuth } from "@/components/require-auth";
+import { getOnboardingSnapshot } from "@/onboarding/onboarding-context";
+import { RequireAuth } from "@/auth/require-auth";
 
 /**
  * Bare /onboarding entry — resume at the furthest step the pro reached.

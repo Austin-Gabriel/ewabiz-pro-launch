@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { AuthShell, useAuthTheme, SANS_STACK } from "@/components/auth-shell";
+import { AuthShell, useAuthTheme, SANS_STACK } from "@/auth/auth-shell";
 import { EwaLockup } from "@/components/ewa-logo";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/auth/auth-context";
 
 export const Route = createFileRoute("/splash")({
   head: () => ({

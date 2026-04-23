@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { TOTAL_STEPS, getOnboardingSnapshot } from "@/lib/onboarding-context";
-import { StepRouter } from "@/components/onboarding/step-router";
+import { TOTAL_STEPS, getOnboardingSnapshot } from "@/onboarding/onboarding-context";
+import { StepRouter } from "@/onboarding/step-router";
 
 export const Route = createFileRoute("/onboarding/$step")({
   head: () => ({
