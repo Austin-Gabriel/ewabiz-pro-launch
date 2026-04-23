@@ -61,8 +61,8 @@ const DAY_CONTEXTS: { value: DevDayContext; label: string; hint: string }[] = [
 const ONLINE_STATUSES: { value: DevOnlineStatus; label: string; hint: string }[] = [
   { value: "auto", label: "Auto", hint: "Default — idle" },
   { value: "idle", label: "Idle", hint: "Waiting for dispatch" },
-  { value: "incoming", label: "Incoming request", hint: "Coming in lifecycle pass" },
-  { value: "active", label: "Active booking", hint: "Coming in lifecycle pass" },
+  { value: "incoming", label: "Incoming request", hint: "Use Lifecycle → Incoming" },
+  { value: "active", label: "Active booking", hint: "Use Lifecycle → In Progress" },
 ];
 
 const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
