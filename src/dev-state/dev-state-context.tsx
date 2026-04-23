@@ -30,6 +30,20 @@ export type DevDayContext = "auto" | "none" | "one" | "multiple" | "full";
 /** Used when DevMode = "online" — current dispatch lifecycle phase. */
 export type DevOnlineStatus = "auto" | "idle" | "incoming" | "active";
 
+/**
+ * Booking lifecycle takeover state. When set to anything other than "none",
+ * Home is replaced by the corresponding lifecycle screen and the bottom tab
+ * bar is hidden — the pro is focused on this one booking.
+ */
+export type DevLifecycle =
+  | "none"
+  | "incoming"
+  | "get-ready"
+  | "en-route"
+  | "arrived"
+  | "in-progress"
+  | "complete";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
@@ -37,6 +51,7 @@ export interface DevState {
   mode: DevMode;
   dayContext: DevDayContext;
   onlineStatus: DevOnlineStatus;
+  lifecycle: DevLifecycle;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -46,6 +61,7 @@ const DEFAULT_STATE: DevState = {
   mode: "auto",
   dayContext: "auto",
   onlineStatus: "auto",
+  lifecycle: "none",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -59,6 +75,7 @@ interface Ctx {
   setMode: (v: DevMode) => void;
   setDayContext: (v: DevDayContext) => void;
   setOnlineStatus: (v: DevOnlineStatus) => void;
+  setLifecycle: (v: DevLifecycle) => void;
   reset: () => void;
 }
 
@@ -117,11 +134,12 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setMode = useCallback((v: DevMode) => setState((s) => ({ ...s, mode: v })), []);
   const setDayContext = useCallback((v: DevDayContext) => setState((s) => ({ ...s, dayContext: v })), []);
   const setOnlineStatus = useCallback((v: DevOnlineStatus) => setState((s) => ({ ...s, onlineStatus: v })), []);
+  const setLifecycle = useCallback((v: DevLifecycle) => setState((s) => ({ ...s, lifecycle: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
-    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, reset }),
-    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, reset],
+    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, setLifecycle, reset }),
+    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setOnlineStatus, setLifecycle, reset],
   );
 
   return <DevStateContext.Provider value={value}>{children}</DevStateContext.Provider>;
@@ -139,6 +157,7 @@ export function useDevState(): Ctx {
       setMode: () => {},
       setDayContext: () => {},
       setOnlineStatus: () => {},
+      setLifecycle: () => {},
       reset: () => {},
     };
   }
