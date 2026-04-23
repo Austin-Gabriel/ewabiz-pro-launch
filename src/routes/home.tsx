@@ -163,6 +163,7 @@ function HomePage() {
           todayEarningsUsd={liveData.todayEarningsUsd ?? 0}
           weekToDateUsd={liveData.weekToDateUsd ?? 0}
           weekProjectedUsd={liveData.weekProjectedUsd}
+          weekGoalUsd={"weekGoalUsd" in liveData ? (liveData as { weekGoalUsd?: number }).weekGoalUsd : undefined}
           unreadCount={unreadCount}
         />
       ) : null}
