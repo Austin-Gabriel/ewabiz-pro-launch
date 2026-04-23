@@ -207,7 +207,7 @@ function IncomingRequest({
             fontFamily: UI,
             fontSize: 36,
             fontWeight: 700,
-            color: ORANGE,
+            color: text,
             letterSpacing: "-0.02em",
             marginTop: 14,
             fontVariantNumeric: "tabular-nums",
