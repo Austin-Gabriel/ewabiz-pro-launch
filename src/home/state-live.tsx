@@ -32,6 +32,8 @@ export interface StateLiveProps {
   greetingName: string;
   weekToDateUsd: number;
   monthToDateUsd: number;
+  /** Projected end-of-week earnings ("on pace for $X"). */
+  weekProjectedUsd?: number;
   bookingsToday: Booking[];
   pendingRequests: BookingRequest[];
   bookingLink?: string;
@@ -51,9 +53,10 @@ export function StateLive({
   bookingsToday,
   pendingRequests,
   nextOpenSlot,
-  ratingValue = 0,
+  weekToDateUsd,
+  weekProjectedUsd,
+  bookingLink,
   ratingCount = 0,
-  completionPct = 100,
   todayEarningsUsd = 0,
   todayProjectedUsd = 0,
   liveStatus = { kind: "idle" },
@@ -67,8 +70,7 @@ export function StateLive({
   const incoming = online ? incomingRequest : undefined;
 
   const nextBooking = bookingsToday[0];
-  const remainingCount = Math.max(0, bookingsToday.length - 1);
-  const projectedRemaining = Math.max(0, todayProjectedUsd - todayEarningsUsd);
+  const totalToday = bookingsToday.length;
 
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
@@ -81,25 +83,26 @@ export function StateLive({
         liveStatus={liveStatus}
         nextBooking={nextBooking}
         nextOpenSlot={nextOpenSlot}
+        totalToday={totalToday}
       />
 
       {online && pendingRequests.length > 0 ? (
         <PendingRequests requests={pendingRequests} />
       ) : null}
 
-      {bookingsToday.length > 0 ? (
-        <TodayGlance
-          remainingCount={remainingCount}
-          projectedRemainingUsd={projectedRemaining}
-        />
-      ) : null}
-
-      <QuickStats
-        ratingValue={ratingValue}
-        ratingCount={ratingCount}
-        completionPct={completionPct}
-        todayEarningsUsd={todayEarningsUsd + tipsLogged}
+      <EarningsGlance
+        todayUsd={todayEarningsUsd + tipsLogged}
+        weekToDateUsd={weekToDateUsd}
+        weekProjectedUsd={weekProjectedUsd}
         onEditTip={() => setShowTipModal(true)}
+      />
+
+      <ContextualAction
+        liveStatus={liveStatus}
+        bookingsTodayCount={totalToday}
+        pendingCount={pendingRequests.length}
+        ratingCount={ratingCount}
+        bookingLink={bookingLink}
       />
 
       {showTipModal ? (
