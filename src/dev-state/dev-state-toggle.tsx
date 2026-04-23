@@ -181,6 +181,28 @@ export function DevStateToggle() {
 
             <div className="flex-1 overflow-y-auto px-5 pb-4">
               <Group
+                title="Mode"
+                value={state.mode}
+                options={MODES}
+                onChange={(v) => setMode(v as DevMode)}
+              />
+              {state.mode !== "online" ? (
+                <Group
+                  title="Day context (offline)"
+                  value={state.dayContext}
+                  options={DAY_CONTEXTS}
+                  onChange={(v) => setDayContext(v as DevDayContext)}
+                />
+              ) : null}
+              {state.mode === "online" ? (
+                <Group
+                  title="Online status"
+                  value={state.onlineStatus}
+                  options={ONLINE_STATUSES}
+                  onChange={(v) => setOnlineStatus(v as DevOnlineStatus)}
+                />
+              ) : null}
+              <Group
                 title="Pro state"
                 value={state.proState}
                 options={PRO_STATES}
