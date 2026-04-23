@@ -1106,23 +1106,50 @@ function LifecycleColumn({ children }: { children: React.ReactNode }) {
   return <div className="flex flex-1 flex-col px-5 pt-5 pb-5">{children}</div>;
 }
 
-function Header({ title }: { title: string }) {
-  const { text } = useHomeTheme();
+function Header({
+  title,
+  showSafety,
+  onSafety,
+}: {
+  title: string;
+  showSafety?: boolean;
+  onSafety?: () => void;
+}) {
+  const { text, cardBorder } = useHomeTheme();
   return (
     <div className="flex items-center justify-between">
-      <h1
-        style={{
-          fontFamily: UI,
-          fontSize: 17,
-          fontWeight: 600,
-          color: text,
-          letterSpacing: "-0.01em",
-          margin: 0,
-        }}
-      >
-        {title}
-      </h1>
-      <EwaMark size={22} />
+      <div className="flex items-center gap-2.5">
+        <EwaMark size={22} />
+        <h1
+          style={{
+            fontFamily: UI,
+            fontSize: 17,
+            fontWeight: 600,
+            color: text,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          {title}
+        </h1>
+      </div>
+      {showSafety ? (
+        <button
+          type="button"
+          onClick={onSafety}
+          aria-label="Safety tools"
+          className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
+          style={{
+            width: 36,
+            height: 36,
+            border: `1px solid ${cardBorder}`,
+            color: text,
+            backgroundColor: "transparent",
+          }}
+        >
+          <ShieldIcon size={16} />
+        </button>
+      ) : null}
     </div>
   );
 }
