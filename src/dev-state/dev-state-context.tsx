@@ -21,16 +21,31 @@ export type DevProState =
 export type DevDataDensity = "auto" | "empty" | "sparse" | "rich";
 export type DevThemeOverride = "system" | "dark" | "light";
 
+/** Pro is offline (showing day overview) or online (available for dispatch). */
+export type DevMode = "auto" | "offline" | "online";
+
+/** Used when DevMode = "offline" — how full is today's calendar. */
+export type DevDayContext = "auto" | "none" | "one" | "multiple" | "full";
+
+/** Used when DevMode = "online" — current dispatch lifecycle phase. */
+export type DevOnlineStatus = "auto" | "idle" | "incoming" | "active";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
   theme: DevThemeOverride;
+  mode: DevMode;
+  dayContext: DevDayContext;
+  onlineStatus: DevOnlineStatus;
 }
 
 const DEFAULT_STATE: DevState = {
   proState: "auto",
   dataDensity: "auto",
   theme: "system",
+  mode: "auto",
+  dayContext: "auto",
+  onlineStatus: "auto",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -41,6 +56,9 @@ interface Ctx {
   setProState: (v: DevProState) => void;
   setDataDensity: (v: DevDataDensity) => void;
   setTheme: (v: DevThemeOverride) => void;
+  setMode: (v: DevMode) => void;
+  setDayContext: (v: DevDayContext) => void;
+  setOnlineStatus: (v: DevOnlineStatus) => void;
   reset: () => void;
 }
 
