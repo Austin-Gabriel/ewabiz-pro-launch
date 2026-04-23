@@ -529,7 +529,6 @@ function SecondaryStrip({
 /* ---------------- Pending requests ---------------- */
 
 function PendingRequests({ requests }: { requests: BookingRequest[] }) {
-  const { text, borderCol } = useHomeTheme();
   const [resolved, setResolved] = useState<Record<string, "accept" | "decline">>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -541,119 +540,149 @@ function PendingRequests({ requests }: { requests: BookingRequest[] }) {
           const state = resolved[r.id];
           const isOpen = expanded === r.id;
           return (
-            <div
-              key={r.id}
-              className="rounded-2xl px-3.5 py-3"
-              style={{
-                backgroundColor: "rgba(240,235,216,0.045)",
-                border: `1px solid ${borderCol}`,
-                opacity: state ? 0.55 : 1,
-                transition: "opacity 250ms ease",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => (v === r.id ? null : r.id))}
-                className="flex w-full items-start gap-3 text-left"
-              >
-                <Avatar initial={r.clientInitial} small />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span
-                      className="truncate"
-                      style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}
-                    >
-                      {r.clientName}
-                    </span>
-                    <span style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}>
-                      {formatUsd(r.priceUsd)}
-                    </span>
-                  </div>
-                  <div
-                    className="truncate"
-                    style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 1 }}
-                  >
-                    {r.service}
-                  </div>
-                  <div
-                    className="flex flex-wrap items-center gap-x-2"
-                    style={{ fontFamily: UI, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 4 }}
-                  >
-                    <span style={{ color: ORANGE, opacity: 1, fontWeight: 600 }}>{r.requestedFor}</span>
-                    {r.location ? <span aria-hidden>·</span> : null}
-                    {r.location ? <span>{r.location}</span> : null}
-                  </div>
-                </div>
-              </button>
-
-              {isOpen && r.message ? (
-                <p
-                  style={{
-                    fontFamily: UI,
-                    fontSize: 12.5,
-                    lineHeight: 1.5,
-                    color: text,
-                    opacity: 0.7,
-                    marginTop: 10,
-                    paddingLeft: 40,
-                  }}
-                >
-                  "{r.message}"
-                </p>
-              ) : null}
-
-              {!state ? (
-                <div className="mt-3 flex items-center gap-2" style={{ paddingLeft: 40 }}>
-                  <button
-                    type="button"
-                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
-                    className="flex-1 rounded-xl py-2 transition-transform active:scale-[0.98]"
-                    style={{
-                      backgroundColor: ORANGE,
-                      color: "#061C27",
-                      fontFamily: UI,
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
-                    className="rounded-xl px-3 py-2 transition-opacity active:opacity-60"
-                    style={{
-                      backgroundColor: "transparent",
-                      color: text,
-                      opacity: 0.55,
-                      fontFamily: UI,
-                      fontSize: 12.5,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Decline
-                  </button>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    fontFamily: UI,
-                    fontSize: 11.5,
-                    color: state === "accept" ? ORANGE : text,
-                    opacity: state === "accept" ? 1 : 0.5,
-                    marginTop: 8,
-                    paddingLeft: 40,
-                    fontWeight: 600,
-                  }}
-                >
-                  {state === "accept" ? "Accepted — client notified." : "Declined."}
-                </div>
-              )}
-            </div>
+            <CardTheme key={r.id}>
+              <PendingRequestRow
+                r={r}
+                state={state}
+                isOpen={isOpen}
+                onToggle={() => setExpanded((v) => (v === r.id ? null : r.id))}
+                onAccept={() => setResolved((s) => ({ ...s, [r.id]: "accept" }))}
+                onDecline={() => setResolved((s) => ({ ...s, [r.id]: "decline" }))}
+              />
+            </CardTheme>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function PendingRequestRow({
+  r,
+  state,
+  isOpen,
+  onToggle,
+  onAccept,
+  onDecline,
+}: {
+  r: BookingRequest;
+  state: "accept" | "decline" | undefined;
+  isOpen: boolean;
+  onToggle: () => void;
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  return (
+    <div
+      className="rounded-2xl px-3.5 py-3"
+      style={{
+        backgroundColor: cardSurface,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
+        opacity: state ? 0.55 : 1,
+        transition: "opacity 250ms ease",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-start gap-3 text-left"
+      >
+        <Avatar initial={r.clientInitial} small />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span
+              className="truncate"
+              style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}
+            >
+              {r.clientName}
+            </span>
+            <span style={{ fontFamily: UI, fontSize: 14, color: text, fontWeight: 600 }}>
+              {formatUsd(r.priceUsd)}
+            </span>
+          </div>
+          <div
+            className="truncate"
+            style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 1 }}
+          >
+            {r.service}
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-x-2"
+            style={{ fontFamily: UI, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 4 }}
+          >
+            <span style={{ color: ORANGE, opacity: 1, fontWeight: 600 }}>{r.requestedFor}</span>
+            {r.location ? <span aria-hidden>·</span> : null}
+            {r.location ? <span>{r.location}</span> : null}
+          </div>
+        </div>
+      </button>
+
+      {isOpen && r.message ? (
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 12.5,
+            lineHeight: 1.5,
+            color: text,
+            opacity: 0.7,
+            marginTop: 10,
+            paddingLeft: 40,
+          }}
+        >
+          "{r.message}"
+        </p>
+      ) : null}
+
+      {!state ? (
+        <div className="mt-3 flex items-center gap-2" style={{ paddingLeft: 40 }}>
+          <button
+            type="button"
+            onClick={onAccept}
+            className="flex-1 rounded-xl py-2 transition-transform active:scale-[0.98]"
+            style={{
+              backgroundColor: ORANGE,
+              color: "#061C27",
+              fontFamily: UI,
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            onClick={onDecline}
+            className="rounded-xl px-3 py-2 transition-opacity active:opacity-60"
+            style={{
+              backgroundColor: "transparent",
+              color: text,
+              opacity: 0.55,
+              fontFamily: UI,
+              fontSize: 12.5,
+              fontWeight: 500,
+            }}
+          >
+            Decline
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            fontFamily: UI,
+            fontSize: 11.5,
+            color: state === "accept" ? ORANGE : text,
+            opacity: state === "accept" ? 1 : 0.5,
+            marginTop: 8,
+            paddingLeft: 40,
+            fontWeight: 600,
+          }}
+        >
+          {state === "accept" ? "Accepted — client notified." : "Declined."}
+        </div>
+      )}
+    </div>
   );
 }
 
