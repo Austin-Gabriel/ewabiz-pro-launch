@@ -16,6 +16,14 @@ export interface Booking {
   location?: string;
   /** Full street address used by the live state card / nav button. */
   address?: string;
+  /** Short address shown on the Up Next card (e.g. "212 Lafayette Ave, Brooklyn"). */
+  shortAddress?: string;
+  /** Distance from the pro right now (e.g. "2.4 mi"). */
+  distance?: string;
+  /** Avatar tint for the stacked "more today" preview row. */
+  avatarHue?: "blue" | "green" | "peach" | "violet" | "amber";
+  /** Minutes until the booking starts. Drives the "Starts in X min" pill. */
+  startsInMin?: number;
 }
 
 export interface BookingRequest {
@@ -115,6 +123,7 @@ export const LIVE_ACTIVE_DAY = {
   weekToDateUsd: 1240,
   monthToDateUsd: 4680,
   weekProjectedUsd: 1800,
+  weekGoalUsd: 1800,
   bookingsToday: [
     {
       id: "b1",
@@ -123,9 +132,13 @@ export const LIVE_ACTIVE_DAY = {
       service: "Silk press + trim",
       startsAt: "10:30",
       durationMin: 90,
-      priceUsd: 140,
+      priceUsd: 180,
       location: "Fort Greene, Brooklyn",
       address: "212 Lafayette Ave, Brooklyn, NY",
+      shortAddress: "212 Lafayette Ave, Brooklyn",
+      distance: "2.4 mi",
+      avatarHue: "peach",
+      startsInMin: 47,
     },
     {
       id: "b2",
@@ -138,6 +151,9 @@ export const LIVE_ACTIVE_DAY = {
       isNewClient: true,
       location: "Bed-Stuy, Brooklyn",
       address: "488 Halsey St, Brooklyn, NY",
+      shortAddress: "488 Halsey St, Brooklyn",
+      distance: "3.1 mi",
+      avatarHue: "blue",
     },
     {
       id: "b3",
@@ -149,6 +165,9 @@ export const LIVE_ACTIVE_DAY = {
       priceUsd: 95,
       location: "Clinton Hill, Brooklyn",
       address: "70 Greene Ave, Brooklyn, NY",
+      shortAddress: "70 Greene Ave, Brooklyn",
+      distance: "1.8 mi",
+      avatarHue: "green",
     },
   ] as Booking[],
   pendingRequests: [
@@ -321,6 +340,9 @@ export const DAY_FULL = {
       priceUsd: 75,
       location: "Crown Heights, Brooklyn",
       address: "1100 Bedford Ave, Brooklyn, NY",
+      shortAddress: "1100 Bedford Ave, Brooklyn",
+      distance: "2.7 mi",
+      avatarHue: "violet",
     },
     {
       id: "b5",
@@ -333,6 +355,9 @@ export const DAY_FULL = {
       isNewClient: true,
       location: "Bed-Stuy, Brooklyn",
       address: "320 Tompkins Ave, Brooklyn, NY",
+      shortAddress: "320 Tompkins Ave, Brooklyn",
+      distance: "3.6 mi",
+      avatarHue: "amber",
     },
   ] as Booking[],
   todayEarningsUsd: 0,
