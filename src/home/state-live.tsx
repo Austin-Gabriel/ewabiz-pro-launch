@@ -254,8 +254,6 @@ function LiveStateCard({
   nextBooking?: Booking;
   nextOpenSlot?: string;
 }) {
-  const { text, borderCol } = useHomeTheme();
-
   // 1) IN-PROGRESS — orange-accented hero with timer + Go to Appointment
   if (liveStatus.kind === "in-progress" && nextBooking) {
     return (
@@ -302,32 +300,7 @@ function LiveStateCard({
   if (nextBooking) {
     return (
       <Card>
-        <div className="flex items-center justify-between">
-          <Eyebrow>Up Next</Eyebrow>
-          <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.55, fontWeight: 500 }}>
-            {nextBooking.startsAt} · {nextBooking.durationMin} min
-          </span>
-        </div>
-        <div className="mt-2 flex items-center gap-3">
-          <Avatar initial={nextBooking.clientInitial} />
-          <div className="min-w-0 flex-1">
-            <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
-              {nextBooking.clientName}
-              {nextBooking.isNewClient ? <NewBadge /> : null}
-            </div>
-            <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.65, marginTop: 2 }}>
-              {nextBooking.service}
-            </div>
-          </div>
-        </div>
-        {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
-        <PrimaryAction label="Navigate" icon="map" />
-        <SecondaryStrip
-          actions={[
-            { label: "Message", icon: "msg" },
-            { label: "Mark done", icon: "check" },
-          ]}
-        />
+        <UpNextBody nextBooking={nextBooking} />
       </Card>
     );
   }
@@ -335,11 +308,60 @@ function LiveStateCard({
   // 4) Quiet empty state — no fake content
   return (
     <Card>
+      <EmptyTodayBody online={online} nextOpenSlot={nextOpenSlot} />
+    </Card>
+  );
+}
+
+/**
+ * Body components for LiveStateCard branches. They live inside <Card> →
+ * <CardTheme>, so useHomeTheme() resolves to navy-on-white card palette.
+ * Without this indirection, the parent's useHomeTheme() captures the page
+ * palette (cream text in dark mode) and the copy disappears against white.
+ */
+function UpNextBody({ nextBooking }: { nextBooking: Booking }) {
+  const { text } = useHomeTheme();
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <Eyebrow>Up Next</Eyebrow>
+        <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
+          {nextBooking.startsAt} · {nextBooking.durationMin} min
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-3">
+        <Avatar initial={nextBooking.clientInitial} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: text }}>
+            {nextBooking.clientName}
+            {nextBooking.isNewClient ? <NewBadge /> : null}
+          </div>
+          <div className="truncate" style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 2 }}>
+            {nextBooking.service}
+          </div>
+        </div>
+      </div>
+      {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
+      <PrimaryAction label="Navigate" icon="map" />
+      <SecondaryStrip
+        actions={[
+          { label: "Message", icon: "msg" },
+          { label: "Mark done", icon: "check" },
+        ]}
+      />
+    </>
+  );
+}
+
+function EmptyTodayBody({ online, nextOpenSlot }: { online: boolean; nextOpenSlot?: string }) {
+  const { text } = useHomeTheme();
+  return (
+    <>
       <Eyebrow>Today</Eyebrow>
       <p style={{ fontFamily: UI, fontSize: 17, fontWeight: 500, color: text, marginTop: 8, letterSpacing: "-0.01em" }}>
         {online ? "No bookings today." : "You're offline."}
       </p>
-      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.6, marginTop: 4 }}>
+      <p style={{ fontFamily: UI, fontSize: 13, color: text, opacity: 0.7, marginTop: 4 }}>
         {online
           ? nextOpenSlot
             ? `Your next open slot is ${nextOpenSlot}.`
@@ -347,7 +369,7 @@ function LiveStateCard({
           : "Toggle online to start accepting new requests."}
       </p>
       {online ? <PrimaryAction label="Open more availability" subtle /> : null}
-    </Card>
+    </>
   );
 }
 
