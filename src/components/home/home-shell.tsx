@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useDevState } from "@/lib/dev-state-context";
 
 /**
  * Working-surface shell used by /home and the future tab routes (calendar,
@@ -45,14 +46,28 @@ export interface HomeShellProps {
 }
 
 export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps) {
-  // Native-mobile working surface: lock to dark mode. Theme plumbing is kept
-  // for downstream components that already read it.
-  const [isDark, setIsDark] = useState(true);
+  // Native-mobile working surface: defaults to dark. Dev toggle can force
+  // light/dark/system at runtime.
+  const { state: dev } = useDevState();
+  const [systemDark, setSystemDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined" && window.matchMedia) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      setSystemDark(mq.matches);
+      const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+      mq.addEventListener?.("change", onChange);
+      return () => mq.removeEventListener?.("change", onChange);
+    }
   }, []);
+
+  const isDark =
+    dev.theme === "dark" ? true : dev.theme === "light" ? false : systemDark || true;
+  const setIsDark = (_v: boolean) => {
+    /* theme is controlled via dev toggle / system preference */
+  };
 
   const text = isDark ? "#F0EBD8" : "#061C27";
   const bg = isDark ? "#061C27" : "#F0EBD8";
