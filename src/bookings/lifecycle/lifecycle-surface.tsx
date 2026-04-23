@@ -350,10 +350,11 @@ function GetReady({
       <div className="flex-1" />
 
       <PrimaryCta label="Start Route" onClick={onStartRoute} />
+      <MessageCallRow />
       <button
         type="button"
         onClick={onCancel}
-        className="mt-3 w-full py-2 transition-opacity active:opacity-60"
+        className="mt-2 w-full py-2 transition-opacity active:opacity-60"
         style={{ ...tertiaryLink(text), fontSize: 12 }}
       >
         Cancel booking
