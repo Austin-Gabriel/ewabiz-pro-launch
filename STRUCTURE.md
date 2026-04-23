@@ -42,4 +42,4 @@ This file documents the domain-folder structure of the Ewà Biz project for AI t
 ## Maintenance
 
 - Update this file only when a folder is added, renamed, or its purpose fundamentally changes.
-- Do not update for routine file creation or moves within existing folders.
+- Do not update for routine file creation or moves within existing folders..
