@@ -5,6 +5,7 @@ import {
   type DevLifecycle,
 } from "@/dev-state/dev-state-context";
 import { LIFECYCLE_BOOKING, type LifecycleBooking } from "./lifecycle-data";
+import { EwaMark } from "@/components/ewa-logo";
 
 /**
  * Booking lifecycle takeover. Replaces Home (and hides the bottom tab bar)
@@ -187,21 +188,27 @@ function IncomingRequest({
   }, [secondsLeft, onDecline]);
 
   return (
-    <div className="flex flex-1 flex-col px-5 pt-8 pb-6">
+    <div className="flex flex-1 flex-col px-5 pt-5 pb-5">
+      <div className="mb-2 flex items-center justify-between">
+        <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: text, opacity: 0.55, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          New request
+        </span>
+        <EwaMark size={22} />
+      </div>
       <div className="flex flex-col items-center">
         <CountdownRing secondsLeft={secondsLeft} total={TOTAL} />
         <Avatar initial={booking.clientInitial} size={68} />
-        <h1 style={{ ...heading(text), marginTop: 16, fontSize: 24 }}>
+        <h1 style={{ ...heading(text), marginTop: 14, fontSize: 20 }}>
           {booking.clientName}
         </h1>
-        <p style={{ ...subline(text), marginTop: 6, fontSize: 14 }}>
+        <p style={{ ...subline(text), marginTop: 4, fontSize: 12.5 }}>
           {booking.service} · {booking.durationMin} min
         </p>
         <p
           style={{
             ...subline(text),
-            marginTop: 4,
-            fontSize: 13,
+            marginTop: 3,
+            fontSize: 12,
             fontVariantNumeric: "tabular-nums",
           }}
         >
@@ -210,11 +217,11 @@ function IncomingRequest({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 36,
+            fontSize: 30,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.02em",
-            marginTop: 14,
+            marginTop: 12,
             fontVariantNumeric: "tabular-nums",
           }}
         >
@@ -325,11 +332,11 @@ function GetReady({
       <Header title="Get ready" />
       <ClientCard booking={booking} />
 
-      <div className="mt-8 flex flex-col items-center">
+      <div className="mt-7 flex flex-col items-center">
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -339,10 +346,10 @@ function GetReady({
         >
           {mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Leave by {booking.leaveByAt}
         </p>
-        <p style={{ ...subline(text), marginTop: 4, fontSize: 12, opacity: 0.55 }}>
+        <p style={{ ...subline(text), marginTop: 3, fontSize: 11, opacity: 0.55 }}>
           You set {booking.prepMin} min prep · client expects you by {booking.arrivalAt}
         </p>
       </div>
@@ -425,7 +432,7 @@ function DistanceHero({ booking }: { booking: LifecycleBooking }) {
       <span
         style={{
           fontFamily: UI,
-          fontSize: 48,
+          fontSize: 40,
           fontWeight: 700,
           color: text,
           letterSpacing: "-0.03em",
@@ -435,7 +442,7 @@ function DistanceHero({ booking }: { booking: LifecycleBooking }) {
       >
         {booking.distance}
       </span>
-      <p style={{ ...subline(text), marginTop: 10, fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+      <p style={{ ...subline(text), marginTop: 8, fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
         Est. {booking.etaMin} min · arriving {booking.arrivalAt}
       </p>
     </div>
@@ -496,11 +503,12 @@ function ArrivedPin({
   return (
     <LifecycleColumn>
       <Header title="Enter client's PIN" />
-      <p style={{ ...subline(text), marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
+      <ClientCard booking={booking} />
+      <p style={{ ...subline(text), marginTop: 14, fontSize: 12.5, lineHeight: 1.5, textAlign: "left" }}>
         Ask {booking.clientName.split(" ")[0]} for their 4-digit code. They received it when the booking confirmed.
       </p>
 
-      <div className="mt-10 flex justify-center gap-3">
+      <div className="mt-6 flex justify-center gap-2.5">
         {digits.map((d, i) => {
           const active = i === digits.findIndex((x) => x === "");
           const filledThis = d.length === 1;
@@ -517,15 +525,15 @@ function ArrivedPin({
               autoFocus={i === 0}
               aria-label={`PIN digit ${i + 1}`}
               style={{
-                width: 56,
-                height: 64,
-                borderRadius: 14,
+                width: 52,
+                height: 60,
+                borderRadius: 12,
                 textAlign: "center",
                 backgroundColor: "transparent",
                 border: `1.5px solid ${active && !filledThis ? ORANGE : "rgba(240,235,216,0.18)"}`,
                 color: text,
                 fontFamily: UI,
-                fontSize: 30,
+                fontSize: 26,
                 fontWeight: 700,
                 outline: "none",
                 fontVariantNumeric: "tabular-nums",
@@ -540,10 +548,10 @@ function ArrivedPin({
         <p
           style={{
             fontFamily: UI,
-            fontSize: 12.5,
+            fontSize: 12,
             color: ORANGE,
             textAlign: "center",
-            marginTop: 14,
+            marginTop: 12,
             fontWeight: 500,
           }}
         >
@@ -551,11 +559,25 @@ function ArrivedPin({
         </p>
       ) : null}
 
+      <p
+        style={{
+          fontFamily: UI,
+          fontSize: 10.5,
+          color: text,
+          opacity: 0.45,
+          textAlign: "center",
+          marginTop: 10,
+          letterSpacing: "0.04em",
+        }}
+      >
+        DEMO PIN · {booking.pin}
+      </p>
+
       <button
         type="button"
         onClick={() => setHelpOpen(true)}
-        className="mt-6 self-center transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 12.5 }}
+        className="mt-3 self-center transition-opacity active:opacity-60"
+        style={{ ...tertiaryLink(text), fontSize: 12 }}
       >
         Can't get the PIN?
       </button>
@@ -563,6 +585,7 @@ function ArrivedPin({
       <div className="flex-1" />
 
       <PrimaryCta label="Start service" onClick={submit} disabled={!filled} />
+      <MessageCallRow />
 
       {helpOpen ? (
         <PinHelpSheet
@@ -682,11 +705,11 @@ function InProgress({
       <Header title="In session" />
       <ClientCard booking={booking} />
 
-      <div className="mt-8 flex flex-col items-center">
+      <div className="mt-7 flex flex-col items-center">
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -696,7 +719,7 @@ function InProgress({
         >
           {hh}:{mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Scheduled: {booking.durationMin} min
         </p>
       </div>
@@ -708,13 +731,7 @@ function InProgress({
       <div className="flex-1" />
 
       <PrimaryCta label="End service" onClick={onEnd} />
-      <button
-        type="button"
-        className="mt-3 w-full py-2 transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 13 }}
-      >
-        Message client
-      </button>
+      <MessageOnlyRow />
     </LifecycleColumn>
   );
 }
@@ -764,7 +781,7 @@ function Complete({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 64,
+            fontSize: 48,
             fontWeight: 700,
             color: SUCCESS,
             letterSpacing: "-0.03em",
@@ -774,7 +791,7 @@ function Complete({
         >
           ${booking.payoutUsd}
         </span>
-        <p style={{ ...subline(text), marginTop: 8, fontSize: 13 }}>Paid out Friday</p>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>Paid out Friday</p>
         {booking.tipUsd > 0 ? (
           <p
             style={{
@@ -1005,7 +1022,7 @@ function NoShow({
         <span
           style={{
             fontFamily: UI,
-            fontSize: 56,
+            fontSize: 44,
             fontWeight: 700,
             color: text,
             letterSpacing: "-0.03em",
@@ -1015,7 +1032,7 @@ function NoShow({
         >
           {mm}:{ss}
         </span>
-        <p style={{ ...subline(text), marginTop: 10, fontSize: 13 }}>
+        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
           Auto-pinging {booking.clientName.split(" ")[0]} at 3 and 6 min
         </p>
         <ul style={{ marginTop: 14, padding: 0, listStyle: "none", textAlign: "center" }}>
@@ -1066,24 +1083,27 @@ function NoShow({
  * ================================================================= */
 
 function LifecycleColumn({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-1 flex-col px-5 pt-7 pb-6">{children}</div>;
+  return <div className="flex flex-1 flex-col px-5 pt-5 pb-5">{children}</div>;
 }
 
 function Header({ title }: { title: string }) {
   const { text } = useHomeTheme();
   return (
-    <h1
-      style={{
-        fontFamily: UI,
-        fontSize: 22,
-        fontWeight: 700,
-        color: text,
-        letterSpacing: "-0.02em",
-        margin: 0,
-      }}
-    >
-      {title}
-    </h1>
+    <div className="flex items-center justify-between">
+      <h1
+        style={{
+          fontFamily: UI,
+          fontSize: 17,
+          fontWeight: 600,
+          color: text,
+          letterSpacing: "-0.01em",
+          margin: 0,
+        }}
+      >
+        {title}
+      </h1>
+      <EwaMark size={22} />
+    </div>
   );
 }
 
@@ -1099,7 +1119,7 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
     <div
-      className="mt-4 rounded-2xl px-4 py-4"
+      className="mt-4 rounded-2xl px-4 py-3.5"
       style={{
         backgroundColor: cardSurface,
         border: `1px solid ${cardBorder}`,
@@ -1107,35 +1127,36 @@ function ClientCardInner({ booking }: { booking: LifecycleBooking }) {
       }}
     >
       <div className="flex items-center gap-3">
-        <Avatar initial={booking.clientInitial} size={44} />
+        <Avatar initial={booking.clientInitial} size={40} />
         <div className="min-w-0 flex-1">
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: text }}
+            style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: text, letterSpacing: "-0.005em" }}
           >
             {booking.clientName}
           </div>
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.65, marginTop: 2 }}
+            style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, marginTop: 1, fontVariantNumeric: "tabular-nums" }}
           >
-            {booking.service}
+            {booking.service} · {booking.durationMin} min · ${booking.priceUsd}
           </div>
         </div>
       </div>
-      <div className="mt-3 flex items-start gap-1.5" style={{ color: text, opacity: 0.7 }}>
-        <span style={{ marginTop: 2 }}>
+      <div
+        className="mt-3 flex items-start gap-1.5 rounded-lg px-2.5 py-2"
+        style={{ color: text, backgroundColor: "rgba(6,28,39,0.04)" }}
+      >
+        <span style={{ marginTop: 2, opacity: 0.7 }}>
           <PinIcon size={11} />
         </span>
-        <span style={{ fontFamily: UI, fontSize: 12, lineHeight: 1.4 }}>{booking.address}</span>
+        <div className="min-w-0 flex-1">
+          <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{booking.address}</div>
+          <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
+            {booking.distance} · {booking.etaMin} min away
+          </div>
+        </div>
       </div>
-      <button
-        type="button"
-        className="mt-3 transition-opacity active:opacity-60"
-        style={{ ...tertiaryLink(text), fontSize: 12.5 }}
-      >
-        Message client
-      </button>
     </div>
   );
 }
@@ -1177,11 +1198,11 @@ function PrimaryCta({
       disabled={disabled}
       className="w-full rounded-2xl transition-transform active:scale-[0.99]"
       style={{
-        height: 56,
+        height: 52,
         backgroundColor: ORANGE,
         color: "#061C27",
         fontFamily: UI,
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 700,
         letterSpacing: "-0.01em",
         opacity: disabled ? 0.45 : 1,
@@ -1223,18 +1244,18 @@ function MessageCallRow() {
   const { text, cardBorder } = useHomeTheme();
   const baseStyle: React.CSSProperties = {
     flex: 1,
-    height: 44,
+    height: 42,
     borderRadius: 12,
     border: `1px solid ${cardBorder}`,
     backgroundColor: "transparent",
     color: text,
     fontFamily: UI,
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: 600,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 7,
   };
   return (
     <div className="mt-3 flex items-stretch gap-2">
@@ -1257,6 +1278,39 @@ function MessageCallRow() {
         Call
       </button>
     </div>
+  );
+}
+
+/**
+ * Single-button outlined Message action. Used on In Progress where calling
+ * mid-session breaks the rhythm of the appointment but messaging is still OK.
+ * Same visual weight as MessageCallRow for consistency across lifecycle.
+ */
+function MessageOnlyRow() {
+  const { text, cardBorder } = useHomeTheme();
+  return (
+    <button
+      type="button"
+      aria-label="Message client"
+      className="mt-3 w-full transition-opacity active:opacity-60"
+      style={{
+        height: 42,
+        borderRadius: 12,
+        border: `1px solid ${cardBorder}`,
+        backgroundColor: "transparent",
+        color: text,
+        fontFamily: UI,
+        fontSize: 12.5,
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 7,
+      }}
+    >
+      <ChatBubbleIcon />
+      Message
+    </button>
   );
 }
 
