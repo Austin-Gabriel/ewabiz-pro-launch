@@ -193,6 +193,12 @@ export function DevStateToggle() {
 
             <div className="flex-1 overflow-y-auto px-5 pb-4">
               <Group
+                title="Lifecycle state"
+                value={state.lifecycle}
+                options={LIFECYCLES}
+                onChange={(v) => setLifecycle(v as DevLifecycle)}
+              />
+              <Group
                 title="Mode"
                 value={state.mode}
                 options={MODES}
