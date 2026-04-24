@@ -289,7 +289,7 @@ function RailTime({ time, meridiem }: { time: string; meridiem: "AM" | "PM" }) {
 
 function RailDot({ active }: { active?: boolean }) {
   return (
-    <div className="relative flex shrink-0 items-start justify-center" style={{ width: 24, paddingTop: 18 }}>
+    <div className="relative flex shrink-0 items-start justify-center mt-[28px] mb-[38px] ml-[4px]" style={{ width: 24, paddingTop: 18 }}>
       <span
         aria-hidden
         className="rounded-full"
