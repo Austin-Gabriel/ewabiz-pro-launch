@@ -181,7 +181,7 @@ function UpcomingTab() {
       id: "p2",
       clientName: "Devon M.",
       clientInitial: "D",
-      service: "Knotless braids · Sunday 9 AM",
+      service: "Knotless braids",
       startsAt: "9:00",
       durationMin: 240,
       priceUsd: 220,
