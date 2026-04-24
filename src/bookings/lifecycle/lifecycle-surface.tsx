@@ -1411,22 +1411,47 @@ function ClientCardInner({
         boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
       }}
     >
-      <div className="flex items-center gap-3">
-        <Avatar initial={booking.clientInitial} size={40} />
+      <div className="flex items-start gap-3.5">
+        <Avatar initial={booking.clientInitial} size={44} />
         <div className="min-w-0 flex-1">
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: text, letterSpacing: "-0.005em" }}
+            style={{
+              fontFamily: UI,
+              fontSize: 15,
+              fontWeight: 600,
+              color: text,
+              letterSpacing: "-0.005em",
+            }}
           >
             {booking.clientName}
           </div>
           <div
             className="truncate"
-            style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, marginTop: 1, fontVariantNumeric: "tabular-nums" }}
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: text,
+              opacity: 0.7,
+              marginTop: 3,
+              fontVariantNumeric: "tabular-nums",
+            }}
           >
-            {booking.service} · {booking.durationMin} min · ${booking.priceUsd}
+            {booking.service} · {booking.durationMin} min
           </div>
         </div>
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 16,
+            fontWeight: 700,
+            color: text,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          ${booking.priceUsd}
+        </span>
       </div>
       <div
         className="mt-3 flex items-start gap-1.5 rounded-lg px-2.5 py-2"
@@ -1481,7 +1506,7 @@ function PrimaryCta({
       type="button"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className="w-full rounded-2xl transition-transform active:scale-[0.99]"
+      className="mt-5 w-full rounded-2xl transition-transform active:scale-[0.99]"
       style={{
         height: 52,
         backgroundColor: ORANGE,

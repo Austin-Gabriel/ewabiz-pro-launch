@@ -1,12 +1,20 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
 import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
-import { LIVE_ACTIVE_DAY, formatUsd, type Booking } from "@/data/mock-data";
+import { formatUsd, type Booking } from "@/data/mock-data";
+import {
+  ALL_BOOKINGS,
+  horizonOf,
+  formatExpiresIn,
+  formatTimeOnly,
+  type Booking as CanonicalBooking,
+  type TimeHorizon,
+} from "@/data/mock-bookings";
 import {
   BookingRowCard,
   BookingsGroup,
@@ -160,49 +168,43 @@ function TabBar({
 /* ---------------- Upcoming ---------------- */
 
 function UpcomingTab() {
-  const today = LIVE_ACTIVE_DAY.bookingsToday as Booking[];
-
-  // Pending scheduled requests — mock seed. These are bookings the client
-  // has requested but the pro hasn't yet accepted. They expire after 6h
-  // (countdown-style copy); on accept they fold into the confirmed list.
-  const [pending, setPending] = useState<Booking[]>(() => [
-    {
-      id: "p1",
-      clientName: "Simone Carter",
-      clientInitial: "S",
-      service: "Silk press",
-      startsAt: "11:00",
-      durationMin: 90,
-      priceUsd: 160,
-      location: "Prospect Heights, Brooklyn",
-      avatarHue: "amber",
-    },
-    {
-      id: "p2",
-      clientName: "Devon M.",
-      clientInitial: "D",
-      service: "Knotless braids",
-      startsAt: "9:00",
-      durationMin: 240,
-      priceUsd: 220,
-      location: "Park Slope, Brooklyn",
-      avatarHue: "violet",
-    },
-  ]);
-  // Per-card expiry copy. A real implementation would derive these from a
-  // server timestamp; for the mock we just keep them as static labels so the
-  // designer can see the visual.
-  const expiryByPendingId: Record<string, string> = {
-    p1: "expires in 6h",
-    p2: "expires in 23 min",
-  };
+  // Active bookings (excluding completed/cancelled) live in a single
+  // dismissible registry so accept/decline mutate the list locally.
+  const [bookings, setBookings] = useState<CanonicalBooking[]>(() =>
+    ALL_BOOKINGS.filter((b) => b.status === "confirmed" || b.status === "pending"),
+  );
 
   const handleAccept = (id: string) =>
-    setPending((prev) => prev.filter((b) => b.id !== id));
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status: "confirmed" } : b)),
+    );
   const handleDecline = (id: string) =>
-    setPending((prev) => prev.filter((b) => b.id !== id));
+    setBookings((prev) => prev.filter((b) => b.id !== id));
 
-  if (today.length === 0) {
+  // Group by time horizon. Sections are keyed in canonical display order.
+  const groups = useMemo(() => {
+    const buckets: Record<TimeHorizon, CanonicalBooking[]> = {
+      today: [],
+      "this-week": [],
+      "this-month": [],
+      "next-month": [],
+      later: [],
+    };
+    for (const b of bookings) buckets[horizonOf(b.startsAt)].push(b);
+    for (const k of Object.keys(buckets) as TimeHorizon[]) {
+      buckets[k].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+    }
+    return buckets;
+  }, [bookings]);
+
+  const total =
+    groups.today.length +
+    groups["this-week"].length +
+    groups["this-month"].length +
+    groups["next-month"].length +
+    groups.later.length;
+
+  if (total === 0) {
     return (
       <EmptyBlock
         title="Nothing on the books yet"
@@ -211,60 +213,198 @@ function UpcomingTab() {
     );
   }
 
-  // Build timeline entries with stacked time labels and computed gap labels.
-  const entries: TimelineEntry[] = today.map((b, i) => {
-    const [time, meridiem] = formatStackedTime(b.startsAt);
-    const prev = i > 0 ? today[i - 1] : undefined;
+  return (
+    <div className="flex flex-col pb-6">
+      <TodayHorizonGroup
+        bookings={groups.today}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
+      <CollapsibleHorizonGroup
+        title="This Week"
+        bookings={groups["this-week"]}
+        defaultOpen
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
+      <CollapsibleHorizonGroup
+        title="This Month"
+        bookings={groups["this-month"]}
+        defaultOpen={false}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
+      <CollapsibleHorizonGroup
+        title="Next Month"
+        bookings={groups["next-month"]}
+        defaultOpen={false}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
+      <CollapsibleHorizonGroup
+        title="Later"
+        bookings={groups.later}
+        defaultOpen={false}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+      />
+    </div>
+  );
+}
+
+/* ---- Horizon groups ---- */
+
+function adaptCanonical(b: CanonicalBooking): Booking {
+  return {
+    id: b.id,
+    clientName: b.clientName,
+    clientInitial: b.clientInitial,
+    service: b.service,
+    startsAt: formatTimeOnly(b.startsAt),
+    durationMin: b.durationMin,
+    priceUsd: b.priceUsd,
+    isNewClient: b.isNewClient,
+    location: b.neighborhood,
+    address: b.address,
+    distance: b.distance,
+    avatarHue: b.avatarHue,
+  };
+}
+
+function pendingPropsFor(
+  b: CanonicalBooking,
+  onAccept: (id: string) => void,
+  onDecline: (id: string) => void,
+) {
+  if (b.status !== "pending") return undefined;
+  return {
+    expiresLabel: b.expiresAt ? formatExpiresIn(b.expiresAt) : "Expires soon",
+    onAccept: () => onAccept(b.id),
+    onDecline: () => onDecline(b.id),
+  };
+}
+
+function TodayHorizonGroup({
+  bookings,
+  onAccept,
+  onDecline,
+}: {
+  bookings: CanonicalBooking[];
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+}) {
+  if (bookings.length === 0) return null;
+
+  const entries: TimelineEntry[] = bookings.map((b, i) => {
+    const adapted = adaptCanonical(b);
+    const [time, meridiem] = formatStackedTime(adapted.startsAt);
+    const prev = i > 0 ? bookings[i - 1] : undefined;
     const gapBefore = prev
-      ? gapBetween(prev.startsAt, prev.durationMin, b.startsAt)
+      ? gapBetween(
+          formatTimeOnly(prev.startsAt),
+          prev.durationMin,
+          adapted.startsAt,
+        )
       : undefined;
     return {
-      booking: b,
+      booking: adapted,
       time,
       meridiem,
-      isNext: i === 0,
+      isNext: i === 0 && b.status === "confirmed",
       gapBefore,
+      pending: pendingPropsFor(b, onAccept, onDecline),
     };
   });
 
-  const totalUsd = today.reduce((sum, b) => sum + b.priceUsd, 0);
-  const dateLabel = currentDateLabel();
+  const totalUsd = bookings
+    .filter((b) => b.status === "confirmed")
+    .reduce((sum, b) => sum + b.priceUsd, 0);
 
   return (
-    <div className="flex flex-col pb-6">
-      {pending.length > 0 ? (
-        <BookingsGroup>
-          <BookingsSectionHeader
-            title="Pending"
-            meta={`${pending.length} ${pending.length === 1 ? "request" : "requests"}`}
-          />
-          <div className="flex flex-col gap-2.5">
-            {pending.map((b) => (
-              <BookingRowCard
-                key={b.id}
-                booking={b}
-                pending={{
-                  expiresLabel: expiryByPendingId[b.id] ?? "expires soon",
-                  onAccept: () => handleAccept(b.id),
-                  onDecline: () => handleDecline(b.id),
-                }}
-              />
-            ))}
-          </div>
-        </BookingsGroup>
+    <BookingsGroup>
+      <BookingsSectionHeader
+        title="Today"
+        meta={`${bookings.length} ${bookings.length === 1 ? "booking" : "bookings"} · ${formatUsd(totalUsd)}`}
+        date={currentDateLabel()}
+      />
+      <BookingTimeline entries={entries} />
+    </BookingsGroup>
+  );
+}
+
+function CollapsibleHorizonGroup({
+  title,
+  bookings,
+  defaultOpen,
+  onAccept,
+  onDecline,
+}: {
+  title: string;
+  bookings: CanonicalBooking[];
+  defaultOpen: boolean;
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const { text } = useHomeTheme();
+  if (bookings.length === 0) return null;
+
+  return (
+    <BookingsGroup>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="mb-3 flex w-full items-baseline justify-between gap-3 text-left transition-opacity active:opacity-70"
+        aria-expanded={open}
+      >
+        <h2
+          style={{
+            fontFamily: UI,
+            fontSize: 16,
+            fontWeight: 700,
+            color: text,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          {title}
+        </h2>
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            color: text,
+            opacity: 0.55,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
+          <span
+            aria-hidden
+            style={{
+              display: "inline-block",
+              marginLeft: 8,
+              transform: open ? "rotate(90deg)" : "rotate(0deg)",
+              transition: "transform 180ms ease",
+            }}
+          >
+            ›
+          </span>
+        </span>
+      </button>
+      {open ? (
+        <div className="flex flex-col gap-2.5">
+          {bookings.map((b) => (
+            <BookingRowCard
+              key={b.id}
+              booking={adaptCanonical(b)}
+              pending={pendingPropsFor(b, onAccept, onDecline)}
+            />
+          ))}
+        </div>
       ) : null}
-
-      <BookingsGroup>
-        <BookingsSectionHeader
-          title="Today"
-          meta={`${today.length} ${today.length === 1 ? "booking" : "bookings"} · ${formatUsd(totalUsd)}`}
-          date={dateLabel}
-        />
-        <BookingTimeline entries={entries} />
-      </BookingsGroup>
-
-      {/* Placeholder for This Week / Later groups (no rail, no NEXT). */}
-    </div>
+    </BookingsGroup>
   );
 }
 

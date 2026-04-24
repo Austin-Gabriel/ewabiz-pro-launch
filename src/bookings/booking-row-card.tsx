@@ -84,7 +84,7 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending }: 
             name={booking.clientName}
             service={booking.service}
             location={booking.location}
-            pendingStatus={pending ? `Pending your approval · ${pending.expiresLabel}` : undefined}
+            pendingStatus={pending ? pending.expiresLabel : undefined}
           />
           <Price priceUsd={booking.priceUsd} cancelled={cancelled} />
         </div>
@@ -176,9 +176,10 @@ function Body({
           style={{
             fontFamily: UI,
             fontSize: 11.5,
-            color: BAGEL,
-            fontWeight: 600,
-            letterSpacing: "0.02em",
+            color: MIDNIGHT,
+            opacity: 0.55,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
             marginTop: 6,
             lineHeight: 1.3,
           }}
@@ -344,6 +345,8 @@ export interface TimelineEntry {
   isNext?: boolean;
   /** Optional gap label rendered ABOVE this entry on the rail. */
   gapBefore?: string;
+  /** Pending request props if this entry is awaiting pro approval. */
+  pending?: BookingRowCardProps["pending"];
 }
 
 export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
@@ -382,7 +385,11 @@ function RailRow({ entry }: { entry: TimelineEntry }) {
       <RailTime time={entry.time} meridiem={entry.meridiem} />
       <RailDot active={entry.isNext} />
       <div className="min-w-0 flex-1 pl-3">
-        <BookingRowCard booking={entry.booking} isNext={entry.isNext} />
+        <BookingRowCard
+          booking={entry.booking}
+          isNext={entry.isNext}
+          pending={entry.pending}
+        />
       </div>
     </div>
   );
