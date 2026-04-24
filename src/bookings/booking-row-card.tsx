@@ -119,55 +119,36 @@ function Body({
         {name}
       </div>
       <div
-        className="flex items-start gap-2"
-        style={{ marginTop: 3 }}
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: MIDNIGHT,
+          opacity: 0.7,
+          lineHeight: 1.35,
+          marginTop: 3,
+          wordBreak: "break-word",
+        }}
       >
-        <span
+        {service}
+      </div>
+      {location ? (
+        <div
           style={{
             fontFamily: UI,
-            fontSize: 13,
+            fontSize: 12,
             color: MIDNIGHT,
-            opacity: 0.6,
+            opacity: 0.5,
             lineHeight: 1.3,
+            marginTop: 2,
             wordBreak: "break-word",
-            flex: "1 1 0",
-            minWidth: 0,
           }}
         >
-          {service}
-        </span>
-        {location ? (
-          <>
-            <span
-              aria-hidden
-              style={{
-                fontFamily: UI,
-                fontSize: 13,
-                color: MIDNIGHT,
-                opacity: 0.35,
-                lineHeight: 1.3,
-                flexShrink: 0,
-              }}
-            >
-              ·
-            </span>
-            <span
-              style={{
-                fontFamily: UI,
-                fontSize: 13,
-                color: MIDNIGHT,
-                opacity: 0.6,
-                lineHeight: 1.3,
-                wordBreak: "break-word",
-                flex: "1 1 0",
-                minWidth: 0,
-              }}
-            >
-              {shortLocality(location)}
-            </span>
-          </>
-        ) : null}
-      </div>
+          {shortLocality(location)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
     </div>
   );
 }
