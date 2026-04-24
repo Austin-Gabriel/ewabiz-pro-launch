@@ -1,6 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { useDevState } from "@/dev-state/dev-state-context";
 import {
@@ -846,8 +854,13 @@ function DetailActionBar({
         </>
       ) : action.kind === "start" ? (
         <PrimaryButton label="Start booking" onClick={onStart} />
-      ) : action.kind === "start-disabled" ? (
-        <PrimaryButton label={action.label} onClick={() => {}} disabled />
+      ) : action.kind === "start-early" ? (
+        <StartEarlyButton
+          label={action.label}
+          firstName={booking.clientName.split(" ")[0]}
+          neighborhood={booking.neighborhood}
+          onConfirm={onStart}
+        />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
       ) : action.kind === "book-again" ? (
@@ -878,7 +891,7 @@ function DetailActionBar({
 type DetailAction =
   | { kind: "pending" }
   | { kind: "start" }
-  | { kind: "start-disabled"; label: string }
+  | { kind: "start-early"; label: string }
   | { kind: "open-active" }
   | { kind: "book-again" }
   | { kind: "book-similar" }
@@ -904,10 +917,13 @@ function deriveAction(
       const minsUntil = Math.round(
         (booking.startsAt.getTime() - Date.now()) / 60000,
       );
-      // Travel-window threshold — 60 min before start time the pro can start
-      // the booking manually (matches the auto-trigger window in spec).
+      // Inside the travel window (≤ 60m) the pro starts the booking
+      // unprompted. Earlier in the day, "Start now" still works but routes
+      // through a confirmation sheet so they don't trigger the lifecycle by
+      // accident — copy preserves "Starts in Xh Ym" so they see exactly how
+      // early they're going.
       if (minsUntil <= 60) return { kind: "start" };
-      return { kind: "start-disabled", label: `Starts in ${formatLeadTime(minsUntil)}` };
+      return { kind: "start-early", label: `Starts in ${formatLeadTime(minsUntil)}` };
     }
     return { kind: "cancel" };
   }
