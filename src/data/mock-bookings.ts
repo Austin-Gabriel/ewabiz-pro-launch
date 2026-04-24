@@ -71,6 +71,26 @@ export interface Booking {
 
   /** Pending request expiry timestamp (only meaningful when status === pending). */
   expiresAt?: Date;
+
+  /* ----- Completed-only fields ----- */
+  /** Actual elapsed service duration if it differs from `durationMin`. */
+  actualDurationMin?: number;
+  /** Tip the client added on completion. */
+  tipUsd?: number;
+  /** Payout date label (e.g. "Apr 20"). Undefined while pending payout. */
+  paidOutOn?: string;
+  /** Pro's rating of the client (1–5). Undefined if not yet rated. */
+  proRatingOfClient?: number;
+
+  /* ----- Cancelled-only fields ----- */
+  /** Who initiated the cancellation. */
+  cancelledBy?: "client" | "pro" | "expired";
+  /** When it was cancelled (display string, already formatted). */
+  cancelledAt?: string;
+  /** Optional client- or pro-supplied reason. */
+  cancellationReason?: string;
+  /** Cancellation fee paid out to the pro, in USD. 0 means none. */
+  cancellationFeeUsd?: number;
 }
 
 /* --------- Initials helper --------- */
@@ -276,6 +296,10 @@ export const HISTORY_BOOKINGS: Booking[] = [
     address: "212 Lafayette Ave, Brooklyn, NY",
     avatarHue: "peach",
     priorBookingsWithPro: 1,
+    actualDurationMin: 52,
+    tipUsd: 12,
+    paidOutOn: undefined,
+    proRatingOfClient: undefined,
   }),
   mk({
     id: "h2",
@@ -289,6 +313,10 @@ export const HISTORY_BOOKINGS: Booking[] = [
     address: "1100 Bedford Ave, Brooklyn, NY",
     avatarHue: "blue",
     priorBookingsWithPro: 0,
+    actualDurationMin: 240,
+    tipUsd: 30,
+    paidOutOn: "Apr 20",
+    proRatingOfClient: 5,
   }),
   mk({
     id: "h3",
@@ -302,6 +330,10 @@ export const HISTORY_BOOKINGS: Booking[] = [
     address: "320 5th Ave, Brooklyn, NY",
     avatarHue: "violet",
     priorBookingsWithPro: 1,
+    actualDurationMin: 88,
+    tipUsd: 15,
+    paidOutOn: "Apr 18",
+    proRatingOfClient: 4,
   }),
   mk({
     id: "h4",
@@ -314,6 +346,10 @@ export const HISTORY_BOOKINGS: Booking[] = [
     neighborhood: "Crown Heights, Brooklyn",
     address: "1100 Bedford Ave, Brooklyn, NY",
     avatarHue: "amber",
+    cancelledBy: "client",
+    cancelledAt: "Apr 18 · 4:12 PM",
+    cancellationReason: "Something came up — so sorry!",
+    cancellationFeeUsd: 25,
   }),
   mk({
     id: "h5",
@@ -327,6 +363,10 @@ export const HISTORY_BOOKINGS: Booking[] = [
     address: "240 Lenox Ave, New York, NY",
     avatarHue: "green",
     priorBookingsWithPro: 2,
+    actualDurationMin: 345,
+    tipUsd: 50,
+    paidOutOn: "Apr 12",
+    proRatingOfClient: 5,
   }),
 ];
 

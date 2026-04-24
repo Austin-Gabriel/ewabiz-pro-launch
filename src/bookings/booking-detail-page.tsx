@@ -30,6 +30,12 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   const navigate = useNavigate();
   const { state: dev, setLifecycle } = useDevState();
   const booking = findBookingById(bookingId);
+  // Local optimistic status — accept/decline mutate this without leaving the
+  // page so the pro sees the result immediately. Defaults safely when the
+  // booking is missing; hooks must run unconditionally before any return.
+  const [status, setStatus] = useState<BookingStatus>(
+    booking?.status ?? "cancelled",
+  );
 
   if (!booking) {
     return (
@@ -45,9 +51,6 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     );
   }
 
-  // Local optimistic status — accept/decline mutate this without leaving the
-  // page so the pro sees the result immediately.
-  const [status, setStatus] = useState<BookingStatus>(booking.status);
   const lifecycleActive =
     dev.lifecycle !== "none" && dev.lifecycle !== "incoming";
 
@@ -72,12 +75,17 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-32 pt-2">
         <HeroBlock booking={booking} status={status} />
-        <ServiceCard booking={booking} />
+        <ServiceCard booking={booking} dimmed={status === "cancelled"} />
         <LocationCard booking={booking} revealAddress={false} />
-        <PaymentCard booking={booking} />
+        {status === "cancelled" ? (
+          <CancellationCard booking={booking} />
+        ) : (
+          <PaymentCard booking={booking} status={status} />
+        )}
+        {status === "completed" ? <RatingCard booking={booking} /> : null}
         {booking.note ? <NotesCard note={booking.note} /> : null}
         <ClientCard booking={booking} status={status} />
-        <PolicyLink />
+        {status === "pending" || status === "confirmed" ? <PolicyLink /> : null}
       </div>
 
       <DetailActionBar
@@ -178,6 +186,7 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
             opacity: 0.65,
             marginTop: 6,
             fontVariantNumeric: "tabular-nums",
+            textDecoration: status === "cancelled" ? "line-through" : "none",
           }}
         >
           {formatBookingDate(booking.startsAt)}
@@ -220,7 +229,11 @@ function pillPalette(status: BookingStatus) {
     case "completed":
       return { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
     case "cancelled":
-      return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.06)", border: "rgba(6,28,39,0.18)" };
+      return {
+        fg: "rgba(6,28,39,0.55)",
+        bg: "rgba(6,28,39,0.05)",
+        border: "rgba(6,28,39,0.14)",
+      };
     default:
       return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.04)", border: "rgba(6,28,39,0.14)" };
   }
@@ -271,48 +284,59 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ServiceCard({ booking }: { booking: Booking }) {
+function ServiceCard({ booking, dimmed }: { booking: Booking; dimmed?: boolean }) {
+  // Cancelled bookings dim the entire card to signal the service did not
+  // actually take place. Completed bookings render an actual-duration sub-line
+  // when it differs from the scheduled length.
+  const showActual =
+    booking.actualDurationMin != null &&
+    booking.actualDurationMin !== booking.durationMin;
   return (
     <DetailCard>
-      <CardLabel>Service</CardLabel>
-      <div className="flex items-baseline justify-between gap-3">
-        <div className="min-w-0">
-          <div
-            style={{
-              fontFamily: UI,
-              fontSize: 17,
-              fontWeight: 600,
-              color: MIDNIGHT,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {booking.service}
+      <div style={{ opacity: dimmed ? 0.55 : 1 }}>
+        <CardLabel>Service</CardLabel>
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="min-w-0">
+            <div
+              style={{
+                fontFamily: UI,
+                fontSize: 17,
+                fontWeight: 600,
+                color: MIDNIGHT,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {booking.service}
+            </div>
+            <div
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.65,
+                marginTop: 4,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {showActual
+                ? `${booking.durationMin} min scheduled · ${booking.actualDurationMin} min actual`
+                : `${booking.durationMin} min`}
+            </div>
           </div>
-          <div
+          <span
             style={{
               fontFamily: UI,
-              fontSize: 13,
+              fontSize: 22,
+              fontWeight: 700,
               color: MIDNIGHT,
-              opacity: 0.65,
-              marginTop: 4,
+              letterSpacing: "-0.02em",
               fontVariantNumeric: "tabular-nums",
+              textDecoration: dimmed ? "line-through" : "none",
             }}
           >
-            {booking.durationMin} min
-          </div>
+            {formatUsd(booking.priceUsd)}
+          </span>
         </div>
-        <span
-          style={{
-            fontFamily: UI,
-            fontSize: 22,
-            fontWeight: 700,
-            color: MIDNIGHT,
-            letterSpacing: "-0.02em",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {formatUsd(booking.priceUsd)}
-        </span>
       </div>
     </DetailCard>
   );
@@ -402,14 +426,28 @@ function LocationCard({ booking, revealAddress }: { booking: Booking; revealAddr
   );
 }
 
-function PaymentCard({ booking }: { booking: Booking }) {
+function PaymentCard({
+  booking,
+  status,
+}: {
+  booking: Booking;
+  status: BookingStatus;
+}) {
   const platformFee = Math.round(booking.priceUsd * PLATFORM_FEE_PCT);
-  const earnings = booking.priceUsd - platformFee;
+  const tip = booking.tipUsd ?? 0;
+  const earnings = booking.priceUsd - platformFee + tip;
+  const isCompleted = status === "completed";
+  const payoutLine = isCompleted
+    ? booking.paidOutOn
+      ? `Paid out ${booking.paidOutOn}`
+      : "Pending payout"
+    : "Paid out within 24 hours of completion.";
   return (
     <DetailCard>
       <CardLabel>Payment</CardLabel>
       <Row label="Service total" value={formatUsd(booking.priceUsd)} />
       <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
+      {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
       <div
         className="my-3"
         style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
@@ -425,9 +463,140 @@ function PaymentCard({ booking }: { booking: Booking }) {
           lineHeight: 1.4,
         }}
       >
-        Paid out within 24 hours of completion.
+        {payoutLine}
       </p>
     </DetailCard>
+  );
+}
+
+/* ---- Cancellation card (replaces Payment when status === cancelled) ---- */
+
+function CancellationCard({ booking }: { booking: Booking }) {
+  const who = booking.cancelledBy ?? "client";
+  const firstName = booking.clientName.split(" ")[0];
+  const whoLabel =
+    who === "client"
+      ? `Cancelled by ${firstName}`
+      : who === "pro"
+        ? "Cancelled by you"
+        : "Cancelled automatically (expired)";
+  const fee = booking.cancellationFeeUsd ?? 0;
+  return (
+    <DetailCard>
+      <CardLabel>Cancellation</CardLabel>
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 15,
+          fontWeight: 600,
+          color: MIDNIGHT,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {whoLabel}
+      </div>
+      {booking.cancelledAt ? (
+        <div
+          style={{
+            fontFamily: UI,
+            fontSize: 12.5,
+            color: MIDNIGHT,
+            opacity: 0.6,
+            marginTop: 3,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {booking.cancelledAt}
+        </div>
+      ) : null}
+      {booking.cancellationReason ? (
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            color: MIDNIGHT,
+            opacity: 0.75,
+            lineHeight: 1.45,
+            marginTop: 10,
+            fontStyle: "italic",
+          }}
+        >
+          “{booking.cancellationReason}”
+        </p>
+      ) : null}
+      {fee > 0 ? (
+        <>
+          <div
+            className="my-3"
+            style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
+          />
+          <Row label="Cancellation fee paid out" value={formatUsd(fee)} bold />
+        </>
+      ) : null}
+    </DetailCard>
+  );
+}
+
+/* ---- Rating card (Completed only) ---- */
+
+function RatingCard({ booking }: { booking: Booking }) {
+  const rating = booking.proRatingOfClient;
+  return (
+    <DetailCard>
+      <CardLabel>Your rating</CardLabel>
+      {rating != null ? (
+        <div className="flex items-center gap-2">
+          <Stars value={rating} />
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: MIDNIGHT,
+              opacity: 0.65,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {rating}.0 / 5
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="w-full rounded-xl py-2.5 transition-opacity active:opacity-70"
+          style={{
+            border: "1px solid rgba(6,28,39,0.18)",
+            backgroundColor: "transparent",
+            color: MIDNIGHT,
+            fontFamily: UI,
+            fontSize: 13.5,
+            fontWeight: 600,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          Rate your experience
+        </button>
+      )}
+    </DetailCard>
+  );
+}
+
+function Stars({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          aria-hidden
+          style={{
+            fontSize: 16,
+            color: i <= value ? ORANGE : "rgba(6,28,39,0.18)",
+            lineHeight: 1,
+          }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -544,9 +713,17 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
           </div>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div
+        className={
+          status === "completed" || status === "cancelled"
+            ? "mt-3 grid grid-cols-1 gap-2.5"
+            : "mt-3 grid grid-cols-2 gap-2.5"
+        }
+      >
         <SecondaryButton label="Message" />
-        <SecondaryButton label="Call" />
+        {status === "completed" || status === "cancelled" ? null : (
+          <SecondaryButton label="Call" />
+        )}
       </div>
     </DetailCard>
   );
@@ -679,8 +856,10 @@ function DetailActionBar({
         <PrimaryButton label={action.label} onClick={() => {}} disabled />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
-      ) : action.kind === "rate" ? (
-        <PrimaryButton label="Rate client" onClick={() => {}} />
+      ) : action.kind === "book-again" ? (
+        <SecondaryActionButton label="Book again" onClick={() => {}} />
+      ) : action.kind === "book-similar" ? (
+        <SecondaryActionButton label="Book similar" onClick={() => {}} />
       ) : action.kind === "cancel" ? (
         <button
           type="button"
@@ -707,7 +886,8 @@ type DetailAction =
   | { kind: "start" }
   | { kind: "start-disabled"; label: string }
   | { kind: "open-active" }
-  | { kind: "rate" }
+  | { kind: "book-again" }
+  | { kind: "book-similar" }
   | { kind: "cancel" }
   | null;
 
@@ -718,8 +898,11 @@ function deriveAction(
 ): DetailAction {
   if (status === "pending") return { kind: "pending" };
   if (status === "in-progress") return { kind: "open-active" };
-  if (status === "completed") return { kind: "rate" };
-  if (status === "cancelled") return null;
+  if (status === "completed") return { kind: "book-again" };
+  if (status === "cancelled") {
+    if (booking.cancelledBy === "client") return { kind: "book-similar" };
+    return null;
+  }
 
   if (status === "confirmed") {
     if (lifecycleActive) return { kind: "open-active" };
@@ -779,6 +962,39 @@ function PrimaryButton({
         letterSpacing: "-0.01em",
         opacity: disabled ? 0.45 : 1,
         cursor: disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+/**
+ * Outlined full-width secondary button — used for "Book again" and
+ * "Book similar" on resolved bookings where the bagel primary fill would
+ * imply more urgency than the action deserves.
+ */
+function SecondaryActionButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl transition-opacity active:opacity-70"
+      style={{
+        height: 52,
+        border: "1px solid rgba(6,28,39,0.22)",
+        backgroundColor: "transparent",
+        color: MIDNIGHT,
+        fontFamily: UI,
+        fontSize: 15,
+        fontWeight: 600,
+        letterSpacing: "-0.005em",
       }}
     >
       {label}

@@ -5,10 +5,10 @@ import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
-import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
 import { formatUsd, type Booking } from "@/data/mock-data";
 import {
   ALL_BOOKINGS,
+  HISTORY_BOOKINGS,
   horizonOf,
   formatExpiresIn,
   formatTimeOnly,
@@ -186,6 +186,20 @@ function UpcomingTab() {
     setBookings((prev) => prev.filter((b) => b.id !== id));
 
   // Group by time horizon. Sections are keyed in canonical display order.
+  // Pending bookings live in their own dedicated top section. They do NOT
+  // appear in the time-horizon groups — one or the other, never both.
+  const pending = useMemo(
+    () =>
+      bookings
+        .filter((b) => b.status === "pending")
+        .sort((a, b) => {
+          const ax = a.expiresAt?.getTime() ?? Number.POSITIVE_INFINITY;
+          const bx = b.expiresAt?.getTime() ?? Number.POSITIVE_INFINITY;
+          return ax - bx;
+        }),
+    [bookings],
+  );
+
   const groups = useMemo(() => {
     const buckets: Record<TimeHorizon, CanonicalBooking[]> = {
       today: [],
@@ -194,7 +208,10 @@ function UpcomingTab() {
       "next-month": [],
       later: [],
     };
-    for (const b of bookings) buckets[horizonOf(b.startsAt)].push(b);
+    for (const b of bookings) {
+      if (b.status === "pending") continue;
+      buckets[horizonOf(b.startsAt)].push(b);
+    }
     for (const k of Object.keys(buckets) as TimeHorizon[]) {
       buckets[k].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
     }
@@ -202,6 +219,7 @@ function UpcomingTab() {
   }, [bookings]);
 
   const total =
+    pending.length +
     groups.today.length +
     groups["this-week"].length +
     groups["this-month"].length +
@@ -219,6 +237,12 @@ function UpcomingTab() {
 
   return (
     <div className="flex flex-col pb-6">
+      <PendingSection
+        bookings={pending}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+        onOpen={openDetail}
+      />
       <TodayHorizonGroup
         bookings={groups.today}
         onAccept={handleAccept}
@@ -258,6 +282,63 @@ function UpcomingTab() {
         onOpen={openDetail}
       />
     </div>
+  );
+}
+
+/* ---- Pending section (top, non-collapsable, hidden when empty) ---- */
+
+function PendingSection({
+  bookings,
+  onAccept,
+  onDecline,
+  onOpen,
+}: {
+  bookings: CanonicalBooking[];
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+  onOpen: (id: string) => void;
+}) {
+  const { text } = useHomeTheme();
+  if (bookings.length === 0) return null;
+  return (
+    <BookingsGroup>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2
+          style={{
+            fontFamily: UI,
+            fontSize: 16,
+            fontWeight: 700,
+            color: text,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          Pending
+        </h2>
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            color: text,
+            opacity: 0.55,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {bookings.length} {bookings.length === 1 ? "request" : "requests"}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {bookings.map((b) => (
+          <BookingRowCard
+            key={b.id}
+            booking={adaptCanonical(b)}
+            pending={pendingPropsFor(b, onAccept, onDecline)}
+            onSelect={() => onOpen(b.id)}
+          />
+        ))}
+      </div>
+    </BookingsGroup>
   );
 }
 
@@ -443,90 +524,58 @@ function InProgressTab({ lifecycleActive }: { lifecycleActive: boolean }) {
 
 /* ---------------- History ---------------- */
 
-interface HistoryItem extends Booking {
-  cancelled?: boolean;
-}
-
 function HistoryTab() {
-  // Static demo set spread across the four buckets.
-  const today: HistoryItem[] = [
-    {
-      id: "ht1",
-      clientName: LIFECYCLE_BOOKING.clientName,
-      clientInitial: LIFECYCLE_BOOKING.clientInitial,
-      service: "Silk press",
-      startsAt: "9:00 AM",
-      durationMin: LIFECYCLE_BOOKING.durationMin,
-      priceUsd: LIFECYCLE_BOOKING.priceUsd,
-      location: LIFECYCLE_BOOKING.neighborhood,
-      avatarHue: "peach",
-    },
-  ];
-  const yesterday: HistoryItem[] = [
-    {
-      id: "hy1",
-      clientName: "Jordan Lee",
-      clientInitial: "J",
-      service: "Knotless braids",
-      startsAt: "Yesterday",
-      durationMin: 240,
-      priceUsd: 220,
-      location: "Crown Heights, Brooklyn",
-      avatarHue: "blue",
-    },
-  ];
-  const thisWeek: HistoryItem[] = [
-    {
-      id: "hw1",
-      clientName: "Devon M.",
-      clientInitial: "D",
-      service: "Silk press",
-      startsAt: "Mon",
-      durationMin: 75,
-      priceUsd: 120,
-      location: "Park Slope, Brooklyn",
-      avatarHue: "violet",
-    },
-    {
-      id: "hw2",
-      clientName: "Imani O.",
-      clientInitial: "I",
-      service: "Blowout",
-      startsAt: "Mon",
-      durationMin: 60,
-      priceUsd: 0,
-      location: "Crown Heights, Brooklyn",
-      avatarHue: "amber",
-      cancelled: true,
-    } as HistoryItem,
-  ];
-  const earlier: HistoryItem[] = [
-    {
-      id: "he1",
-      clientName: "Aaliyah K.",
-      clientInitial: "A",
-      service: "Box braids",
-      startsAt: "Apr 18",
-      durationMin: 360,
-      priceUsd: 320,
-      location: "Harlem, Manhattan",
-      avatarHue: "green",
-    },
-  ];
+  const navigate = useNavigate();
+  const now = new Date();
+
+  const buckets = useMemo(() => {
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - 7);
+
+    const out: Record<"today" | "yesterday" | "this-week" | "earlier", CanonicalBooking[]> = {
+      today: [],
+      yesterday: [],
+      "this-week": [],
+      earlier: [],
+    };
+    for (const b of HISTORY_BOOKINGS) {
+      const t = b.startsAt;
+      if (t >= startOfToday) out.today.push(b);
+      else if (t >= startOfYesterday) out.yesterday.push(b);
+      else if (t >= startOfWeek) out["this-week"].push(b);
+      else out.earlier.push(b);
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const open = (id: string) =>
+    navigate({ to: "/bookings/$id", params: { id } });
 
   return (
     <div className="flex flex-col pb-6">
-      <HistoryGroup label="Today" items={today} />
-      <HistoryGroup label="Yesterday" items={yesterday} />
-      <HistoryGroup label="This Week" items={thisWeek} />
-      <HistoryGroup label="Earlier" items={earlier} />
+      <HistoryGroup label="Today" items={buckets.today} onOpen={open} />
+      <HistoryGroup label="Yesterday" items={buckets.yesterday} onOpen={open} />
+      <HistoryGroup label="This Week" items={buckets["this-week"]} onOpen={open} />
+      <HistoryGroup label="Earlier" items={buckets.earlier} onOpen={open} />
     </div>
   );
 }
 
-function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] }) {
+function HistoryGroup({
+  label,
+  items,
+  onOpen,
+}: {
+  label: string;
+  items: CanonicalBooking[];
+  onOpen: (id: string) => void;
+}) {
   if (items.length === 0) return null;
-  const navigate = useNavigate();
   return (
     <BookingsGroup>
       <BookingsSectionHeader title={label} />
@@ -534,9 +583,9 @@ function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] })
         {items.map((b) => (
           <BookingRowCard
             key={b.id}
-            booking={b}
-            cancelled={b.cancelled}
-            onSelect={() => navigate({ to: "/bookings/$id", params: { id: b.id } })}
+            booking={adaptCanonical(b)}
+            cancelled={b.status === "cancelled"}
+            onSelect={() => onOpen(b.id)}
           />
         ))}
       </div>
