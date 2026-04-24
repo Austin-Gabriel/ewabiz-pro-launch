@@ -8,6 +8,7 @@ import {
   type DevMode,
   type DevDayContext,
   type DevLifecycle,
+  type DevBookingSource,
 } from "@/dev-state/dev-state-context";
 
 /**
@@ -62,6 +63,12 @@ const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
   { value: "arrived", label: "Arrived (PIN entry)", hint: "4-digit code from client" },
   { value: "in-progress", label: "In Progress", hint: "Service running" },
   { value: "complete", label: "Complete", hint: "Done — earnings + rating" },
+];
+
+const BOOKING_SOURCES: { value: DevBookingSource; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Match the active booking's real source" },
+  { value: "on-demand", label: "On-demand", hint: "Get Ready shows prep countdown" },
+  { value: "scheduled", label: "Scheduled", hint: "Get Ready shows Leave by behavior" },
 ];
 
 export function DevStateToggle() {
