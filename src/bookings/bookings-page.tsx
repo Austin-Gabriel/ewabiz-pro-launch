@@ -170,7 +170,7 @@ function UpcomingTab() {
       id: "p1",
       clientName: "Simone Carter",
       clientInitial: "S",
-      service: "Silk press + trim · Saturday 11 AM",
+      service: "Silk press",
       startsAt: "11:00",
       durationMin: 90,
       priceUsd: 160,
