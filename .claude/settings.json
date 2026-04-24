@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(kill %1)",
-      "Bash(pkill -f \"vite dev\")"
+      "Bash(pkill -f \"vite dev\")",
+      "Bash(git revert *)"
     ]
   }
 }
