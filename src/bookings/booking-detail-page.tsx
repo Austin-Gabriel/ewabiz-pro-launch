@@ -161,7 +161,7 @@ function DetailHeader({ title, onBack }: { title: string; onBack: () => void }) 
 /* ---------------- Hero ---------------- */
 
 function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatus }) {
-  const { text, cardBorder } = useHomeTheme();
+  const { isDark, text, cardBorder } = useHomeTheme();
   // Pending hides last name (privacy). Otherwise show full name.
   const displayName =
     status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
@@ -198,8 +198,13 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
           style={{
             width: 52,
             height: 52,
-            backgroundColor: "rgba(255,130,63,0.16)",
-            color: "#7A2E0E",
+            // The hero avatar sits directly on the page background (not on a
+            // white card like the list rows), so dark mode needs a brighter
+            // fill + lighter monogram to stay legible on midnight.
+            backgroundColor: isDark
+              ? "rgba(255,130,63,0.22)"
+              : "rgba(255,130,63,0.16)",
+            color: isDark ? "#FFB387" : "#7A2E0E",
             fontFamily: UI,
             fontSize: 17,
             fontWeight: 600,
