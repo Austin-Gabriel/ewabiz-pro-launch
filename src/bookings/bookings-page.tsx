@@ -1,12 +1,20 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
 import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
-import { LIVE_ACTIVE_DAY, formatUsd, type Booking } from "@/data/mock-data";
+import { formatUsd, type Booking } from "@/data/mock-data";
+import {
+  ALL_BOOKINGS,
+  horizonOf,
+  formatExpiresIn,
+  formatTimeOnly,
+  type Booking as CanonicalBooking,
+  type TimeHorizon,
+} from "@/data/mock-bookings";
 import {
   BookingRowCard,
   BookingsGroup,
