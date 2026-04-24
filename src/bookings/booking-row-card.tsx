@@ -153,7 +153,7 @@ function Body({
 function Price({ priceUsd, cancelled }: { priceUsd: number; cancelled?: boolean }) {
   if (cancelled) {
     return (
-      <span
+      <span className="mb-0 mt-[12px]"
         style={{
           fontFamily: UI,
           fontSize: 13,
