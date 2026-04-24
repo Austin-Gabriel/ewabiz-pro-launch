@@ -347,6 +347,8 @@ export interface TimelineEntry {
   gapBefore?: string;
   /** Pending request props if this entry is awaiting pro approval. */
   pending?: BookingRowCardProps["pending"];
+  /** Tap handler — routes to the booking detail page. */
+  onOpen?: () => void;
 }
 
 export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
@@ -389,6 +391,7 @@ function RailRow({ entry }: { entry: TimelineEntry }) {
           booking={entry.booking}
           isNext={entry.isNext}
           pending={entry.pending}
+          onSelect={entry.onOpen}
         />
       </div>
     </div>
