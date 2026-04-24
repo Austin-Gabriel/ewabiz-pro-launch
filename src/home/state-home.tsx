@@ -3,6 +3,7 @@ import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
+import { BookingRowCard } from "@/bookings/booking-row-card";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -273,7 +274,7 @@ function OfflineBody({
   return (
     <div className="flex flex-1 flex-col gap-3 pt-2">
       <UpNextCard booking={next} />
-      {rest.length > 0 ? <MoreTodayRow remaining={rest} /> : null}
+      {rest.length > 0 ? <TodayRestList bookings={rest} /> : null}
       <EarningsGoalCard
         todayUsd={todayEarningsUsd}
         weekToDateUsd={weekToDateUsd}
@@ -524,59 +525,27 @@ function SecondaryButton({ icon, label }: { icon: React.ReactNode; label: string
 
 /* ---------------- "X more today" compact row ---------------- */
 
-function MoreTodayRow({ remaining }: { remaining: Booking[] }) {
-  return (
-    <CardTheme>
-      <MoreTodayInner remaining={remaining} />
-    </CardTheme>
-  );
-}
+/* ---------------- Rest-of-today (canonical card list) ---------------- */
 
-function MoreTodayInner({ remaining }: { remaining: Booking[] }) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
-  const next = remaining[0];
+function TodayRestList({ bookings }: { bookings: Booking[] }) {
+  const { text } = useHomeTheme();
   return (
-    <button
-      type="button"
-      aria-label={`${remaining.length} more bookings today`}
-      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left transition-opacity active:opacity-70"
-      style={{
-        backgroundColor: cardSurface,
-        border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
-      }}
-    >
-      <AvatarStack bookings={remaining.slice(0, 2)} />
-      <div className="min-w-0 flex-1">
-        <div
-          className="truncate"
-          style={{ fontFamily: UI, fontSize: 14, fontWeight: 700, color: text, letterSpacing: "-0.005em" }}
-        >
-          {remaining.length} more today
-        </div>
-        <div
-          className="truncate"
-          style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.6, marginTop: 2 }}
-        >
-          Next at {formatTime12(next.startsAt)} · {shortLocation(next.location)}
-        </div>
+    <div className="mt-1 flex flex-col gap-2.5">
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: "1.4px",
+          textTransform: "uppercase",
+          color: text,
+          opacity: 0.55,
+        }}
+      >
+        Later today
       </div>
-      <ChevronIcon />
-    </button>
-  );
-}
-
-function AvatarStack({ bookings }: { bookings: Booking[] }) {
-  return (
-    <div className="flex shrink-0 items-center" style={{ width: bookings.length === 1 ? 32 : 50 }}>
-      {bookings.map((b, i) => (
-        <Avatar
-          key={b.id}
-          initial={b.clientInitial}
-          hue={b.avatarHue}
-          size={32}
-          stackOffset={i > 0 ? -10 : 0}
-        />
+      {bookings.map((b) => (
+        <BookingRowCard key={b.id} booking={b} />
       ))}
     </div>
   );
