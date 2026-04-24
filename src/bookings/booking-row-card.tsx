@@ -176,12 +176,13 @@ function Body({
           style={{
             fontFamily: UI,
             fontSize: 11.5,
-            color: MIDNIGHT,
-            opacity: 0.55,
-            fontWeight: 500,
+            color: "#FF823F",
+            fontWeight: 600,
             letterSpacing: "-0.005em",
             marginTop: 6,
             lineHeight: 1.3,
+            textShadow:
+              "0 0 6px rgba(255,130,63,0.45), 0 0 14px rgba(255,130,63,0.25)",
           }}
         >
           {pendingStatus}
