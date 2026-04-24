@@ -229,7 +229,11 @@ function pillPalette(status: BookingStatus) {
     case "completed":
       return { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
     case "cancelled":
-      return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.06)", border: "rgba(6,28,39,0.18)" };
+      return {
+        fg: "rgba(6,28,39,0.55)",
+        bg: "rgba(6,28,39,0.05)",
+        border: "rgba(6,28,39,0.14)",
+      };
     default:
       return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.04)", border: "rgba(6,28,39,0.14)" };
   }
