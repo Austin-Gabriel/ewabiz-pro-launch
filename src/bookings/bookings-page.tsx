@@ -1,12 +1,18 @@
-import { type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
+import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
 import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
 import { LIVE_ACTIVE_DAY, formatUsd, type Booking } from "@/data/mock-data";
+import {
+  BookingRowCard,
+  BookingsGroup,
+  BookingsSectionHeader,
+  BookingTimeline,
+  type TimelineEntry,
+} from "@/bookings/booking-row-card";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -22,15 +28,13 @@ export function BookingsPage({
 }) {
   const { state: dev } = useDevState();
   const isInProgressTab = tab === "in-progress";
-  // The In Progress tab embeds the lifecycle body when a booking is active.
-  // Strip is hidden on this tab (redundant with the body).
   return (
     <HomeShell>
       <ActiveBookingStrip hide={isInProgressTab} />
       <PageHeader />
       <TabBar tab={tab} onSelect={onTabChange} />
 
-      <div className="flex flex-1 flex-col px-4 pb-2 pt-3">
+      <div className="flex flex-1 flex-col px-4 pb-2 pt-4">
         {tab === "upcoming" ? <UpcomingTab /> : null}
         {tab === "in-progress" ? (
           <InProgressTab lifecycleActive={dev.lifecycle !== "none" && dev.lifecycle !== "incoming"} />
@@ -116,7 +120,7 @@ function TabBar({
               fontFamily: UI,
               fontSize: 13,
               fontWeight: 600,
-              color: active ? text : text,
+              color: text,
               opacity: active ? 1 : 0.5,
               backgroundColor: "transparent",
               border: "none",
@@ -156,6 +160,7 @@ function TabBar({
 
 function UpcomingTab() {
   const today = LIVE_ACTIVE_DAY.bookingsToday as Booking[];
+
   if (today.length === 0) {
     return (
       <EmptyBlock
@@ -164,114 +169,39 @@ function UpcomingTab() {
       />
     );
   }
-  return (
-    <div className="flex flex-col gap-4 pb-6">
-      <Section title="Today">
-        {today.map((b) => (
-          <BookingRow key={b.id} booking={b} />
-        ))}
-      </Section>
-    </div>
-  );
-}
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  const { text } = useHomeTheme();
-  return (
-    <div>
-      <div
-        style={{
-          fontFamily: UI,
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: "1.4px",
-          textTransform: "uppercase",
-          color: text,
-          opacity: 0.55,
-          marginBottom: 8,
-        }}
-      >
-        {title}
-      </div>
-      <div className="flex flex-col gap-2.5">{children}</div>
-    </div>
-  );
-}
+  // Build timeline entries with stacked time labels and computed gap labels.
+  const entries: TimelineEntry[] = today.map((b, i) => {
+    const [time, meridiem] = formatStackedTime(b.startsAt);
+    const prev = i > 0 ? today[i - 1] : undefined;
+    const gapBefore = prev
+      ? gapBetween(prev.startsAt, prev.durationMin, b.startsAt)
+      : undefined;
+    return {
+      booking: b,
+      time,
+      meridiem,
+      isNext: i === 0,
+      gapBefore,
+    };
+  });
 
-function BookingRow({ booking }: { booking: Booking }) {
-  return (
-    <CardTheme>
-      <BookingRowInner booking={booking} />
-    </CardTheme>
-  );
-}
+  const totalUsd = today.reduce((sum, b) => sum + b.priceUsd, 0);
+  const dateLabel = currentDateLabel();
 
-function BookingRowInner({ booking }: { booking: Booking }) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
   return (
-    <div
-      className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
-      style={{
-        backgroundColor: cardSurface,
-        border: `1px solid ${cardBorder}`,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
-      }}
-    >
-      <div
-        className="flex shrink-0 items-center justify-center rounded-full"
-        style={{
-          width: 44,
-          height: 44,
-          backgroundColor: "rgba(255,130,63,0.16)",
-          border: "1px solid rgba(255,130,63,0.4)",
-          color: "#7A2E0E",
-          fontFamily: UI,
-          fontSize: 16,
-          fontWeight: 700,
-        }}
-      >
-        {booking.clientInitial}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div
-          className="truncate"
-          style={{ fontFamily: UI, fontSize: 14.5, fontWeight: 700, color: text, letterSpacing: "-0.005em" }}
-        >
-          {booking.clientName}
-        </div>
-        <div
-          className="truncate"
-          style={{ fontFamily: UI, fontSize: 12.5, color: text, opacity: 0.6, marginTop: 2 }}
-        >
-          {booking.service} · {booking.location ?? "Brooklyn"}
-        </div>
-      </div>
-      <div className="flex flex-col items-end leading-tight">
-        <span
-          style={{
-            fontFamily: UI,
-            fontSize: 13,
-            fontWeight: 700,
-            color: text,
-            fontVariantNumeric: "tabular-nums",
-            letterSpacing: "-0.005em",
-          }}
-        >
-          {booking.startsAt}
-        </span>
-        <span
-          style={{
-            fontFamily: UI,
-            fontSize: 11.5,
-            color: text,
-            opacity: 0.55,
-            marginTop: 2,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {formatUsd(booking.priceUsd)}
-        </span>
-      </div>
+    <div className="flex flex-col pb-6">
+      <BookingsGroup>
+        <BookingsSectionHeader
+          title="Today"
+          meta={`${today.length} ${today.length === 1 ? "booking" : "bookings"} · ${formatUsd(totalUsd)}`}
+          date={dateLabel}
+          serif
+        />
+        <BookingTimeline entries={entries} />
+      </BookingsGroup>
+
+      {/* Placeholder for This Week / Later groups (no rail, no NEXT). */}
     </div>
   );
 }
@@ -296,29 +226,98 @@ function InProgressTab({ lifecycleActive }: { lifecycleActive: boolean }) {
 
 /* ---------------- History ---------------- */
 
+interface HistoryItem extends Booking {
+  cancelled?: boolean;
+}
+
 function HistoryTab() {
-  // One static example to show shape.
-  const past: Booking[] = [
+  // Static demo set spread across the four buckets.
+  const today: HistoryItem[] = [
     {
-      id: "h1",
+      id: "ht1",
       clientName: LIFECYCLE_BOOKING.clientName,
       clientInitial: LIFECYCLE_BOOKING.clientInitial,
       service: LIFECYCLE_BOOKING.service,
-      startsAt: "Yesterday",
+      startsAt: "9:00 AM",
       durationMin: LIFECYCLE_BOOKING.durationMin,
       priceUsd: LIFECYCLE_BOOKING.priceUsd,
       location: LIFECYCLE_BOOKING.neighborhood,
       avatarHue: "peach",
     },
   ];
+  const yesterday: HistoryItem[] = [
+    {
+      id: "hy1",
+      clientName: "Jordan Lee",
+      clientInitial: "J",
+      service: "Knotless braids · medium",
+      startsAt: "Yesterday",
+      durationMin: 240,
+      priceUsd: 220,
+      location: "Crown Heights, Brooklyn",
+      avatarHue: "blue",
+    },
+  ];
+  const thisWeek: HistoryItem[] = [
+    {
+      id: "hw1",
+      clientName: "Devon M.",
+      clientInitial: "D",
+      service: "Silk press",
+      startsAt: "Mon",
+      durationMin: 75,
+      priceUsd: 120,
+      location: "Park Slope, Brooklyn",
+      avatarHue: "violet",
+    },
+    {
+      id: "hw2",
+      clientName: "Imani O.",
+      clientInitial: "I",
+      service: "Wash & blow-dry",
+      startsAt: "Mon",
+      durationMin: 60,
+      priceUsd: 0,
+      location: "Crown Heights, Brooklyn",
+      avatarHue: "amber",
+      cancelled: true,
+    } as HistoryItem,
+  ];
+  const earlier: HistoryItem[] = [
+    {
+      id: "he1",
+      clientName: "Aaliyah K.",
+      clientInitial: "A",
+      service: "Box braids · waist length",
+      startsAt: "Apr 18",
+      durationMin: 360,
+      priceUsd: 320,
+      location: "Harlem, Manhattan",
+      avatarHue: "green",
+    },
+  ];
+
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      <Section title="This week">
-        {past.map((b) => (
-          <BookingRow key={b.id} booking={b} />
-        ))}
-      </Section>
+    <div className="flex flex-col pb-6">
+      <HistoryGroup label="Today" items={today} />
+      <HistoryGroup label="Yesterday" items={yesterday} />
+      <HistoryGroup label="This Week" items={thisWeek} />
+      <HistoryGroup label="Earlier" items={earlier} />
     </div>
+  );
+}
+
+function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <BookingsGroup>
+      <BookingsSectionHeader title={label} />
+      <div className="flex flex-col gap-2.5">
+        {items.map((b) => (
+          <BookingRowCard key={b.id} booking={b} cancelled={b.cancelled} />
+        ))}
+      </div>
+    </BookingsGroup>
   );
 }
 
@@ -355,4 +354,54 @@ function EmptyBlock({ title, sub }: { title: string; sub: string }) {
       </p>
     </div>
   );
+}
+
+/* ---------------- Time helpers ---------------- */
+
+function formatStackedTime(t: string): [string, "AM" | "PM"] {
+  // Accepts "10:30" or "10:30 AM". Returns ["10:30", "AM"].
+  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!m) return [t, "AM"];
+  let h = parseInt(m[1], 10);
+  const mm = m[2];
+  let suffix: "AM" | "PM";
+  if (m[3]) {
+    suffix = m[3].toUpperCase() as "AM" | "PM";
+  } else {
+    if (h === 0) { h = 12; suffix = "AM"; }
+    else if (h === 12) { suffix = "PM"; }
+    else if (h > 12) { h -= 12; suffix = "PM"; }
+    else if (h >= 1 && h <= 6) { suffix = "PM"; }
+    else { suffix = "AM"; }
+  }
+  return [`${h}:${mm}`, suffix];
+}
+
+function gapBetween(prevStart: string, prevDuration: number, nextStart: string): string | undefined {
+  const prevEnd = toMinutes(prevStart) + prevDuration;
+  const next = toMinutes(nextStart);
+  const gap = next - prevEnd;
+  if (gap <= 5) return undefined;
+  const h = Math.floor(gap / 60);
+  const m = gap % 60;
+  if (h === 0) return `${m}m gap`;
+  if (m === 0) return `${h}h gap`;
+  return `${h}h ${m}m gap`;
+}
+
+function toMinutes(t: string): number {
+  const [time, suffix] = formatStackedTime(t);
+  const [hStr, mStr] = time.split(":");
+  let h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (suffix === "PM" && h !== 12) h += 12;
+  if (suffix === "AM" && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+function currentDateLabel(d: Date = new Date()): string {
+  const weekday = d.toLocaleDateString(undefined, { weekday: "long" });
+  const month = d.toLocaleDateString(undefined, { month: "short" });
+  const day = d.getDate();
+  return `${weekday} · ${month} ${day}`;
 }
