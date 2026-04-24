@@ -38,6 +38,14 @@ export type DevLifecycle =
   | "in-progress"
   | "complete";
 
+/**
+ * Booking source. Only meaningful when DevLifecycle === "get-ready" — controls
+ * whether the Get Ready screen renders the on-demand prep countdown or the
+ * scheduled "Leave by" framing. For every other lifecycle state, this field
+ * has no effect.
+ */
+export type DevBookingSource = "auto" | "on-demand" | "scheduled";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
@@ -45,6 +53,7 @@ export interface DevState {
   mode: DevMode;
   dayContext: DevDayContext;
   lifecycle: DevLifecycle;
+  bookingSource: DevBookingSource;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -54,6 +63,7 @@ const DEFAULT_STATE: DevState = {
   mode: "auto",
   dayContext: "auto",
   lifecycle: "none",
+  bookingSource: "auto",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -67,6 +77,7 @@ interface Ctx {
   setMode: (v: DevMode) => void;
   setDayContext: (v: DevDayContext) => void;
   setLifecycle: (v: DevLifecycle) => void;
+  setBookingSource: (v: DevBookingSource) => void;
   reset: () => void;
 }
 
@@ -122,11 +133,12 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setMode = useCallback((v: DevMode) => setState((s) => ({ ...s, mode: v })), []);
   const setDayContext = useCallback((v: DevDayContext) => setState((s) => ({ ...s, dayContext: v })), []);
   const setLifecycle = useCallback((v: DevLifecycle) => setState((s) => ({ ...s, lifecycle: v })), []);
+  const setBookingSource = useCallback((v: DevBookingSource) => setState((s) => ({ ...s, bookingSource: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
-    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset }),
-    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset],
+    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset }),
+    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset],
   );
 
   return <DevStateContext.Provider value={value}>{children}</DevStateContext.Provider>;
@@ -144,6 +156,7 @@ export function useDevState(): Ctx {
       setMode: () => {},
       setDayContext: () => {},
       setLifecycle: () => {},
+      setBookingSource: () => {},
       reset: () => {},
     };
   }

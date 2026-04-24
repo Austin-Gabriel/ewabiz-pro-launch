@@ -31,6 +31,18 @@ export interface BookingRowCardProps {
   /** Render "Cancelled" in muted text where the price would be. */
   cancelled?: boolean;
   onSelect?: () => void;
+  /**
+   * Pending scheduled booking — client requested an appointment, pro hasn't
+   * accepted yet. Renders a small bagel dot top-left, an expiry status line,
+   * and inline Accept / Decline buttons stacked under the row content.
+   * Tapping the card body still routes to detail (via onSelect).
+   */
+  pending?: {
+    /** Time-left label, e.g. "expires in 6h" or "expires in 23 min". */
+    expiresLabel: string;
+    onAccept: () => void;
+    onDecline: () => void;
+  };
 }
 
 export function BookingRowCard(props: BookingRowCardProps) {
@@ -41,18 +53,22 @@ export function BookingRowCard(props: BookingRowCardProps) {
   );
 }
 
-function BookingRowCardInner({ booking, isNext, cancelled, onSelect }: BookingRowCardProps) {
+function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending }: BookingRowCardProps) {
   const { cardSurface, cardBorder } = useHomeTheme();
   const borderCol = isNext ? BAGEL_BORDER : cardBorder;
-  const Wrapper: any = onSelect ? "button" : "div";
+  // Pending cards always behave as a button (taps the body to view detail)
+  // even if no onSelect was passed — the inline action buttons below stop
+  // propagation so they don't double-fire.
+  const isInteractive = Boolean(onSelect) || Boolean(pending);
+  const Wrapper: any = isInteractive ? "button" : "div";
 
   return (
     <div className="relative">
       <Wrapper
-        type={onSelect ? "button" : undefined}
+        type={isInteractive ? "button" : undefined}
         onClick={onSelect}
         className={
-          "flex w-full items-start gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
+          "flex w-full flex-col gap-3 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
         style={{
           backgroundColor: isNext ? "#FFF4EC" : cardSurface,
@@ -62,15 +78,22 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect }: BookingRo
             : "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
         }}
       >
-        <Monogram initial={booking.clientInitial} />
-        <Body
-          name={booking.clientName}
-          service={booking.service}
-          location={booking.location}
-        />
-        <Price priceUsd={booking.priceUsd} cancelled={cancelled} />
+        <div className="flex w-full items-start gap-3.5">
+          <Monogram initial={booking.clientInitial} />
+          <Body
+            name={booking.clientName}
+            service={booking.service}
+            location={booking.location}
+            pendingStatus={pending ? `Pending your approval · ${pending.expiresLabel}` : undefined}
+          />
+          <Price priceUsd={booking.priceUsd} cancelled={cancelled} />
+        </div>
+        {pending ? (
+          <PendingActions onAccept={pending.onAccept} onDecline={pending.onDecline} />
+        ) : null}
       </Wrapper>
       {isNext ? <NextPill /> : null}
+      {pending ? <PendingDot /> : null}
     </div>
   );
 }
@@ -99,10 +122,12 @@ function Body({
   name,
   service,
   location,
+  pendingStatus,
 }: {
   name: string;
   service: string;
   location?: string;
+  pendingStatus?: string;
 }) {
   return (
     <div className="min-w-0 flex-1">
@@ -144,6 +169,21 @@ function Body({
           }}
         >
           {shortLocality(location)}
+        </div>
+      ) : null}
+      {pendingStatus ? (
+        <div
+          style={{
+            fontFamily: UI,
+            fontSize: 11.5,
+            color: BAGEL,
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            marginTop: 6,
+            lineHeight: 1.3,
+          }}
+        >
+          {pendingStatus}
         </div>
       ) : null}
     </div>
@@ -205,6 +245,87 @@ function NextPill() {
     >
       Next
     </span>
+  );
+}
+
+/**
+ * Bagel dot pinned top-left of a pending booking card. Same visual
+ * vocabulary as the In Progress tab indicator dot — flags an unreviewed
+ * scheduled request waiting on the pro's decision.
+ */
+function PendingDot() {
+  return (
+    <span
+      aria-label="Pending approval"
+      className="absolute rounded-full"
+      style={{
+        top: -5,
+        left: -5,
+        width: 12,
+        height: 12,
+        backgroundColor: BAGEL,
+        border: "2px solid #FFFFFF",
+        boxShadow: "0 0 8px rgba(255,130,63,0.55)",
+      }}
+    />
+  );
+}
+
+/**
+ * Inline Accept / Decline buttons rendered at the bottom of a pending
+ * scheduled booking card. The pro can act directly from the list — they
+ * don't need to open detail to make a call. Both buttons stop propagation
+ * so the parent card's tap-to-view-detail doesn't fire alongside.
+ */
+function PendingActions({
+  onAccept,
+  onDecline,
+}: {
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  return (
+    <div className="grid w-full grid-cols-2 gap-2.5">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDecline();
+        }}
+        className="rounded-xl py-2.5 transition-opacity active:opacity-70"
+        style={{
+          border: "1px solid rgba(6,28,39,0.18)",
+          backgroundColor: "transparent",
+          color: MIDNIGHT,
+          opacity: 0.75,
+          fontFamily: UI,
+          fontSize: 13.5,
+          fontWeight: 600,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        Decline
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onAccept();
+        }}
+        className="rounded-xl py-2.5 transition-transform active:scale-[0.99]"
+        style={{
+          backgroundColor: BAGEL,
+          color: MIDNIGHT,
+          fontFamily: UI,
+          fontSize: 13.5,
+          fontWeight: 700,
+          letterSpacing: "-0.005em",
+          boxShadow: "0 4px 12px -6px rgba(255,130,63,0.5)",
+        }}
+      >
+        Accept
+      </button>
+    </div>
   );
 }
 

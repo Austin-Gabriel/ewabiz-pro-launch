@@ -32,6 +32,13 @@ export interface LifecycleBooking {
   pin: string;
   /** Tip the client added (set when complete). */
   tipUsd: number;
+  /**
+   * Where the booking originated. On-demand requests trigger a 60s incoming
+   * timer + prep countdown in Get Ready. Scheduled bookings flow through
+   * Pending → Confirmed Upcoming, then transition into Get Ready at
+   * T-minus-(travel+buffer) with a "Leave by" framing.
+   */
+  source: "on-demand" | "scheduled";
 }
 
 export const LIFECYCLE_BOOKING: LifecycleBooking = {
@@ -50,4 +57,5 @@ export const LIFECYCLE_BOOKING: LifecycleBooking = {
   leaveByAt: "10:48 AM",
   pin: "4729",
   tipUsd: 25,
+  source: "on-demand",
 };

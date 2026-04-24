@@ -4,6 +4,8 @@ import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
+import { useDevState } from "@/dev-state/dev-state-context";
+import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -58,6 +60,12 @@ export function StateHome(props: StateHomeProps) {
   // sensible even with the dev panel untouched.
   const initialOnline = props.mode === "online";
   const [online, setOnline] = useState(initialOnline);
+  const { state: dev } = useDevState();
+  // Any active lifecycle (other than the incoming takeover, which is its own
+  // full-screen surface) means the pro is committed to a booking — they
+  // cannot accept new on-demand requests until Complete is acknowledged.
+  const lifecycleActive =
+    dev.lifecycle !== "none" && dev.lifecycle !== "incoming";
 
   // Re-sync when dev toggle flips between offline/online while we're on the
   // page. This is the moment the user expects a smooth crossfade.
@@ -69,7 +77,11 @@ export function StateHome(props: StateHomeProps) {
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
       <Header unreadCount={props.unreadCount ?? 0} />
-      <ModeToggle online={online} onToggle={() => setOnline((v) => !v)} />
+      <ModeToggle
+        online={online}
+        onToggle={() => setOnline((v) => !v)}
+        lockedClientName={lifecycleActive ? LIFECYCLE_BOOKING.clientName.split(" ")[0] : undefined}
+      />
 
       <div
         className="relative flex flex-1 flex-col"
@@ -146,10 +158,28 @@ function Header({ unreadCount }: { unreadCount: number }) {
 
 /* ---------------- Mode toggle (Offline ↔ Online) ---------------- */
 
-function ModeToggle({ online, onToggle }: { online: boolean; onToggle: () => void }) {
+function ModeToggle({
+  online,
+  onToggle,
+  lockedClientName,
+}: {
+  online: boolean;
+  onToggle: () => void;
+  /**
+   * When set, the toggle is rendered in a locked state — the pro is
+   * currently committed to this client. Tap is disabled, no orange/pulse
+   * accents, and the copy explains the booking is in progress.
+   */
+  lockedClientName?: string;
+}) {
   const { text, borderCol, surface, isDark } = useHomeTheme();
   const offTrackBg = isDark ? "rgba(240,235,216,0.22)" : "rgba(6,28,39,0.28)";
   const thumbColor = isDark ? "#061C27" : "#F0EBD8";
+  const locked = Boolean(lockedClientName);
+  // When locked we render the toggle in a neutral, off-looking state — never
+  // the orange "online" accent, regardless of whether the pro had been online
+  // before the lifecycle started.
+  const showOnlineAccent = online && !locked;
 
   return (
     <div
@@ -159,13 +189,16 @@ function ModeToggle({ online, onToggle }: { online: boolean; onToggle: () => voi
         border: `1px solid ${borderCol}`,
         // Subtle background tint shift for the mode change
         transition: "background-color 280ms ease, border-color 280ms ease",
+        opacity: locked ? 0.92 : 1,
       }}
     >
       <button
         type="button"
-        onClick={onToggle}
-        className="flex min-w-0 flex-1 items-center gap-2.5 transition-opacity active:opacity-70"
+        onClick={locked ? undefined : onToggle}
+        disabled={locked}
+        className="flex min-w-0 flex-1 items-center gap-2.5 transition-opacity active:opacity-70 disabled:cursor-not-allowed disabled:active:opacity-100"
         aria-pressed={online}
+        aria-disabled={locked}
       >
         <span
           className="flex shrink-0 items-center rounded-full"
@@ -173,7 +206,7 @@ function ModeToggle({ online, onToggle }: { online: boolean; onToggle: () => voi
             width: 38,
             height: 22,
             padding: 2,
-            backgroundColor: online ? ORANGE : offTrackBg,
+            backgroundColor: showOnlineAccent ? ORANGE : offTrackBg,
             transition: "background-color 280ms ease",
           }}
         >
@@ -182,25 +215,29 @@ function ModeToggle({ online, onToggle }: { online: boolean; onToggle: () => voi
             style={{
               width: 18,
               height: 18,
-              backgroundColor: online ? "#061C27" : thumbColor,
-              transform: online ? "translateX(16px)" : "translateX(0)",
+              backgroundColor: showOnlineAccent ? "#061C27" : thumbColor,
+              transform: showOnlineAccent ? "translateX(16px)" : "translateX(0)",
               transition: "transform 280ms cubic-bezier(0.4, 0, 0.2, 1), background-color 280ms ease",
               boxShadow: "0 1px 2px rgba(6,28,39,0.25)",
             }}
           />
         </span>
         <span className="flex min-w-0 flex-col items-start text-left">
-          <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: text, lineHeight: 1.2 }}>
-            {online ? "Online" : "Offline"}
+          <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 700, color: text, lineHeight: 1.2 }}>
+            {locked ? `Currently with ${lockedClientName}` : online ? "Online" : "Offline"}
           </span>
           <span style={{ fontFamily: UI, fontSize: 11, color: text, opacity: 0.6, lineHeight: 1.2, marginTop: 2 }}>
-            {online ? "Accepting new requests" : "Not accepting new requests"}
+            {locked
+              ? "Back online when complete"
+              : online
+                ? "Accepting new requests"
+                : "Not accepting new requests"}
           </span>
         </span>
       </button>
 
       {/* Schedule button only shown in offline mode. */}
-      {!online ? (
+      {!online && !locked ? (
         <button
           type="button"
           aria-label="Open schedule"

@@ -8,6 +8,7 @@ import {
   type DevMode,
   type DevDayContext,
   type DevLifecycle,
+  type DevBookingSource,
 } from "@/dev-state/dev-state-context";
 
 /**
@@ -64,6 +65,12 @@ const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
   { value: "complete", label: "Complete", hint: "Done — earnings + rating" },
 ];
 
+const BOOKING_SOURCES: { value: DevBookingSource; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Match the active booking's real source" },
+  { value: "on-demand", label: "On-demand", hint: "Get Ready shows prep countdown" },
+  { value: "scheduled", label: "Scheduled", hint: "Get Ready shows Leave by behavior" },
+];
+
 export function DevStateToggle() {
   const {
     enabled,
@@ -74,6 +81,7 @@ export function DevStateToggle() {
     setMode,
     setDayContext,
     setLifecycle,
+    setBookingSource,
     reset,
   } = useDevState();
   const [open, setOpen] = useState(false);
@@ -186,6 +194,14 @@ export function DevStateToggle() {
                 options={LIFECYCLES}
                 onChange={(v) => setLifecycle(v as DevLifecycle)}
               />
+              {state.lifecycle === "get-ready" ? (
+                <Group
+                  title="Booking source (Get Ready only)"
+                  value={state.bookingSource}
+                  options={BOOKING_SOURCES}
+                  onChange={(v) => setBookingSource(v as DevBookingSource)}
+                />
+              ) : null}
               <Group
                 title="Mode"
                 value={state.mode}
