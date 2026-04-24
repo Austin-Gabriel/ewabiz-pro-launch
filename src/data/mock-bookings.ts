@@ -65,6 +65,8 @@ export interface Booking {
   note?: string;
   /** History count, used on detail page client card. 0 for first-time. */
   priorBookingsWithPro?: number;
+  /** When this client last booked with the pro before today's appointment. */
+  lastBookedAt?: Date;
 
   /** Drives the avatar tint on Home's "more today" preview. */
   avatarHue?: "blue" | "green" | "peach" | "violet" | "amber";
