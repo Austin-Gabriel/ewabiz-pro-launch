@@ -980,6 +980,71 @@ function PrimaryButton({
 }
 
 /**
+ * "Start now" CTA for same-day Confirmed bookings that are still outside the
+ * 60-minute travel window. Renders as a fully-styled bagel primary (no longer
+ * visually disabled), but routes through a confirmation sheet so the pro
+ * acknowledges they're starting earlier than scheduled. On confirm we run the
+ * same `onStart` flow as the in-window button — no separate code path.
+ */
+function StartEarlyButton({
+  label,
+  firstName,
+  neighborhood,
+  onConfirm,
+}: {
+  label: string;
+  firstName: string;
+  neighborhood: string;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <PrimaryButton label={label} onClick={() => setOpen(true)} />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="max-w-sm rounded-2xl"
+          style={{ fontFamily: UI }}
+        >
+          <DialogHeader>
+            <DialogTitle
+              style={{
+                fontFamily: UI,
+                fontSize: 18,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Start {firstName}'s booking early?
+            </DialogTitle>
+            <DialogDescription
+              style={{
+                fontFamily: UI,
+                fontSize: 14,
+                lineHeight: 1.45,
+                marginTop: 4,
+              }}
+            >
+              You'll head to {neighborhood} now. The client will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col sm:space-x-0">
+            <PrimaryButton
+              label="Yes, start now"
+              onClick={() => {
+                setOpen(false);
+                onConfirm();
+              }}
+            />
+            <SecondaryActionButton label="Cancel" onClick={() => setOpen(false)} />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/**
  * Outlined full-width secondary button — used for "Book again" and
  * "Book similar" on resolved bookings where the bagel primary fill would
  * imply more urgency than the action deserves.
