@@ -1506,7 +1506,7 @@ function PrimaryCta({
       type="button"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      className="w-full rounded-2xl transition-transform active:scale-[0.99]"
+      className="mt-5 w-full rounded-2xl transition-transform active:scale-[0.99]"
       style={{
         height: 52,
         backgroundColor: ORANGE,
