@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
