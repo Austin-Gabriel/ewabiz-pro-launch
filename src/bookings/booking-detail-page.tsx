@@ -167,8 +167,11 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
     status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
   // Relationship label (tiered, no numbered counts).
   const relationship = clientRelationshipLabel(booking);
-  // Contact actions only when the working relationship is live.
-  const showContact = status === "confirmed" || status === "in-progress";
+  // Contact actions: available as soon as the request lands and through the
+  // appointment. Hidden once the booking is closed (completed/cancelled),
+  // since chats and calls happen elsewhere post-service.
+  const showContact =
+    status === "pending" || status === "confirmed" || status === "in-progress";
   const iconBtn: React.CSSProperties = {
     width: 36,
     height: 36,
