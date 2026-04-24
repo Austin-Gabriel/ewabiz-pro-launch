@@ -708,9 +708,17 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
           </div>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div
+        className={
+          status === "completed" || status === "cancelled"
+            ? "mt-3 grid grid-cols-1 gap-2.5"
+            : "mt-3 grid grid-cols-2 gap-2.5"
+        }
+      >
         <SecondaryButton label="Message" />
-        <SecondaryButton label="Call" />
+        {status === "completed" || status === "cancelled" ? null : (
+          <SecondaryButton label="Call" />
+        )}
       </div>
     </DetailCard>
   );
