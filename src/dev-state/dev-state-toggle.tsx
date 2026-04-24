@@ -99,6 +99,14 @@ export function DevStateToggle() {
     };
   }, [open]);
 
+  // Scheduled bookings can't enter Get Ready — clear the lifecycle if the
+  // source flips while Get Ready is active.
+  useEffect(() => {
+    if (state.bookingSource === "scheduled" && state.lifecycle === "get-ready") {
+      setLifecycle("none");
+    }
+  }, [state.bookingSource, state.lifecycle, setLifecycle]);
+
   if (!mounted || !enabled) return null;
 
   return (
@@ -189,19 +197,21 @@ export function DevStateToggle() {
 
             <div className="flex-1 overflow-y-auto px-5 pb-4">
               <Group
+                title="Booking source"
+                value={state.bookingSource}
+                options={BOOKING_SOURCES}
+                onChange={(v) => setBookingSource(v as DevBookingSource)}
+              />
+              <Group
                 title="Lifecycle state"
                 value={state.lifecycle}
-                options={LIFECYCLES}
+                options={
+                  state.bookingSource === "scheduled"
+                    ? LIFECYCLES.filter((l) => l.value !== "get-ready")
+                    : LIFECYCLES
+                }
                 onChange={(v) => setLifecycle(v as DevLifecycle)}
               />
-              {state.lifecycle === "get-ready" ? (
-                <Group
-                  title="Booking source (Get Ready only)"
-                  value={state.bookingSource}
-                  options={BOOKING_SOURCES}
-                  onChange={(v) => setBookingSource(v as DevBookingSource)}
-                />
-              ) : null}
               <Group
                 title="Mode"
                 value={state.mode}

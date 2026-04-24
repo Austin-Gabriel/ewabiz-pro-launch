@@ -69,12 +69,9 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     setTimeout(() => navigate({ to: "/bookings", search: { tab: "upcoming" } }), 250);
   };
   const handleStartBooking = () => {
-    setLifecycle("get-ready");
-    navigate({ to: "/bookings", search: { tab: "in-progress" } });
-  };
-  const handleStartEarly = () => {
-    // Early-start skips the prep countdown and drops the pro straight into
-    // "On your way" — they've explicitly confirmed they're heading out now.
+    // Scheduled bookings skip Get Ready entirely — the pro confirms and
+    // heads straight into "On your way". Get Ready is reserved for the
+    // on-demand flow where prep time matters.
     setLifecycle("en-route");
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
   };
@@ -109,7 +106,6 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         onAccept={handleAccept}
         onDecline={handleDecline}
         onStart={handleStartBooking}
-        onStartEarly={handleStartEarly}
         onOpenActive={handleOpenActive}
       />
 
@@ -793,7 +789,6 @@ function DetailActionBar({
   onAccept,
   onDecline,
   onStart,
-  onStartEarly,
   onOpenActive,
 }: {
   booking: Booking;
@@ -802,7 +797,6 @@ function DetailActionBar({
   onAccept: () => void;
   onDecline: () => void;
   onStart: () => void;
-  onStartEarly: () => void;
   onOpenActive: () => void;
 }) {
   const { bg, borderCol } = useHomeTheme();
@@ -862,16 +856,14 @@ function DetailActionBar({
           </div>
         </>
       ) : action.kind === "start" ? (
-        <PrimaryButton label="Start booking" onClick={onStart} />
-      ) : action.kind === "start-early" ? (
-        <StartEarlyButton
+        <StartBookingButton
           label={action.label}
+          early={action.early}
+          minsUntil={action.minsUntil}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
-          onConfirm={onStartEarly}
+          onConfirm={onStart}
         />
-      ) : action.kind === "start-info" ? (
-        <PrimaryButton label={action.label} onClick={() => {}} disabled />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
       ) : action.kind === "book-again" ? (
@@ -901,9 +893,7 @@ function DetailActionBar({
 
 type DetailAction =
   | { kind: "pending" }
-  | { kind: "start" }
-  | { kind: "start-early"; label: string }
-  | { kind: "start-info"; label: string }
+  | { kind: "start"; label: string; early: boolean; minsUntil: number }
   | { kind: "open-active" }
   | { kind: "book-again" }
   | { kind: "book-similar" }
@@ -929,15 +919,14 @@ function deriveAction(
       const minsUntil = Math.round(
         (booking.startsAt.getTime() - Date.now()) / 60000,
       );
-      // Window logic:
-      //  - >15m before start: informational only, disabled "Starts in Xh Ym"
-      //  - 10-15m before start: tappable "Start booking" via confirmation sheet
-      //  - ≤10m before start (or already started): direct "Start booking"
-      if (minsUntil <= 10) return { kind: "start" };
-      if (minsUntil <= 15) {
-        return { kind: "start-early", label: "Start booking" };
-      }
-      return { kind: "start-info", label: `Starts in ${formatLeadTime(minsUntil)}` };
+      // Same-day bookings are always tappable. The button is never grayed
+      // out — only the copy + the confirmation sheet adapt to how early
+      // the pro is starting:
+      //  - within 15m of start: "Start booking" + standard sheet
+      //  - >15m before start: "Starts in Xm" + early-start sheet
+      const early = minsUntil > 15;
+      const label = early ? `Starts in ${formatLeadTime(minsUntil)}` : "Start booking";
+      return { kind: "start", label, early, minsUntil };
     }
     return { kind: "cancel" };
   }
@@ -994,24 +983,33 @@ function PrimaryButton({
 }
 
 /**
- * "Start now" CTA for same-day Confirmed bookings that are still outside the
- * 60-minute travel window. Renders as a fully-styled bagel primary (no longer
- * visually disabled), but routes through a confirmation sheet so the pro
- * acknowledges they're starting earlier than scheduled. On confirm we run the
- * same `onStart` flow as the in-window button — no separate code path.
+ * "Start booking" CTA for same-day Confirmed bookings. Always renders as a
+ * tappable bagel primary regardless of how far out the booking is — only
+ * the label and confirmation copy change. On confirm the booking transitions
+ * straight into "On your way" (scheduled bookings skip Get Ready).
  */
-function StartEarlyButton({
+function StartBookingButton({
   label,
+  early,
+  minsUntil,
   firstName,
   neighborhood,
   onConfirm,
 }: {
   label: string;
+  early: boolean;
+  minsUntil?: number;
   firstName: string;
   neighborhood: string;
   onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const title = early
+    ? `Start ${firstName}'s booking early?`
+    : `Start ${firstName}'s booking?`;
+  const body = early
+    ? `The booking is in ${formatLeadTime(minsUntil ?? 0)}. You'll head to ${neighborhood} now. The client will be notified.`
+    : `You'll head to ${neighborhood} now. The client will be notified.`;
   return (
     <>
       <PrimaryButton label={label} onClick={() => setOpen(true)} />
@@ -1029,7 +1027,7 @@ function StartEarlyButton({
                 letterSpacing: "-0.01em",
               }}
             >
-              Start {firstName}'s booking early?
+              {title}
             </DialogTitle>
             <DialogDescription
               style={{
@@ -1039,7 +1037,7 @@ function StartEarlyButton({
                 marginTop: 4,
               }}
             >
-              You'll head to {neighborhood} now. The client will be notified.
+              {body}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col sm:space-x-0">
