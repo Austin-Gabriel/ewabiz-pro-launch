@@ -72,12 +72,17 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-32 pt-2">
         <HeroBlock booking={booking} status={status} />
-        <ServiceCard booking={booking} />
+        <ServiceCard booking={booking} dimmed={status === "cancelled"} />
         <LocationCard booking={booking} revealAddress={false} />
-        <PaymentCard booking={booking} />
+        {status === "cancelled" ? (
+          <CancellationCard booking={booking} />
+        ) : (
+          <PaymentCard booking={booking} status={status} />
+        )}
+        {status === "completed" ? <RatingCard booking={booking} /> : null}
         {booking.note ? <NotesCard note={booking.note} /> : null}
         <ClientCard booking={booking} status={status} />
-        <PolicyLink />
+        {status === "pending" || status === "confirmed" ? <PolicyLink /> : null}
       </div>
 
       <DetailActionBar
