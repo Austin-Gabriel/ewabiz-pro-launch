@@ -196,7 +196,6 @@ function UpcomingTab() {
           title="Today"
           meta={`${today.length} ${today.length === 1 ? "booking" : "bookings"} · ${formatUsd(totalUsd)}`}
           date={dateLabel}
-          serif
         />
         <BookingTimeline entries={entries} />
       </BookingsGroup>

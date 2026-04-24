@@ -55,7 +55,7 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect }: BookingRo
           "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
         style={{
-          backgroundColor: cardSurface,
+          backgroundColor: isNext ? "#FFF4EC" : cardSurface,
           border: `1px solid ${borderCol}`,
           boxShadow: isNext
             ? "0 1px 2px rgba(6,28,39,0.06), 0 12px 28px -16px rgba(255,130,63,0.35)"
@@ -119,17 +119,54 @@ function Body({
         {name}
       </div>
       <div
-        className="truncate"
-        style={{
-          fontFamily: UI,
-          fontSize: 13,
-          color: MIDNIGHT,
-          opacity: 0.6,
-          marginTop: 2,
-        }}
+        className="flex items-start gap-2"
+        style={{ marginTop: 3 }}
       >
-        {service}
-        {location ? ` · ${shortLocality(location)}` : ""}
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            color: MIDNIGHT,
+            opacity: 0.6,
+            lineHeight: 1.3,
+            wordBreak: "break-word",
+            flex: "1 1 0",
+            minWidth: 0,
+          }}
+        >
+          {service}
+        </span>
+        {location ? (
+          <>
+            <span
+              aria-hidden
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.35,
+                lineHeight: 1.3,
+                flexShrink: 0,
+              }}
+            >
+              ·
+            </span>
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.6,
+                lineHeight: 1.3,
+                wordBreak: "break-word",
+                flex: "1 1 0",
+                minWidth: 0,
+              }}
+            >
+              {shortLocality(location)}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );
@@ -211,7 +248,8 @@ export interface TimelineEntry {
 }
 
 export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
-  const railColor = "rgba(240,235,216,0.10)";
+  const { isDark } = useHomeTheme();
+  const railColor = isDark ? "rgba(240,235,216,0.18)" : "rgba(6,28,39,0.18)";
   return (
     <div className="relative">
       {/* Rail line */}
@@ -288,6 +326,9 @@ function RailTime({ time, meridiem }: { time: string; meridiem: "AM" | "PM" }) {
 }
 
 function RailDot({ active }: { active?: boolean }) {
+  const { isDark } = useHomeTheme();
+  const dotIdle = isDark ? "rgba(240,235,216,0.55)" : "rgba(6,28,39,0.30)";
+  const dotIdleBorder = isDark ? "rgba(240,235,216,0.65)" : "rgba(6,28,39,0.40)";
   return (
     <div className="relative flex shrink-0 items-start justify-center mt-[28px] mb-[38px] ml-[4px]" style={{ width: 24, paddingTop: 18 }}>
       <span
@@ -296,8 +337,8 @@ function RailDot({ active }: { active?: boolean }) {
         style={{
           width: active ? 11 : 8,
           height: active ? 11 : 8,
-          backgroundColor: active ? BAGEL : "rgba(240,235,216,0.45)",
-          border: active ? `2px solid ${BAGEL}` : "1px solid rgba(240,235,216,0.55)",
+          backgroundColor: active ? BAGEL : dotIdle,
+          border: active ? `2px solid ${BAGEL}` : `1px solid ${dotIdleBorder}`,
           boxShadow: active ? "0 0 0 4px rgba(255,130,63,0.18)" : "none",
         }}
       />
@@ -307,6 +348,8 @@ function RailDot({ active }: { active?: boolean }) {
 
 function RailGap({ label }: { label: string }) {
   const { text } = useHomeTheme();
+  const { isDark } = useHomeTheme();
+  const dotCol = isDark ? "rgba(240,235,216,0.45)" : "rgba(6,28,39,0.30)";
   return (
     <div className="relative mb-3 flex items-center" style={{ paddingLeft: 44 }}>
       <span
@@ -316,7 +359,7 @@ function RailGap({ label }: { label: string }) {
           width: 4,
           height: 4,
           marginLeft: 10,
-          backgroundColor: "rgba(240,235,216,0.35)",
+          backgroundColor: dotCol,
         }}
       />
       <span
