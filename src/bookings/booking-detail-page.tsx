@@ -279,48 +279,59 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ServiceCard({ booking }: { booking: Booking }) {
+function ServiceCard({ booking, dimmed }: { booking: Booking; dimmed?: boolean }) {
+  // Cancelled bookings dim the entire card to signal the service did not
+  // actually take place. Completed bookings render an actual-duration sub-line
+  // when it differs from the scheduled length.
+  const showActual =
+    booking.actualDurationMin != null &&
+    booking.actualDurationMin !== booking.durationMin;
   return (
     <DetailCard>
-      <CardLabel>Service</CardLabel>
-      <div className="flex items-baseline justify-between gap-3">
-        <div className="min-w-0">
-          <div
-            style={{
-              fontFamily: UI,
-              fontSize: 17,
-              fontWeight: 600,
-              color: MIDNIGHT,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {booking.service}
+      <div style={{ opacity: dimmed ? 0.55 : 1 }}>
+        <CardLabel>Service</CardLabel>
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="min-w-0">
+            <div
+              style={{
+                fontFamily: UI,
+                fontSize: 17,
+                fontWeight: 600,
+                color: MIDNIGHT,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {booking.service}
+            </div>
+            <div
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.65,
+                marginTop: 4,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {showActual
+                ? `${booking.durationMin} min scheduled · ${booking.actualDurationMin} min actual`
+                : `${booking.durationMin} min`}
+            </div>
           </div>
-          <div
+          <span
             style={{
               fontFamily: UI,
-              fontSize: 13,
+              fontSize: 22,
+              fontWeight: 700,
               color: MIDNIGHT,
-              opacity: 0.65,
-              marginTop: 4,
+              letterSpacing: "-0.02em",
               fontVariantNumeric: "tabular-nums",
+              textDecoration: dimmed ? "line-through" : "none",
             }}
           >
-            {booking.durationMin} min
-          </div>
+            {formatUsd(booking.priceUsd)}
+          </span>
         </div>
-        <span
-          style={{
-            fontFamily: UI,
-            fontSize: 22,
-            fontWeight: 700,
-            color: MIDNIGHT,
-            letterSpacing: "-0.02em",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {formatUsd(booking.priceUsd)}
-        </span>
       </div>
     </DetailCard>
   );
@@ -410,14 +421,28 @@ function LocationCard({ booking, revealAddress }: { booking: Booking; revealAddr
   );
 }
 
-function PaymentCard({ booking }: { booking: Booking }) {
+function PaymentCard({
+  booking,
+  status,
+}: {
+  booking: Booking;
+  status: BookingStatus;
+}) {
   const platformFee = Math.round(booking.priceUsd * PLATFORM_FEE_PCT);
-  const earnings = booking.priceUsd - platformFee;
+  const tip = booking.tipUsd ?? 0;
+  const earnings = booking.priceUsd - platformFee + tip;
+  const isCompleted = status === "completed";
+  const payoutLine = isCompleted
+    ? booking.paidOutOn
+      ? `Paid out ${booking.paidOutOn}`
+      : "Pending payout"
+    : "Paid out within 24 hours of completion.";
   return (
     <DetailCard>
       <CardLabel>Payment</CardLabel>
       <Row label="Service total" value={formatUsd(booking.priceUsd)} />
       <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
+      {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
       <div
         className="my-3"
         style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
@@ -433,9 +458,140 @@ function PaymentCard({ booking }: { booking: Booking }) {
           lineHeight: 1.4,
         }}
       >
-        Paid out within 24 hours of completion.
+        {payoutLine}
       </p>
     </DetailCard>
+  );
+}
+
+/* ---- Cancellation card (replaces Payment when status === cancelled) ---- */
+
+function CancellationCard({ booking }: { booking: Booking }) {
+  const who = booking.cancelledBy ?? "client";
+  const firstName = booking.clientName.split(" ")[0];
+  const whoLabel =
+    who === "client"
+      ? `Cancelled by ${firstName}`
+      : who === "pro"
+        ? "Cancelled by you"
+        : "Cancelled automatically (expired)";
+  const fee = booking.cancellationFeeUsd ?? 0;
+  return (
+    <DetailCard>
+      <CardLabel>Cancellation</CardLabel>
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 15,
+          fontWeight: 600,
+          color: MIDNIGHT,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {whoLabel}
+      </div>
+      {booking.cancelledAt ? (
+        <div
+          style={{
+            fontFamily: UI,
+            fontSize: 12.5,
+            color: MIDNIGHT,
+            opacity: 0.6,
+            marginTop: 3,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {booking.cancelledAt}
+        </div>
+      ) : null}
+      {booking.cancellationReason ? (
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            color: MIDNIGHT,
+            opacity: 0.75,
+            lineHeight: 1.45,
+            marginTop: 10,
+            fontStyle: "italic",
+          }}
+        >
+          “{booking.cancellationReason}”
+        </p>
+      ) : null}
+      {fee > 0 ? (
+        <>
+          <div
+            className="my-3"
+            style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
+          />
+          <Row label="Cancellation fee paid out" value={formatUsd(fee)} bold />
+        </>
+      ) : null}
+    </DetailCard>
+  );
+}
+
+/* ---- Rating card (Completed only) ---- */
+
+function RatingCard({ booking }: { booking: Booking }) {
+  const rating = booking.proRatingOfClient;
+  return (
+    <DetailCard>
+      <CardLabel>Your rating</CardLabel>
+      {rating != null ? (
+        <div className="flex items-center gap-2">
+          <Stars value={rating} />
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: MIDNIGHT,
+              opacity: 0.65,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {rating}.0 / 5
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="w-full rounded-xl py-2.5 transition-opacity active:opacity-70"
+          style={{
+            border: "1px solid rgba(6,28,39,0.18)",
+            backgroundColor: "transparent",
+            color: MIDNIGHT,
+            fontFamily: UI,
+            fontSize: 13.5,
+            fontWeight: 600,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          Rate your experience
+        </button>
+      )}
+    </DetailCard>
+  );
+}
+
+function Stars({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          aria-hidden
+          style={{
+            fontSize: 16,
+            color: i <= value ? ORANGE : "rgba(6,28,39,0.18)",
+            lineHeight: 1,
+          }}
+        >
+          ★
+        </span>
+      ))}
+    </div>
   );
 }
 
