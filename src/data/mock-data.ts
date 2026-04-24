@@ -128,7 +128,7 @@ export const LIVE_ACTIVE_DAY = {
     {
       id: "b1",
       clientName: "Maya Okafor",
-      clientInitial: "M",
+       clientInitial: "MO",
       service: "Silk press + trim",
       startsAt: "10:30",
       durationMin: 90,
@@ -143,7 +143,7 @@ export const LIVE_ACTIVE_DAY = {
     {
       id: "b2",
       clientName: "Tasha B.",
-      clientInitial: "T",
+       clientInitial: "TB",
       service: "Knotless braids · small",
       startsAt: "1:00",
       durationMin: 240,
@@ -158,7 +158,7 @@ export const LIVE_ACTIVE_DAY = {
     {
       id: "b3",
       clientName: "Renée Adeyemi",
-      clientInitial: "R",
+       clientInitial: "RA",
       service: "Retwist + style",
       startsAt: "5:30",
       durationMin: 75,
