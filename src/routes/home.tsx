@@ -31,6 +31,8 @@ import {
 import { RequireAuth } from "@/auth/require-auth";
 import { ProfileSheet } from "@/home/profile-sheet";
 import { LifecycleSurface } from "@/bookings/lifecycle/lifecycle-surface";
+import { ActiveBookingStrip } from "@/components/active-booking-strip";
+import { useNavigate } from "@tanstack/react-router";
 
 /**
  * Home is state-aware. The same URL renders one of three surfaces:
@@ -87,6 +89,7 @@ function HomePage() {
   const { data: onboarding } = useOnboarding();
   const { state: dev } = useDevState();
   const [activeTab, setActiveTab] = useState<TabKey>("home");
+  const navigate = useNavigate();
 
   // Dev toggle wins over ?state= which wins over auto-detection.
   const devForced = mapDevProState(dev.proState);
@@ -98,13 +101,13 @@ function HomePage() {
   });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
-  // Lifecycle states render as a takeover on the Home tab. The bottom tab
-  // bar is hidden ONLY for the Incoming Request state — that's a focused
-  // 60s decision moment. All other lifecycle states (Get Ready, En Route,
-  // Arrived, In Progress, Complete) keep the tab bar visible so the pro can
-  // jump to Bookings/Calendar/Earnings/Profile mid-session and come back.
-  const lifecycleActive = dev.lifecycle !== "none";
-  const lifecycleHidesTabs = dev.lifecycle === "incoming";
+  // Only the Incoming Request state takes over Home — it's a focused 60-90s
+  // decision moment that must hide the tab bar. All other lifecycle states
+  // live inside /bookings (In Progress tab), and Home stays a normal
+  // dashboard. A persistent strip surfaces the active booking up top.
+  const incomingTakeover = dev.lifecycle === "incoming";
+  const otherLifecycleActive =
+    dev.lifecycle !== "none" && dev.lifecycle !== "incoming";
 
   // Apply data-density override by remapping which mock dataset feeds Home.
   const liveData = pickLiveData(
@@ -124,7 +127,7 @@ function HomePage() {
     homeMode === "offline" ? (("pendingRequests" in liveData) ? (liveData as { pendingRequests: unknown[] }).pendingRequests.length : 0) : 0;
 
   return (
-    <HomeShell noTabBarSpacing={isHardGate || lifecycleHidesTabs}>
+    <HomeShell noTabBarSpacing={isHardGate || incomingTakeover}>
       {resolved.kind === "mid-onboarding" ? (
         <StateMidOnboarding
           firstName={firstNameOf(auth.displayName, onboarding.firstName)}
@@ -141,28 +144,40 @@ function HomePage() {
         />
       ) : null}
 
-      {!isHardGate && !lifecycleActive ? (
-        <StateHome
-          mode={homeMode}
-          dayContext={dev.dayContext}
-          bookingsToday={liveData.bookingsToday ?? []}
-          nextFutureBookingLabel={
-            "nextFutureBookingLabel" in liveData
-              ? (liveData as { nextFutureBookingLabel?: string }).nextFutureBookingLabel
-              : undefined
-          }
-          todayEarningsUsd={liveData.todayEarningsUsd ?? 0}
-          weekToDateUsd={liveData.weekToDateUsd ?? 0}
-          weekProjectedUsd={liveData.weekProjectedUsd}
-          weekGoalUsd={"weekGoalUsd" in liveData ? (liveData as { weekGoalUsd?: number }).weekGoalUsd : undefined}
-          unreadCount={unreadCount}
-        />
+      {!isHardGate && !incomingTakeover ? (
+        <>
+          <ActiveBookingStrip />
+          <StateHome
+            mode={homeMode}
+            dayContext={dev.dayContext}
+            bookingsToday={liveData.bookingsToday ?? []}
+            nextFutureBookingLabel={
+              "nextFutureBookingLabel" in liveData
+                ? (liveData as { nextFutureBookingLabel?: string }).nextFutureBookingLabel
+                : undefined
+            }
+            todayEarningsUsd={liveData.todayEarningsUsd ?? 0}
+            weekToDateUsd={liveData.weekToDateUsd ?? 0}
+            weekProjectedUsd={liveData.weekProjectedUsd}
+            weekGoalUsd={"weekGoalUsd" in liveData ? (liveData as { weekGoalUsd?: number }).weekGoalUsd : undefined}
+            unreadCount={unreadCount}
+          />
+        </>
       ) : null}
 
-      {!isHardGate && !lifecycleHidesTabs ? (
+      {!isHardGate && !incomingTakeover ? (
         <BottomTabs
           active={activeTab}
-          onSelect={setActiveTab}
+          onSelect={(k) => {
+            if (k === "bookings") {
+              navigate({
+                to: "/bookings",
+                search: otherLifecycleActive ? { tab: "in-progress" } : { tab: "upcoming" },
+              });
+              return;
+            }
+            setActiveTab(k);
+          }}
           badge={
             resolved.kind === "live" && dev.dayContext === "full"
               ? { tab: "calendar", count: 2 }
@@ -173,11 +188,11 @@ function HomePage() {
         />
       ) : null}
       <ProfileSheet
-        open={!isHardGate && !lifecycleHidesTabs && activeTab === "profile"}
+        open={!isHardGate && !incomingTakeover && activeTab === "profile"}
         onClose={() => setActiveTab("home")}
       />
 
-      {lifecycleActive ? <LifecycleSurface /> : null}
+      {incomingTakeover ? <LifecycleSurface /> : null}
     </HomeShell>
   );
 }

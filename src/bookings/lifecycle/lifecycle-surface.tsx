@@ -77,6 +77,115 @@ export function LifecycleSurface() {
 
   return (
     <SurfaceRoot lifecycleKind={kind}>
+      <LifecycleStateRouter
+        kind={kind}
+        booking={booking}
+        setKind={setKind}
+        setLifecycle={setLifecycle}
+        openSafety={openSafety}
+        exitToHome={exitToHome}
+      />
+
+      {safetyOpen ? (
+        <SafetySheet
+          onClose={() => setSafetyOpen(false)}
+          onCall911={() => {
+            setSafetyOpen(false);
+            setEmergencyConfirm(true);
+          }}
+        />
+      ) : null}
+      {emergencyConfirm ? (
+        <EmergencyConfirmSheet
+          onCancel={() => setEmergencyConfirm(false)}
+          onConfirm={() => {
+            setEmergencyConfirm(false);
+            // In production: window.location.href = "tel:911"
+          }}
+        />
+      ) : null}
+    </SurfaceRoot>
+  );
+}
+
+/**
+ * Embeddable lifecycle body — same per-state components as the takeover, but
+ * without the full-screen `SurfaceRoot` wrapper. Designed to render inside a
+ * tab (Bookings → In Progress) so the bottom tab bar stays visible.
+ *
+ * Should NOT be used for the `incoming` state — that one stays a takeover.
+ */
+export function LifecycleBody() {
+  const { state: dev, setLifecycle } = useDevState();
+  const [kind, setKind] = useState<LifecycleKind>(devToKind(dev.lifecycle));
+  const [safetyOpen, setSafetyOpen] = useState(false);
+  const [emergencyConfirm, setEmergencyConfirm] = useState(false);
+  const openSafety = () => setSafetyOpen(true);
+
+  useEffect(() => {
+    setKind(devToKind(dev.lifecycle));
+  }, [dev.lifecycle]);
+
+  const booking = LIFECYCLE_BOOKING;
+  const exitToHome = () => setLifecycle("none");
+
+  return (
+    <div
+      className="relative flex flex-1 flex-col"
+      style={{ fontFamily: UI }}
+      key={kind}
+    >
+      <LifecycleStateRouter
+        kind={kind}
+        booking={booking}
+        setKind={setKind}
+        setLifecycle={setLifecycle}
+        openSafety={openSafety}
+        exitToHome={exitToHome}
+      />
+
+      {safetyOpen ? (
+        <SafetySheet
+          onClose={() => setSafetyOpen(false)}
+          onCall911={() => {
+            setSafetyOpen(false);
+            setEmergencyConfirm(true);
+          }}
+        />
+      ) : null}
+      {emergencyConfirm ? (
+        <EmergencyConfirmSheet
+          onCancel={() => setEmergencyConfirm(false)}
+          onConfirm={() => {
+            setEmergencyConfirm(false);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Switches between the per-state lifecycle component. Shared by the takeover
+ * `LifecycleSurface` and the embeddable `LifecycleBody`.
+ */
+function LifecycleStateRouter({
+  kind,
+  booking,
+  setKind,
+  setLifecycle,
+  openSafety,
+  exitToHome,
+}: {
+  kind: LifecycleKind;
+  booking: LifecycleBooking;
+  setKind: (k: LifecycleKind) => void;
+  setLifecycle: (l: DevLifecycle) => void;
+  openSafety: () => void;
+  exitToHome: () => void;
+}) {
+  return (
+    <>
       {kind === "incoming" ? (
         <IncomingRequest
           booking={booking}
@@ -129,7 +238,7 @@ export function LifecycleSurface() {
 
       {kind === "cancel-confirm" ? (
         <CancelConfirm
-          onKeep={() => setKind(devToKind(dev.lifecycle))}
+          onKeep={() => setKind(kind)}
           onCancel={exitToHome}
         />
       ) : null}
@@ -137,26 +246,7 @@ export function LifecycleSurface() {
       {kind === "no-show" ? (
         <NoShow booking={booking} onMarkNoShow={exitToHome} />
       ) : null}
-
-      {safetyOpen ? (
-        <SafetySheet
-          onClose={() => setSafetyOpen(false)}
-          onCall911={() => {
-            setSafetyOpen(false);
-            setEmergencyConfirm(true);
-          }}
-        />
-      ) : null}
-      {emergencyConfirm ? (
-        <EmergencyConfirmSheet
-          onCancel={() => setEmergencyConfirm(false)}
-          onConfirm={() => {
-            setEmergencyConfirm(false);
-            // In production: window.location.href = "tel:911"
-          }}
-        />
-      ) : null}
-    </SurfaceRoot>
+    </>
   );
 }
 
