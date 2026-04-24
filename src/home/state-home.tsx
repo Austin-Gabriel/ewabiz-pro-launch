@@ -60,6 +60,12 @@ export function StateHome(props: StateHomeProps) {
   // sensible even with the dev panel untouched.
   const initialOnline = props.mode === "online";
   const [online, setOnline] = useState(initialOnline);
+  const { state: dev } = useDevState();
+  // Any active lifecycle (other than the incoming takeover, which is its own
+  // full-screen surface) means the pro is committed to a booking — they
+  // cannot accept new on-demand requests until Complete is acknowledged.
+  const lifecycleActive =
+    dev.lifecycle !== "none" && dev.lifecycle !== "incoming";
 
   // Re-sync when dev toggle flips between offline/online while we're on the
   // page. This is the moment the user expects a smooth crossfade.
@@ -71,7 +77,11 @@ export function StateHome(props: StateHomeProps) {
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
       <Header unreadCount={props.unreadCount ?? 0} />
-      <ModeToggle online={online} onToggle={() => setOnline((v) => !v)} />
+      <ModeToggle
+        online={online}
+        onToggle={() => setOnline((v) => !v)}
+        lockedClientName={lifecycleActive ? LIFECYCLE_BOOKING.clientName.split(" ")[0] : undefined}
+      />
 
       <div
         className="relative flex flex-1 flex-col"
