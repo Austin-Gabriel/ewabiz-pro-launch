@@ -175,18 +175,17 @@ function SurfaceRoot({
   children: React.ReactNode;
 }) {
   const { bg } = useHomeTheme();
-  // Incoming Request is a focused takeover — covers the bottom tab bar.
-  // All other lifecycle states leave room for the tab bar (~64px + safe area).
-  const coversTabs = lifecycleKind === "incoming";
+  // Every lifecycle state leaves room for the bottom tab bar (~64px + safe
+  // area) so the pro can navigate to Bookings/Calendar/Earnings/Profile
+  // mid-session and come back — including during Incoming Request.
+  void lifecycleKind;
   return (
     <div
       className="fixed inset-0 z-30 flex flex-col"
       style={{
         backgroundColor: bg,
         paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: coversTabs
-          ? "env(safe-area-inset-bottom)"
-          : "calc(64px + env(safe-area-inset-bottom))",
+        paddingBottom: "calc(64px + env(safe-area-inset-bottom))",
         fontFamily: UI,
         // Smooth horizontal slide between states
         animation: "ewa-life-slide 300ms cubic-bezier(0.22, 1, 0.36, 1)",
