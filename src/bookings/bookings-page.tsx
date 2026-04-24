@@ -186,6 +186,20 @@ function UpcomingTab() {
     setBookings((prev) => prev.filter((b) => b.id !== id));
 
   // Group by time horizon. Sections are keyed in canonical display order.
+  // Pending bookings live in their own dedicated top section. They do NOT
+  // appear in the time-horizon groups — one or the other, never both.
+  const pending = useMemo(
+    () =>
+      bookings
+        .filter((b) => b.status === "pending")
+        .sort((a, b) => {
+          const ax = a.expiresAt?.getTime() ?? Number.POSITIVE_INFINITY;
+          const bx = b.expiresAt?.getTime() ?? Number.POSITIVE_INFINITY;
+          return ax - bx;
+        }),
+    [bookings],
+  );
+
   const groups = useMemo(() => {
     const buckets: Record<TimeHorizon, CanonicalBooking[]> = {
       today: [],
@@ -194,7 +208,10 @@ function UpcomingTab() {
       "next-month": [],
       later: [],
     };
-    for (const b of bookings) buckets[horizonOf(b.startsAt)].push(b);
+    for (const b of bookings) {
+      if (b.status === "pending") continue;
+      buckets[horizonOf(b.startsAt)].push(b);
+    }
     for (const k of Object.keys(buckets) as TimeHorizon[]) {
       buckets[k].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
     }
@@ -202,6 +219,7 @@ function UpcomingTab() {
   }, [bookings]);
 
   const total =
+    pending.length +
     groups.today.length +
     groups["this-week"].length +
     groups["this-month"].length +
@@ -219,6 +237,12 @@ function UpcomingTab() {
 
   return (
     <div className="flex flex-col pb-6">
+      <PendingSection
+        bookings={pending}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
+        onOpen={openDetail}
+      />
       <TodayHorizonGroup
         bookings={groups.today}
         onAccept={handleAccept}
@@ -258,6 +282,63 @@ function UpcomingTab() {
         onOpen={openDetail}
       />
     </div>
+  );
+}
+
+/* ---- Pending section (top, non-collapsable, hidden when empty) ---- */
+
+function PendingSection({
+  bookings,
+  onAccept,
+  onDecline,
+  onOpen,
+}: {
+  bookings: CanonicalBooking[];
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+  onOpen: (id: string) => void;
+}) {
+  const { text } = useHomeTheme();
+  if (bookings.length === 0) return null;
+  return (
+    <BookingsGroup>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2
+          style={{
+            fontFamily: UI,
+            fontSize: 16,
+            fontWeight: 700,
+            color: text,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          Pending
+        </h2>
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            color: text,
+            opacity: 0.55,
+            fontWeight: 500,
+            letterSpacing: "-0.005em",
+          }}
+        >
+          {bookings.length} {bookings.length === 1 ? "request" : "requests"}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {bookings.map((b) => (
+          <BookingRowCard
+            key={b.id}
+            booking={adaptCanonical(b)}
+            pending={pendingPropsFor(b, onAccept, onDecline)}
+            onSelect={() => onOpen(b.id)}
+          />
+        ))}
+      </div>
+    </BookingsGroup>
   );
 }
 
