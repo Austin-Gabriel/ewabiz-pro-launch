@@ -43,8 +43,8 @@ export interface LifecycleBooking {
 
 export const LIFECYCLE_BOOKING: LifecycleBooking = {
   clientName: "Maya Okafor",
-  clientInitial: "M",
-  service: "Silk press + trim",
+  clientInitial: "MO",
+  service: "Silk press",
   durationMin: 90,
   priceUsd: 180,
   payoutUsd: 162,
