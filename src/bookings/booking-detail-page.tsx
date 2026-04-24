@@ -892,9 +892,7 @@ function DetailActionBar({
 
 type DetailAction =
   | { kind: "pending" }
-  | { kind: "start" }
-  | { kind: "start-early"; label: string }
-  | { kind: "start-info"; label: string }
+  | { kind: "start"; label: string; early: boolean; minsUntil: number }
   | { kind: "open-active" }
   | { kind: "book-again" }
   | { kind: "book-similar" }
@@ -920,15 +918,14 @@ function deriveAction(
       const minsUntil = Math.round(
         (booking.startsAt.getTime() - Date.now()) / 60000,
       );
-      // Window logic:
-      //  - >15m before start: informational only, disabled "Starts in Xh Ym"
-      //  - 10-15m before start: tappable "Start booking" via confirmation sheet
-      //  - ≤10m before start (or already started): direct "Start booking"
-      if (minsUntil <= 10) return { kind: "start" };
-      if (minsUntil <= 15) {
-        return { kind: "start-early", label: "Start booking" };
-      }
-      return { kind: "start-info", label: `Starts in ${formatLeadTime(minsUntil)}` };
+      // Same-day bookings are always tappable. The button is never grayed
+      // out — only the copy + the confirmation sheet adapt to how early
+      // the pro is starting:
+      //  - within 15m of start: "Start booking" + standard sheet
+      //  - >15m before start: "Starts in Xm" + early-start sheet
+      const early = minsUntil > 15;
+      const label = early ? `Starts in ${formatLeadTime(minsUntil)}` : "Start booking";
+      return { kind: "start", label, early, minsUntil };
     }
     return { kind: "cancel" };
   }
