@@ -463,42 +463,23 @@ function GetReady({
   onSafety: () => void;
 }) {
   const { text } = useHomeTheme();
-  // Prep timer: starts at prepMin and counts down. Kept in seconds.
-  const [secondsLeft, setSecondsLeft] = useState(booking.prepMin * 60);
-  useEffect(() => {
-    const id = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const ss = String(secondsLeft % 60).padStart(2, "0");
+  // Booking source comes from dev state when set; otherwise falls back to the
+  // active booking's intrinsic source. Same Get Ready component, two display
+  // modes — never duplicated into separate screens.
+  const { state: dev } = useDevState();
+  const resolvedSource: "on-demand" | "scheduled" =
+    dev.bookingSource === "auto" ? booking.source : dev.bookingSource;
 
   return (
     <LifecycleColumn>
       <Header title="Get ready" showSafety onSafety={onSafety} />
       <ClientCard booking={booking} kind="get-ready" />
 
-      <div className="mt-7 flex flex-col items-center">
-        <span
-          style={{
-            fontFamily: UI,
-            fontSize: 44,
-            fontWeight: 700,
-            color: text,
-            letterSpacing: "-0.03em",
-            fontVariantNumeric: "tabular-nums",
-            lineHeight: 1,
-          }}
-        >
-          {mm}:{ss}
-        </span>
-        <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
-          Leave by {booking.leaveByAt}
-        </p>
-        <p style={{ ...subline(text), marginTop: 3, fontSize: 11, opacity: 0.55 }}>
-          You set {booking.prepMin} min prep · client expects you by {booking.arrivalAt}
-        </p>
-      </div>
+      {resolvedSource === "on-demand" ? (
+        <GetReadyPrepCountdown booking={booking} />
+      ) : (
+        <GetReadyLeaveBy booking={booking} />
+      )}
 
       <div className="flex-1" />
 
@@ -514,6 +495,115 @@ function GetReady({
       </button>
     </LifecycleColumn>
   );
+}
+
+/**
+ * On-demand Get Ready — pro just accepted an immediate request, gets a
+ * ticking prep countdown so they don't dawdle.
+ */
+function GetReadyPrepCountdown({ booking }: { booking: LifecycleBooking }) {
+  const { text } = useHomeTheme();
+  const [secondsLeft, setSecondsLeft] = useState(booking.prepMin * 60);
+  useEffect(() => {
+    const id = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const ss = String(secondsLeft % 60).padStart(2, "0");
+
+  return (
+    <div className="mt-7 flex flex-col items-center">
+      <span
+        style={{
+          fontFamily: UI,
+          fontSize: 44,
+          fontWeight: 700,
+          color: text,
+          letterSpacing: "-0.03em",
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1,
+        }}
+      >
+        {mm}:{ss}
+      </span>
+      <p style={{ ...subline(text), marginTop: 8, fontSize: 12 }}>
+        Leave by {booking.leaveByAt}
+      </p>
+      <p style={{ ...subline(text), marginTop: 3, fontSize: 11, opacity: 0.55 }}>
+        You set {booking.prepMin} min prep · client expects you by {booking.arrivalAt}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Scheduled Get Ready — appointment was on the books; no ticking prep timer.
+ * Show "Leave by" prominently, then "Arriving at". If the leave-by time has
+ * passed without Start Route, the copy shifts to a running-late warning in
+ * the bagel accent color (no state change, just emphasis).
+ */
+function GetReadyLeaveBy({ booking }: { booking: LifecycleBooking }) {
+  const { text } = useHomeTheme();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Compare current minute-of-day against the leave-by display string.
+  const leaveByMin = parseDisplayTime(booking.leaveByAt);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const runningLate = leaveByMin !== null && nowMin > leaveByMin;
+  const firstName = booking.clientName.split(" ")[0];
+
+  return (
+    <div className="mt-7 flex flex-col items-center">
+      <span
+        style={{
+          fontFamily: UI,
+          fontSize: 38,
+          fontWeight: 700,
+          color: runningLate ? ORANGE : text,
+          letterSpacing: "-0.03em",
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1,
+          textAlign: "center",
+        }}
+      >
+        {runningLate ? "Running late" : `Leave by ${booking.leaveByAt}`}
+      </span>
+      <p
+        style={{
+          ...subline(text),
+          marginTop: 10,
+          fontSize: 13,
+          color: runningLate ? ORANGE : text,
+          opacity: runningLate ? 0.95 : 0.65,
+          fontWeight: runningLate ? 600 : 500,
+        }}
+      >
+        {runningLate
+          ? `${firstName} expects you at ${booking.arrivalAt}`
+          : `Arriving at ${booking.arrivalAt}`}
+      </p>
+      <p style={{ ...subline(text), marginTop: 4, fontSize: 11, opacity: 0.55 }}>
+        Scheduled booking · address now revealed
+      </p>
+    </div>
+  );
+}
+
+/** "10:48 AM" → minute-of-day. Null if unparseable. */
+function parseDisplayTime(s: string): number | null {
+  const m = s.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const suffix = m[3].toUpperCase();
+  if (suffix === "PM" && h !== 12) h += 12;
+  if (suffix === "AM" && h === 12) h = 0;
+  return h * 60 + min;
 }
 
 /* =================================================================
