@@ -168,11 +168,15 @@ function TabBar({
 /* ---------------- Upcoming ---------------- */
 
 function UpcomingTab() {
+  const navigate = useNavigate();
   // Active bookings (excluding completed/cancelled) live in a single
   // dismissible registry so accept/decline mutate the list locally.
   const [bookings, setBookings] = useState<CanonicalBooking[]>(() =>
     ALL_BOOKINGS.filter((b) => b.status === "confirmed" || b.status === "pending"),
   );
+
+  const openDetail = (id: string) =>
+    navigate({ to: "/bookings/$id", params: { id } });
 
   const handleAccept = (id: string) =>
     setBookings((prev) =>
@@ -219,6 +223,7 @@ function UpcomingTab() {
         bookings={groups.today}
         onAccept={handleAccept}
         onDecline={handleDecline}
+        onOpen={openDetail}
       />
       <CollapsibleHorizonGroup
         title="This Week"
@@ -226,6 +231,7 @@ function UpcomingTab() {
         defaultOpen
         onAccept={handleAccept}
         onDecline={handleDecline}
+        onOpen={openDetail}
       />
       <CollapsibleHorizonGroup
         title="This Month"
@@ -233,6 +239,7 @@ function UpcomingTab() {
         defaultOpen={false}
         onAccept={handleAccept}
         onDecline={handleDecline}
+        onOpen={openDetail}
       />
       <CollapsibleHorizonGroup
         title="Next Month"
@@ -240,6 +247,7 @@ function UpcomingTab() {
         defaultOpen={false}
         onAccept={handleAccept}
         onDecline={handleDecline}
+        onOpen={openDetail}
       />
       <CollapsibleHorizonGroup
         title="Later"
@@ -247,6 +255,7 @@ function UpcomingTab() {
         defaultOpen={false}
         onAccept={handleAccept}
         onDecline={handleDecline}
+        onOpen={openDetail}
       />
     </div>
   );
@@ -288,10 +297,12 @@ function TodayHorizonGroup({
   bookings,
   onAccept,
   onDecline,
+  onOpen,
 }: {
   bookings: CanonicalBooking[];
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
+  onOpen: (id: string) => void;
 }) {
   if (bookings.length === 0) return null;
 
@@ -313,6 +324,7 @@ function TodayHorizonGroup({
       isNext: i === 0 && b.status === "confirmed",
       gapBefore,
       pending: pendingPropsFor(b, onAccept, onDecline),
+      onOpen: () => onOpen(b.id),
     };
   });
 
@@ -338,12 +350,14 @@ function CollapsibleHorizonGroup({
   defaultOpen,
   onAccept,
   onDecline,
+  onOpen,
 }: {
   title: string;
   bookings: CanonicalBooking[];
   defaultOpen: boolean;
   onAccept: (id: string) => void;
   onDecline: (id: string) => void;
+  onOpen: (id: string) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const { text } = useHomeTheme();
@@ -400,6 +414,7 @@ function CollapsibleHorizonGroup({
               key={b.id}
               booking={adaptCanonical(b)}
               pending={pendingPropsFor(b, onAccept, onDecline)}
+              onSelect={() => onOpen(b.id)}
             />
           ))}
         </div>
@@ -511,12 +526,18 @@ function HistoryTab() {
 
 function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] }) {
   if (items.length === 0) return null;
+  const navigate = useNavigate();
   return (
     <BookingsGroup>
       <BookingsSectionHeader title={label} />
       <div className="flex flex-col gap-2.5">
         {items.map((b) => (
-          <BookingRowCard key={b.id} booking={b} cancelled={b.cancelled} />
+          <BookingRowCard
+            key={b.id}
+            booking={b}
+            cancelled={b.cancelled}
+            onSelect={() => navigate({ to: "/bookings/$id", params: { id: b.id } })}
+          />
         ))}
       </div>
     </BookingsGroup>
