@@ -392,11 +392,7 @@ function TodayHorizonGroup({
     const [time, meridiem] = formatStackedTime(adapted.startsAt);
     const prev = i > 0 ? bookings[i - 1] : undefined;
     const gapBefore = prev
-      ? gapBetween(
-          formatTimeOnly(prev.startsAt),
-          prev.durationMin,
-          adapted.startsAt,
-        )
+      ? gapBetween(prev.startsAt, prev.durationMin, b.startsAt)
       : undefined;
     return {
       booking: adapted,
@@ -649,11 +645,13 @@ function formatStackedTime(t: string): [string, "AM" | "PM"] {
   return [`${h}:${mm}`, suffix];
 }
 
-function gapBetween(prevStart: string, prevDuration: number, nextStart: string): string | undefined {
-  const prevEnd = toMinutes(prevStart) + prevDuration;
-  const next = toMinutes(nextStart);
-  const gap = next - prevEnd;
-  if (gap <= 5) return undefined;
+function gapBetween(prevStart: Date, prevDuration: number, nextStart: Date): string | undefined {
+  // Compute the open window between bookings directly from Date objects.
+  // The previous version parsed pre-formatted strings, which produced NaN
+  // whenever the string shape didn't match (e.g., a Date coerced to string).
+  const prevEndMs = prevStart.getTime() + prevDuration * 60_000;
+  const gap = Math.round((nextStart.getTime() - prevEndMs) / 60_000);
+  if (!Number.isFinite(gap) || gap <= 5) return undefined;
   const h = Math.floor(gap / 60);
   const m = gap % 60;
   if (h === 0) return `${m}m gap`;
