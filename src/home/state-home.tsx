@@ -371,7 +371,10 @@ function UpNextCard({ booking }: { booking: Booking }) {
 
 function UpNextInner({ booking }: { booking: Booking }) {
   const { text, cardSurface, cardBorder } = useHomeTheme();
+  const navigate = useNavigate();
   const startsIn = booking.startsInMin;
+  const goToDetail = () =>
+    navigate({ to: "/bookings/$id", params: { id: booking.id } });
   return (
     <div
       className="rounded-3xl p-5"
@@ -381,6 +384,16 @@ function UpNextInner({ booking }: { booking: Booking }) {
         boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 16px 32px -20px rgba(6,28,39,0.25)",
       }}
     >
+      {/* Tappable top area — pill through location — opens booking detail.
+          The bottom CTAs (Start navigation, Message, Call) stay separate so
+          they don't accidentally trigger navigation to the detail page. */}
+      <button
+        type="button"
+        onClick={goToDetail}
+        aria-label={`View details for ${booking.clientName}`}
+        className="block w-full text-left transition-opacity active:opacity-80"
+        style={{ background: "transparent", padding: 0, border: "none" }}
+      >
       {/* Header row: status pill + time */}
       <div className="flex items-start justify-between">
         {typeof startsIn === "number" ? (
@@ -505,6 +518,7 @@ function UpNextInner({ booking }: { booking: Booking }) {
           ) : null}
         </div>
       ) : null}
+      </button>
 
       {/* Primary CTA: full-width orange */}
       <button
@@ -565,7 +579,7 @@ function SecondaryButton({ icon, label }: { icon: React.ReactNode; label: string
 /* ---------------- Rest-of-today (canonical card list) ---------------- */
 
 function TodayRestList({ bookings }: { bookings: Booking[] }) {
-  const { text, cardSurface, cardBorder } = useHomeTheme();
+  const { cardText, cardSurface, cardBorder } = useHomeTheme();
   const navigate = useNavigate();
   const count = bookings.length;
   const next = bookings[0];
@@ -594,7 +608,7 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
               fontFamily: UI,
               fontSize: 15,
               fontWeight: 700,
-              color: text,
+              color: cardText,
               letterSpacing: "-0.005em",
               lineHeight: 1.2,
             }}
@@ -606,7 +620,7 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
             style={{
               fontFamily: UI,
               fontSize: 13,
-              color: text,
+              color: cardText,
               opacity: 0.6,
               lineHeight: 1.3,
             }}
@@ -614,7 +628,7 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
             Next at {formatStartTime(next.startsAt)}
           </div>
         </div>
-        <Chevron color={text} />
+        <Chevron color={cardText} />
       </button>
     </CardTheme>
   );
