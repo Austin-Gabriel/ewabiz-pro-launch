@@ -312,7 +312,7 @@ function RailDot({ active }: { active?: boolean }) {
     <div className="relative flex shrink-0 items-center justify-center" style={{ width: 24, alignSelf: "stretch" }}>
       <span
         aria-hidden
-        className="rounded-full"
+        className="rounded-full mt-0 mb-[15px]"
         style={{
           width: active ? 12 : 8,
           height: active ? 12 : 8,
