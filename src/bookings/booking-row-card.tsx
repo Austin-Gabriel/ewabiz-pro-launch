@@ -52,7 +52,7 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect }: BookingRo
         type={onSelect ? "button" : undefined}
         onClick={onSelect}
         className={
-          "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
+          "flex w-full items-start gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
         style={{
           backgroundColor: isNext ? "#FFF4EC" : cardSurface,
