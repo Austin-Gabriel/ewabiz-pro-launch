@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
