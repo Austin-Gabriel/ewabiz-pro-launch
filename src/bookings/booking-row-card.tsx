@@ -255,7 +255,7 @@ export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
       {/* Rail line */}
       <div
         aria-hidden
-        className="absolute"
+        className="absolute ml-[46px]"
         style={{
           left: 36,
           top: 12,
