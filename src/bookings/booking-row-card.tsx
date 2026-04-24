@@ -255,16 +255,17 @@ export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
       {/* Rail line */}
       <div
         aria-hidden
-        className="absolute ml-[46px]"
+        className="absolute"
         style={{
-          left: 36,
-          top: 12,
-          bottom: 12,
+          // RAIL_COL starts at TIME_COL_WIDTH (48). Center of 24px rail column = 48 + 12 = 60.
+          left: 60,
           width: 1,
+          top: 18,
+          bottom: 18,
           backgroundColor: railColor,
         }}
       />
-      <ul className="flex flex-col gap-5">
+      <ul className="flex flex-col gap-4">
         {entries.map((entry) => (
           <li key={entry.booking.id} className="relative">
             {entry.gapBefore ? <RailGap label={entry.gapBefore} /> : null}
@@ -278,10 +279,10 @@ export function BookingTimeline({ entries }: { entries: TimelineEntry[] }) {
 
 function RailRow({ entry }: { entry: TimelineEntry }) {
   return (
-    <div className="relative flex items-stretch">
+    <div className="relative flex items-center">
       <RailTime time={entry.time} meridiem={entry.meridiem} />
       <RailDot active={entry.isNext} />
-      <div className="min-w-0 flex-1 pl-5">
+      <div className="min-w-0 flex-1 pl-3">
         <BookingRowCard booking={entry.booking} isNext={entry.isNext} />
       </div>
     </div>
@@ -293,7 +294,7 @@ function RailTime({ time, meridiem }: { time: string; meridiem: "AM" | "PM" }) {
   return (
     <div
       className="flex shrink-0 flex-col items-end justify-center"
-      style={{ width: 44, paddingTop: 8 }}
+      style={{ width: 48 }}
     >
       <span
         style={{
@@ -316,7 +317,7 @@ function RailTime({ time, meridiem }: { time: string; meridiem: "AM" | "PM" }) {
           color: text,
           opacity: 0.55,
           letterSpacing: "1.2px",
-          marginTop: 4,
+          marginTop: 3,
         }}
       >
         {meridiem}
@@ -330,13 +331,13 @@ function RailDot({ active }: { active?: boolean }) {
   const dotIdle = isDark ? "rgba(240,235,216,0.55)" : "rgba(6,28,39,0.30)";
   const dotIdleBorder = isDark ? "rgba(240,235,216,0.65)" : "rgba(6,28,39,0.40)";
   return (
-    <div className="relative flex shrink-0 items-start justify-center mt-[28px] mb-[38px] ml-[4px]" style={{ width: 24, paddingTop: 18 }}>
+    <div className="relative flex shrink-0 items-center justify-center" style={{ width: 24, alignSelf: "stretch" }}>
       <span
         aria-hidden
         className="rounded-full"
         style={{
-          width: active ? 11 : 8,
-          height: active ? 11 : 8,
+          width: active ? 12 : 8,
+          height: active ? 12 : 8,
           backgroundColor: active ? BAGEL : dotIdle,
           border: active ? `2px solid ${BAGEL}` : `1px solid ${dotIdleBorder}`,
           boxShadow: active ? "0 0 0 4px rgba(255,130,63,0.18)" : "none",
@@ -351,14 +352,14 @@ function RailGap({ label }: { label: string }) {
   const { isDark } = useHomeTheme();
   const dotCol = isDark ? "rgba(240,235,216,0.45)" : "rgba(6,28,39,0.30)";
   return (
-    <div className="relative mb-3 flex items-center" style={{ paddingLeft: 44 }}>
+    <div className="relative mb-2 mt-1 flex items-center" style={{ paddingLeft: 56 }}>
       <span
         aria-hidden
         className="rounded-full"
         style={{
           width: 4,
           height: 4,
-          marginLeft: 10,
+          marginLeft: 2,
           backgroundColor: dotCol,
         }}
       />
