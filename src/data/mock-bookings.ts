@@ -496,3 +496,27 @@ export const STATUS_LABEL: Record<BookingStatus, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
 };
+
+/* --------- Client relationship --------- */
+
+/**
+ * Tiered relationship label. Numbered counts ("47th booking") read like
+ * surveillance — buckets read like a relationship. Optionally append the
+ * last-booked date when it's recent enough to feel current (≤ 6 months).
+ */
+export function clientRelationshipLabel(
+  booking: Pick<Booking, "priorBookingsWithPro" | "lastBookedAt">,
+  now: Date = new Date(),
+): string {
+  const prior = booking.priorBookingsWithPro ?? 0;
+  const tier =
+    prior <= 0 ? "First-time client" : prior <= 3 ? "Returning client" : "Regular client";
+  if (prior <= 0 || !booking.lastBookedAt) return tier;
+  const sixMonthsMs = 1000 * 60 * 60 * 24 * 30 * 6;
+  if (now.getTime() - booking.lastBookedAt.getTime() > sixMonthsMs) return tier;
+  return `${tier} · Last booked ${formatLastBooked(booking.lastBookedAt)}`;
+}
+
+function formatLastBooked(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
