@@ -133,11 +133,12 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setMode = useCallback((v: DevMode) => setState((s) => ({ ...s, mode: v })), []);
   const setDayContext = useCallback((v: DevDayContext) => setState((s) => ({ ...s, dayContext: v })), []);
   const setLifecycle = useCallback((v: DevLifecycle) => setState((s) => ({ ...s, lifecycle: v })), []);
+  const setBookingSource = useCallback((v: DevBookingSource) => setState((s) => ({ ...s, bookingSource: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
-    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset }),
-    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, reset],
+    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset }),
+    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset],
   );
 
   return <DevStateContext.Provider value={value}>{children}</DevStateContext.Provider>;
@@ -155,6 +156,7 @@ export function useDevState(): Ctx {
       setMode: () => {},
       setDayContext: () => {},
       setLifecycle: () => {},
+      setBookingSource: () => {},
       reset: () => {},
     };
   }
