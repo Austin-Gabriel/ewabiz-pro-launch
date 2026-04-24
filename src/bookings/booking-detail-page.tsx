@@ -870,6 +870,8 @@ function DetailActionBar({
           neighborhood={booking.neighborhood}
           onConfirm={onStartEarly}
         />
+      ) : action.kind === "start-info" ? (
+        <PrimaryButton label={action.label} onClick={() => {}} disabled />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
       ) : action.kind === "book-again" ? (
