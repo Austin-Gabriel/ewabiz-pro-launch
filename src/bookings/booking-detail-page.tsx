@@ -829,11 +829,13 @@ function DetailActionBar({
               style={{
                 fontFamily: UI,
                 fontSize: 11.5,
-                color: MIDNIGHT,
-                opacity: 0.55,
+                color: ORANGE,
+                fontWeight: 600,
                 textAlign: "center",
                 marginTop: 0,
                 marginBottom: 8,
+                textShadow:
+                  "0 0 6px rgba(255,130,63,0.45), 0 0 14px rgba(255,130,63,0.25)",
               }}
             >
               {formatExpiresIn(booking.expiresAt)}
