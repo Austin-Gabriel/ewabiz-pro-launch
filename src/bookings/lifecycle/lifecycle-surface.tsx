@@ -314,7 +314,7 @@ function IncomingRequest({
   onDecline: () => void;
 }) {
   const { text } = useHomeTheme();
-  const TOTAL = 90;
+  const TOTAL = 60;
   const [secondsLeft, setSecondsLeft] = useState(TOTAL);
   const startedAt = useRef(Date.now());
 

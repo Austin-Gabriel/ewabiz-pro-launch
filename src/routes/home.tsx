@@ -101,7 +101,7 @@ function HomePage() {
   });
 
   const isHardGate = resolved.kind === "mid-onboarding" || resolved.kind === "pending";
-  // Only the Incoming Request state takes over Home — it's a focused 60-90s
+  // Only the Incoming Request state takes over Home — it's a focused 60s
   // decision moment that must hide the tab bar. All other lifecycle states
   // live inside /bookings (In Progress tab), and Home stays a normal
   // dashboard. A persistent strip surfaces the active booking up top.

@@ -56,7 +56,7 @@ const DAY_CONTEXTS: { value: DevDayContext; label: string; hint: string }[] = [
 
 const LIFECYCLES: { value: DevLifecycle; label: string; hint: string }[] = [
   { value: "none", label: "None", hint: "No lifecycle takeover" },
-  { value: "incoming", label: "Incoming request", hint: "Online dispatch · 90s timer" },
+  { value: "incoming", label: "Incoming request", hint: "Online dispatch · 60s timer" },
   { value: "get-ready", label: "Get Ready", hint: "Accepted — prep countdown" },
   { value: "en-route", label: "En Route", hint: "Driving to client" },
   { value: "arrived", label: "Arrived (PIN entry)", hint: "4-digit code from client" },
