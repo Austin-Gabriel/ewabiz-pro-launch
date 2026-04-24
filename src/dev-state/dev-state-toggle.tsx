@@ -81,6 +81,7 @@ export function DevStateToggle() {
     setMode,
     setDayContext,
     setLifecycle,
+    setBookingSource,
     reset,
   } = useDevState();
   const [open, setOpen] = useState(false);
@@ -193,6 +194,14 @@ export function DevStateToggle() {
                 options={LIFECYCLES}
                 onChange={(v) => setLifecycle(v as DevLifecycle)}
               />
+              {state.lifecycle === "get-ready" ? (
+                <Group
+                  title="Booking source (Get Ready only)"
+                  value={state.bookingSource}
+                  options={BOOKING_SOURCES}
+                  onChange={(v) => setBookingSource(v as DevBookingSource)}
+                />
+              ) : null}
               <Group
                 title="Mode"
                 value={state.mode}
