@@ -169,9 +169,9 @@ function Price({ priceUsd, cancelled }: { priceUsd: number; cancelled?: boolean 
   }
   return (
     <span
+      className="mt-[22px] text-lg"
       style={{
         fontFamily: UI,
-        fontSize: 15,
         fontWeight: 700,
         color: MIDNIGHT,
         fontVariantNumeric: "tabular-nums",
