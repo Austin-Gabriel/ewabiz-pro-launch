@@ -5,10 +5,10 @@ import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
-import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
 import { formatUsd, type Booking } from "@/data/mock-data";
 import {
   ALL_BOOKINGS,
+  HISTORY_BOOKINGS,
   horizonOf,
   formatExpiresIn,
   formatTimeOnly,
@@ -524,90 +524,58 @@ function InProgressTab({ lifecycleActive }: { lifecycleActive: boolean }) {
 
 /* ---------------- History ---------------- */
 
-interface HistoryItem extends Booking {
-  cancelled?: boolean;
-}
-
 function HistoryTab() {
-  // Static demo set spread across the four buckets.
-  const today: HistoryItem[] = [
-    {
-      id: "ht1",
-      clientName: LIFECYCLE_BOOKING.clientName,
-      clientInitial: LIFECYCLE_BOOKING.clientInitial,
-      service: "Silk press",
-      startsAt: "9:00 AM",
-      durationMin: LIFECYCLE_BOOKING.durationMin,
-      priceUsd: LIFECYCLE_BOOKING.priceUsd,
-      location: LIFECYCLE_BOOKING.neighborhood,
-      avatarHue: "peach",
-    },
-  ];
-  const yesterday: HistoryItem[] = [
-    {
-      id: "hy1",
-      clientName: "Jordan Lee",
-      clientInitial: "J",
-      service: "Knotless braids",
-      startsAt: "Yesterday",
-      durationMin: 240,
-      priceUsd: 220,
-      location: "Crown Heights, Brooklyn",
-      avatarHue: "blue",
-    },
-  ];
-  const thisWeek: HistoryItem[] = [
-    {
-      id: "hw1",
-      clientName: "Devon M.",
-      clientInitial: "D",
-      service: "Silk press",
-      startsAt: "Mon",
-      durationMin: 75,
-      priceUsd: 120,
-      location: "Park Slope, Brooklyn",
-      avatarHue: "violet",
-    },
-    {
-      id: "hw2",
-      clientName: "Imani O.",
-      clientInitial: "I",
-      service: "Blowout",
-      startsAt: "Mon",
-      durationMin: 60,
-      priceUsd: 0,
-      location: "Crown Heights, Brooklyn",
-      avatarHue: "amber",
-      cancelled: true,
-    } as HistoryItem,
-  ];
-  const earlier: HistoryItem[] = [
-    {
-      id: "he1",
-      clientName: "Aaliyah K.",
-      clientInitial: "A",
-      service: "Box braids",
-      startsAt: "Apr 18",
-      durationMin: 360,
-      priceUsd: 320,
-      location: "Harlem, Manhattan",
-      avatarHue: "green",
-    },
-  ];
+  const navigate = useNavigate();
+  const now = new Date();
+
+  const buckets = useMemo(() => {
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - 7);
+
+    const out: Record<"today" | "yesterday" | "this-week" | "earlier", CanonicalBooking[]> = {
+      today: [],
+      yesterday: [],
+      "this-week": [],
+      earlier: [],
+    };
+    for (const b of HISTORY_BOOKINGS) {
+      const t = b.startsAt;
+      if (t >= startOfToday) out.today.push(b);
+      else if (t >= startOfYesterday) out.yesterday.push(b);
+      else if (t >= startOfWeek) out["this-week"].push(b);
+      else out.earlier.push(b);
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const open = (id: string) =>
+    navigate({ to: "/bookings/$id", params: { id } });
 
   return (
     <div className="flex flex-col pb-6">
-      <HistoryGroup label="Today" items={today} />
-      <HistoryGroup label="Yesterday" items={yesterday} />
-      <HistoryGroup label="This Week" items={thisWeek} />
-      <HistoryGroup label="Earlier" items={earlier} />
+      <HistoryGroup label="Today" items={buckets.today} onOpen={open} />
+      <HistoryGroup label="Yesterday" items={buckets.yesterday} onOpen={open} />
+      <HistoryGroup label="This Week" items={buckets["this-week"]} onOpen={open} />
+      <HistoryGroup label="Earlier" items={buckets.earlier} onOpen={open} />
     </div>
   );
 }
 
-function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] }) {
+function HistoryGroup({
+  label,
+  items,
+  onOpen,
+}: {
+  label: string;
+  items: CanonicalBooking[];
+  onOpen: (id: string) => void;
+}) {
   if (items.length === 0) return null;
-  const navigate = useNavigate();
   return (
     <BookingsGroup>
       <BookingsSectionHeader title={label} />
@@ -615,9 +583,9 @@ function HistoryGroup({ label, items }: { label: string; items: HistoryItem[] })
         {items.map((b) => (
           <BookingRowCard
             key={b.id}
-            booking={b}
-            cancelled={b.cancelled}
-            onSelect={() => navigate({ to: "/bookings/$id", params: { id: b.id } })}
+            booking={adaptCanonical(b)}
+            cancelled={b.status === "cancelled"}
+            onSelect={() => onOpen(b.id)}
           />
         ))}
       </div>
