@@ -982,24 +982,33 @@ function PrimaryButton({
 }
 
 /**
- * "Start now" CTA for same-day Confirmed bookings that are still outside the
- * 60-minute travel window. Renders as a fully-styled bagel primary (no longer
- * visually disabled), but routes through a confirmation sheet so the pro
- * acknowledges they're starting earlier than scheduled. On confirm we run the
- * same `onStart` flow as the in-window button — no separate code path.
+ * "Start booking" CTA for same-day Confirmed bookings. Always renders as a
+ * tappable bagel primary regardless of how far out the booking is — only
+ * the label and confirmation copy change. On confirm the booking transitions
+ * straight into "On your way" (scheduled bookings skip Get Ready).
  */
-function StartEarlyButton({
+function StartBookingButton({
   label,
+  early,
+  minsUntil,
   firstName,
   neighborhood,
   onConfirm,
 }: {
   label: string;
+  early: boolean;
+  minsUntil?: number;
   firstName: string;
   neighborhood: string;
   onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const title = early
+    ? `Start ${firstName}'s booking early?`
+    : `Start ${firstName}'s booking?`;
+  const body = early
+    ? `The booking is in ${formatLeadTime(minsUntil ?? 0)}. You'll head to ${neighborhood} now. The client will be notified.`
+    : `You'll head to ${neighborhood} now. The client will be notified.`;
   return (
     <>
       <PrimaryButton label={label} onClick={() => setOpen(true)} />
@@ -1017,7 +1026,7 @@ function StartEarlyButton({
                 letterSpacing: "-0.01em",
               }}
             >
-              Start {firstName}'s booking early?
+              {title}
             </DialogTitle>
             <DialogDescription
               style={{
@@ -1027,7 +1036,7 @@ function StartEarlyButton({
                 marginTop: 4,
               }}
             >
-              You'll head to {neighborhood} now. The client will be notified.
+              {body}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col sm:space-x-0">
