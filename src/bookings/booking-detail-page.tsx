@@ -799,7 +799,7 @@ function DetailActionBar({
   onStart: () => void;
   onOpenActive: () => void;
 }) {
-  const { bg, borderCol } = useHomeTheme();
+  const { bg, borderCol, text } = useHomeTheme();
   const action = useMemo(
     () => deriveAction(booking, status, lifecycleActive),
     [booking, status, lifecycleActive],
@@ -840,9 +840,9 @@ function DetailActionBar({
               className="rounded-2xl transition-opacity active:opacity-70"
               style={{
                 height: 52,
-                border: "1px solid rgba(6,28,39,0.22)",
+                border: `1px solid ${borderCol}`,
                 backgroundColor: "transparent",
-                color: MIDNIGHT,
+                color: text,
                 opacity: 0.85,
                 fontFamily: UI,
                 fontSize: 15,
