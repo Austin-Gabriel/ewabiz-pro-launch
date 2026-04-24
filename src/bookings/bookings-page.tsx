@@ -392,11 +392,7 @@ function TodayHorizonGroup({
     const [time, meridiem] = formatStackedTime(adapted.startsAt);
     const prev = i > 0 ? bookings[i - 1] : undefined;
     const gapBefore = prev
-      ? gapBetween(
-          formatTimeOnly(prev.startsAt),
-          prev.durationMin,
-          adapted.startsAt,
-        )
+      ? gapBetween(prev.startsAt, prev.durationMin, b.startsAt)
       : undefined;
     return {
       booking: adapted,
