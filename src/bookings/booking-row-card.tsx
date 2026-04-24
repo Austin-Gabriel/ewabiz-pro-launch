@@ -55,7 +55,7 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect }: BookingRo
           "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
         style={{
-          backgroundColor: cardSurface,
+          backgroundColor: isNext ? "#FFF4EC" : cardSurface,
           border: `1px solid ${borderCol}`,
           boxShadow: isNext
             ? "0 1px 2px rgba(6,28,39,0.06), 0 12px 28px -16px rgba(255,130,63,0.35)"
@@ -119,17 +119,54 @@ function Body({
         {name}
       </div>
       <div
-        className="truncate"
-        style={{
-          fontFamily: UI,
-          fontSize: 13,
-          color: MIDNIGHT,
-          opacity: 0.6,
-          marginTop: 2,
-        }}
+        className="flex items-start gap-2"
+        style={{ marginTop: 3 }}
       >
-        {service}
-        {location ? ` · ${shortLocality(location)}` : ""}
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            color: MIDNIGHT,
+            opacity: 0.6,
+            lineHeight: 1.3,
+            wordBreak: "break-word",
+            flex: "1 1 0",
+            minWidth: 0,
+          }}
+        >
+          {service}
+        </span>
+        {location ? (
+          <>
+            <span
+              aria-hidden
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.35,
+                lineHeight: 1.3,
+                flexShrink: 0,
+              }}
+            >
+              ·
+            </span>
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.6,
+                lineHeight: 1.3,
+                wordBreak: "break-word",
+                flex: "1 1 0",
+                minWidth: 0,
+              }}
+            >
+              {shortLocality(location)}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );
