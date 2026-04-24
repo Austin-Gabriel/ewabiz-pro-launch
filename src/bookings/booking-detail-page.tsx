@@ -198,7 +198,8 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
 }
 
 function StatusPill({ status }: { status: BookingStatus }) {
-  const palette = pillPalette(status);
+  const { isDark } = useHomeTheme();
+  const palette = pillPalette(status, isDark);
   return (
     <span
       style={{
@@ -220,20 +221,21 @@ function StatusPill({ status }: { status: BookingStatus }) {
   );
 }
 
-function pillPalette(status: BookingStatus) {
+function pillPalette(status: BookingStatus, isDark: boolean) {
   switch (status) {
     case "pending":
-      return { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.45)" };
     case "in-progress":
-      return { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.55)" };
+      return isDark
+        ? { fg: "#FFB387", bg: "rgba(255,130,63,0.18)", border: "rgba(255,130,63,0.55)" }
+        : { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.45)" };
     case "completed":
-      return { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
+      return isDark
+        ? { fg: "#7BD8A0", bg: "rgba(22,163,74,0.18)", border: "rgba(22,163,74,0.45)" }
+        : { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
     case "cancelled":
-      return {
-        fg: "rgba(6,28,39,0.55)",
-        bg: "rgba(6,28,39,0.05)",
-        border: "rgba(6,28,39,0.14)",
-      };
+      return isDark
+        ? { fg: "rgba(240,235,216,0.55)", bg: "rgba(240,235,216,0.06)", border: "rgba(240,235,216,0.16)" }
+        : { fg: "rgba(6,28,39,0.55)", bg: "rgba(6,28,39,0.05)", border: "rgba(6,28,39,0.14)" };
     default:
       return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.04)", border: "rgba(6,28,39,0.14)" };
   }
@@ -660,6 +662,7 @@ function NotesCard({ note }: { note: string }) {
 }
 
 function ClientCard({ booking, status }: { booking: Booking; status: BookingStatus }) {
+  const { text, cardText, cardBorder } = useHomeTheme();
   const showFullName = status !== "pending";
   const displayName = showFullName
     ? booking.clientName
@@ -669,6 +672,22 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
     history === 0
       ? "First-time client"
       : `${ordinal(history + 1)} booking with you`;
+  // Inline contact actions: chat is always available; calling is hidden once
+  // the booking is completed/cancelled (mirrors the lifecycle convention).
+  const showCall = status !== "completed" && status !== "cancelled";
+  const iconBtn: React.CSSProperties = {
+    width: 36,
+    height: 36,
+    borderRadius: 9999,
+    border: `1px solid ${cardBorder}`,
+    backgroundColor: "transparent",
+    color: cardText,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  };
+  void text;
 
   return (
     <DetailCard>
@@ -694,7 +713,7 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
               fontFamily: UI,
               fontSize: 15,
               fontWeight: 600,
-              color: MIDNIGHT,
+              color: cardText,
               letterSpacing: "-0.005em",
             }}
           >
@@ -704,7 +723,7 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
             style={{
               fontFamily: UI,
               fontSize: 12,
-              color: MIDNIGHT,
+              color: cardText,
               opacity: 0.55,
               marginTop: 2,
             }}
@@ -712,18 +731,26 @@ function ClientCard({ booking, status }: { booking: Booking; status: BookingStat
             {historyLabel}
           </div>
         </div>
-      </div>
-      <div
-        className={
-          status === "completed" || status === "cancelled"
-            ? "mt-3 grid grid-cols-1 gap-2.5"
-            : "mt-3 grid grid-cols-2 gap-2.5"
-        }
-      >
-        <SecondaryButton label="Message" />
-        {status === "completed" || status === "cancelled" ? null : (
-          <SecondaryButton label="Call" />
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={`Message ${displayName}`}
+            className="transition-opacity active:opacity-60"
+            style={iconBtn}
+          >
+            <ChatBubbleIcon size={15} />
+          </button>
+          {showCall ? (
+            <button
+              type="button"
+              aria-label={`Call ${displayName}`}
+              className="transition-opacity active:opacity-60"
+              style={iconBtn}
+            >
+              <PhoneIcon size={15} />
+            </button>
+          ) : null}
+        </div>
       </div>
     </DetailCard>
   );
@@ -735,23 +762,19 @@ function ordinal(n: number): string {
   return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
-function SecondaryButton({ label }: { label: string }) {
+function ChatBubbleIcon({ size = 15 }: { size?: number }) {
   return (
-    <button
-      type="button"
-      className="rounded-xl py-2.5 transition-opacity active:opacity-70"
-      style={{
-        border: "1px solid rgba(6,28,39,0.18)",
-        backgroundColor: "transparent",
-        color: MIDNIGHT,
-        fontFamily: UI,
-        fontSize: 13.5,
-        fontWeight: 600,
-        letterSpacing: "-0.005em",
-      }}
-    >
-      {label}
-    </button>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z" />
+    </svg>
+  );
+}
+
+function PhoneIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+    </svg>
   );
 }
 
