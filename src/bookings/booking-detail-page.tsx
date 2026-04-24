@@ -856,8 +856,10 @@ function DetailActionBar({
         <PrimaryButton label={action.label} onClick={() => {}} disabled />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
-      ) : action.kind === "rate" ? (
-        <PrimaryButton label="Rate client" onClick={() => {}} />
+      ) : action.kind === "book-again" ? (
+        <SecondaryActionButton label="Book again" onClick={() => {}} />
+      ) : action.kind === "book-similar" ? (
+        <SecondaryActionButton label="Book similar" onClick={() => {}} />
       ) : action.kind === "cancel" ? (
         <button
           type="button"
@@ -884,7 +886,8 @@ type DetailAction =
   | { kind: "start" }
   | { kind: "start-disabled"; label: string }
   | { kind: "open-active" }
-  | { kind: "rate" }
+  | { kind: "book-again" }
+  | { kind: "book-similar" }
   | { kind: "cancel" }
   | null;
 
@@ -895,8 +898,11 @@ function deriveAction(
 ): DetailAction {
   if (status === "pending") return { kind: "pending" };
   if (status === "in-progress") return { kind: "open-active" };
-  if (status === "completed") return { kind: "rate" };
-  if (status === "cancelled") return null;
+  if (status === "completed") return { kind: "book-again" };
+  if (status === "cancelled") {
+    if (booking.cancelledBy === "client") return { kind: "book-similar" };
+    return null;
+  }
 
   if (status === "confirmed") {
     if (lifecycleActive) return { kind: "open-active" };
