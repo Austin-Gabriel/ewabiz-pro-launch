@@ -1,6 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { useDevState } from "@/dev-state/dev-state-context";
 import {
@@ -161,7 +169,7 @@ function DetailHeader({ title, onBack }: { title: string; onBack: () => void }) 
 /* ---------------- Hero ---------------- */
 
 function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatus }) {
-  const { isDark, text, cardBorder } = useHomeTheme();
+  const { isDark, text } = useHomeTheme();
   // Pending hides last name (privacy). Otherwise show full name.
   const displayName =
     status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
@@ -172,11 +180,14 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
   // since chats and calls happen elsewhere post-service.
   const showContact =
     status === "pending" || status === "confirmed" || status === "in-progress";
+  // Theme-aware ring: cardBorder is tuned for white card surfaces and goes
+  // invisible on the dark page background. Use a brighter cream stroke in
+  // dark mode so the circle reads at the same weight as it does in light.
   const iconBtn: React.CSSProperties = {
     width: 36,
     height: 36,
     borderRadius: 9999,
-    border: `1px solid ${cardBorder}`,
+    border: `1px solid ${isDark ? "rgba(240,235,216,0.28)" : "rgba(6,28,39,0.18)"}`,
     backgroundColor: "transparent",
     color: text,
     display: "flex",
@@ -843,8 +854,13 @@ function DetailActionBar({
         </>
       ) : action.kind === "start" ? (
         <PrimaryButton label="Start booking" onClick={onStart} />
-      ) : action.kind === "start-disabled" ? (
-        <PrimaryButton label={action.label} onClick={() => {}} disabled />
+      ) : action.kind === "start-early" ? (
+        <StartEarlyButton
+          label={action.label}
+          firstName={booking.clientName.split(" ")[0]}
+          neighborhood={booking.neighborhood}
+          onConfirm={onStart}
+        />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
       ) : action.kind === "book-again" ? (
@@ -875,7 +891,7 @@ function DetailActionBar({
 type DetailAction =
   | { kind: "pending" }
   | { kind: "start" }
-  | { kind: "start-disabled"; label: string }
+  | { kind: "start-early"; label: string }
   | { kind: "open-active" }
   | { kind: "book-again" }
   | { kind: "book-similar" }
@@ -901,10 +917,13 @@ function deriveAction(
       const minsUntil = Math.round(
         (booking.startsAt.getTime() - Date.now()) / 60000,
       );
-      // Travel-window threshold — 60 min before start time the pro can start
-      // the booking manually (matches the auto-trigger window in spec).
+      // Inside the travel window (≤ 60m) the pro starts the booking
+      // unprompted. Earlier in the day, "Start now" still works but routes
+      // through a confirmation sheet so they don't trigger the lifecycle by
+      // accident — copy preserves "Starts in Xh Ym" so they see exactly how
+      // early they're going.
       if (minsUntil <= 60) return { kind: "start" };
-      return { kind: "start-disabled", label: `Starts in ${formatLeadTime(minsUntil)}` };
+      return { kind: "start-early", label: `Starts in ${formatLeadTime(minsUntil)}` };
     }
     return { kind: "cancel" };
   }
@@ -957,6 +976,71 @@ function PrimaryButton({
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * "Start now" CTA for same-day Confirmed bookings that are still outside the
+ * 60-minute travel window. Renders as a fully-styled bagel primary (no longer
+ * visually disabled), but routes through a confirmation sheet so the pro
+ * acknowledges they're starting earlier than scheduled. On confirm we run the
+ * same `onStart` flow as the in-window button — no separate code path.
+ */
+function StartEarlyButton({
+  label,
+  firstName,
+  neighborhood,
+  onConfirm,
+}: {
+  label: string;
+  firstName: string;
+  neighborhood: string;
+  onConfirm: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <PrimaryButton label={label} onClick={() => setOpen(true)} />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="max-w-sm rounded-2xl"
+          style={{ fontFamily: UI }}
+        >
+          <DialogHeader>
+            <DialogTitle
+              style={{
+                fontFamily: UI,
+                fontSize: 18,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Start {firstName}'s booking early?
+            </DialogTitle>
+            <DialogDescription
+              style={{
+                fontFamily: UI,
+                fontSize: 14,
+                lineHeight: 1.45,
+                marginTop: 4,
+              }}
+            >
+              You'll head to {neighborhood} now. The client will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2 flex-col gap-2 sm:flex-col sm:space-x-0">
+            <PrimaryButton
+              label="Yes, start now"
+              onClick={() => {
+                setOpen(false);
+                onConfirm();
+              }}
+            />
+            <SecondaryActionButton label="Cancel" onClick={() => setOpen(false)} />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
