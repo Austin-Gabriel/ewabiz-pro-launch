@@ -99,6 +99,14 @@ export function DevStateToggle() {
     };
   }, [open]);
 
+  // Scheduled bookings can't enter Get Ready — clear the lifecycle if the
+  // source flips while Get Ready is active.
+  useEffect(() => {
+    if (state.bookingSource === "scheduled" && state.lifecycle === "get-ready") {
+      setLifecycle("none");
+    }
+  }, [state.bookingSource, state.lifecycle, setLifecycle]);
+
   if (!mounted || !enabled) return null;
 
   return (
