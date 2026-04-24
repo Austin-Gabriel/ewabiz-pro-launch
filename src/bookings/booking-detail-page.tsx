@@ -69,12 +69,9 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     setTimeout(() => navigate({ to: "/bookings", search: { tab: "upcoming" } }), 250);
   };
   const handleStartBooking = () => {
-    setLifecycle("get-ready");
-    navigate({ to: "/bookings", search: { tab: "in-progress" } });
-  };
-  const handleStartEarly = () => {
-    // Early-start skips the prep countdown and drops the pro straight into
-    // "On your way" — they've explicitly confirmed they're heading out now.
+    // Scheduled bookings skip Get Ready entirely — the pro confirms and
+    // heads straight into "On your way". Get Ready is reserved for the
+    // on-demand flow where prep time matters.
     setLifecycle("en-route");
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
   };
@@ -109,7 +106,6 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         onAccept={handleAccept}
         onDecline={handleDecline}
         onStart={handleStartBooking}
-        onStartEarly={handleStartEarly}
         onOpenActive={handleOpenActive}
       />
 
