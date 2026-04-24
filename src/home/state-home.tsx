@@ -4,6 +4,8 @@ import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
+import { useDevState } from "@/dev-state/dev-state-context";
+import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
