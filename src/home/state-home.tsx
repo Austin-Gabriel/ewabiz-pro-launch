@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
-import { BookingRowCard } from "@/bookings/booking-row-card";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -528,27 +528,127 @@ function SecondaryButton({ icon, label }: { icon: React.ReactNode; label: string
 /* ---------------- Rest-of-today (canonical card list) ---------------- */
 
 function TodayRestList({ bookings }: { bookings: Booking[] }) {
-  const { text } = useHomeTheme();
+  const { text, cardSurface, cardBorder } = useHomeTheme();
+  const navigate = useNavigate();
+  const count = bookings.length;
+  const next = bookings[0];
+  const stack = bookings.slice(0, 3);
+
   return (
-    <div className="mt-1 flex flex-col gap-2.5">
-      <div
+    <CardTheme>
+      <button
+        type="button"
+        onClick={() =>
+          navigate({ to: "/bookings", search: { tab: "upcoming" } })
+        }
+        className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-opacity active:opacity-80"
         style={{
-          fontFamily: UI,
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: "1.4px",
-          textTransform: "uppercase",
-          color: text,
-          opacity: 0.55,
+          backgroundColor: cardSurface,
+          border: `1px solid ${cardBorder}`,
+          boxShadow:
+            "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -14px rgba(6,28,39,0.18)",
         }}
       >
-        Later today
-      </div>
-      {bookings.map((b) => (
-        <BookingRowCard key={b.id} booking={b} />
-      ))}
+        <AvatarStack bookings={stack} />
+        <div className="min-w-0 flex-1">
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 15,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.2,
+            }}
+          >
+            {count} more today
+          </div>
+          <div
+            className="mt-0.5"
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: text,
+              opacity: 0.6,
+              lineHeight: 1.3,
+            }}
+          >
+            Next at {formatStartTime(next.startsAt)}
+          </div>
+        </div>
+        <Chevron color={text} />
+      </button>
+    </CardTheme>
+  );
+}
+
+function AvatarStack({ bookings }: { bookings: Booking[] }) {
+  const { cardSurface } = useHomeTheme();
+  const SIZE = 30;
+  const OVERLAP = 10;
+  return (
+    <div
+      className="flex shrink-0 items-center"
+      style={{ width: SIZE + (bookings.length - 1) * (SIZE - OVERLAP) }}
+    >
+      {bookings.map((b, i) => {
+        const hue = AVATAR_HUES[b.avatarHue ?? "peach"];
+        return (
+          <div
+            key={b.id}
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: SIZE,
+              height: SIZE,
+              backgroundColor: hue.bg,
+              color: hue.fg,
+              border: `2px solid ${cardSurface}`,
+              fontFamily: UI,
+              fontSize: 10.5,
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              marginLeft: i === 0 ? 0 : -OVERLAP,
+              zIndex: bookings.length - i,
+            }}
+          >
+            {b.clientInitial}
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function Chevron({ color }: { color: string }) {
+  return (
+    <svg
+      aria-hidden
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      style={{ color, opacity: 0.45, flexShrink: 0 }}
+    >
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** "10:30" → "10:30 AM"; "13:00" → "1:00 PM"; passthrough if already meridiem. */
+function formatStartTime(raw: string): string {
+  if (/[ap]m/i.test(raw)) return raw.toUpperCase().replace(/\s+/g, " ");
+  const [hStr, mStr = "00"] = raw.split(":");
+  const h = Number(hStr);
+  if (Number.isNaN(h)) return raw;
+  const meridiem = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${mStr.padStart(2, "0")} ${meridiem}`;
 }
 
 /* ---------------- Earnings + goal card ---------------- */
