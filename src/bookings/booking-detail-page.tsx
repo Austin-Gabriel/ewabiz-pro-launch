@@ -186,6 +186,7 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
             opacity: 0.65,
             marginTop: 6,
             fontVariantNumeric: "tabular-nums",
+            textDecoration: status === "cancelled" ? "line-through" : "none",
           }}
         >
           {formatBookingDate(booking.startsAt)}
