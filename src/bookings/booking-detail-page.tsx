@@ -198,7 +198,8 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
 }
 
 function StatusPill({ status }: { status: BookingStatus }) {
-  const palette = pillPalette(status);
+  const { isDark } = useHomeTheme();
+  const palette = pillPalette(status, isDark);
   return (
     <span
       style={{
@@ -220,20 +221,21 @@ function StatusPill({ status }: { status: BookingStatus }) {
   );
 }
 
-function pillPalette(status: BookingStatus) {
+function pillPalette(status: BookingStatus, isDark: boolean) {
   switch (status) {
     case "pending":
-      return { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.45)" };
     case "in-progress":
-      return { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.55)" };
+      return isDark
+        ? { fg: "#FFB387", bg: "rgba(255,130,63,0.18)", border: "rgba(255,130,63,0.55)" }
+        : { fg: "#7A2E0E", bg: "rgba(255,130,63,0.16)", border: "rgba(255,130,63,0.45)" };
     case "completed":
-      return { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
+      return isDark
+        ? { fg: "#7BD8A0", bg: "rgba(22,163,74,0.18)", border: "rgba(22,163,74,0.45)" }
+        : { fg: "#0E5E2A", bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.35)" };
     case "cancelled":
-      return {
-        fg: "rgba(6,28,39,0.55)",
-        bg: "rgba(6,28,39,0.05)",
-        border: "rgba(6,28,39,0.14)",
-      };
+      return isDark
+        ? { fg: "rgba(240,235,216,0.55)", bg: "rgba(240,235,216,0.06)", border: "rgba(240,235,216,0.16)" }
+        : { fg: "rgba(6,28,39,0.55)", bg: "rgba(6,28,39,0.05)", border: "rgba(6,28,39,0.14)" };
     default:
       return { fg: MIDNIGHT, bg: "rgba(6,28,39,0.04)", border: "rgba(6,28,39,0.14)" };
   }
