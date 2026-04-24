@@ -9,6 +9,7 @@ import {
   formatExpiresIn,
   formatUsd,
   STATUS_LABEL,
+  clientRelationshipLabel,
   type Booking,
   type BookingStatus,
 } from "@/data/mock-bookings";
@@ -84,8 +85,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         )}
         {status === "completed" ? <RatingCard booking={booking} /> : null}
         {booking.note ? <NotesCard note={booking.note} /> : null}
-        <ClientCard booking={booking} status={status} />
-        {status === "pending" || status === "confirmed" ? <PolicyLink /> : null}
+        <PolicyLink />
       </div>
 
       <DetailActionBar
