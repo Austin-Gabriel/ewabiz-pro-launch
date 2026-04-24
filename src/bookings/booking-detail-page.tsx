@@ -969,6 +969,39 @@ function PrimaryButton({
   );
 }
 
+/**
+ * Outlined full-width secondary button — used for "Book again" and
+ * "Book similar" on resolved bookings where the bagel primary fill would
+ * imply more urgency than the action deserves.
+ */
+function SecondaryActionButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl transition-opacity active:opacity-70"
+      style={{
+        height: 52,
+        border: "1px solid rgba(6,28,39,0.22)",
+        backgroundColor: "transparent",
+        color: MIDNIGHT,
+        fontFamily: UI,
+        fontSize: 15,
+        fontWeight: 600,
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function PinIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
