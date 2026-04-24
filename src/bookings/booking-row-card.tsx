@@ -248,6 +248,87 @@ function NextPill() {
   );
 }
 
+/**
+ * Bagel dot pinned top-left of a pending booking card. Same visual
+ * vocabulary as the In Progress tab indicator dot — flags an unreviewed
+ * scheduled request waiting on the pro's decision.
+ */
+function PendingDot() {
+  return (
+    <span
+      aria-label="Pending approval"
+      className="absolute rounded-full"
+      style={{
+        top: -5,
+        left: -5,
+        width: 12,
+        height: 12,
+        backgroundColor: BAGEL,
+        border: "2px solid #FFFFFF",
+        boxShadow: "0 0 8px rgba(255,130,63,0.55)",
+      }}
+    />
+  );
+}
+
+/**
+ * Inline Accept / Decline buttons rendered at the bottom of a pending
+ * scheduled booking card. The pro can act directly from the list — they
+ * don't need to open detail to make a call. Both buttons stop propagation
+ * so the parent card's tap-to-view-detail doesn't fire alongside.
+ */
+function PendingActions({
+  onAccept,
+  onDecline,
+}: {
+  onAccept: () => void;
+  onDecline: () => void;
+}) {
+  return (
+    <div className="grid w-full grid-cols-2 gap-2.5">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDecline();
+        }}
+        className="rounded-xl py-2.5 transition-opacity active:opacity-70"
+        style={{
+          border: "1px solid rgba(6,28,39,0.18)",
+          backgroundColor: "transparent",
+          color: MIDNIGHT,
+          opacity: 0.75,
+          fontFamily: UI,
+          fontSize: 13.5,
+          fontWeight: 600,
+          letterSpacing: "-0.005em",
+        }}
+      >
+        Decline
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onAccept();
+        }}
+        className="rounded-xl py-2.5 transition-transform active:scale-[0.99]"
+        style={{
+          backgroundColor: BAGEL,
+          color: MIDNIGHT,
+          fontFamily: UI,
+          fontSize: 13.5,
+          fontWeight: 700,
+          letterSpacing: "-0.005em",
+          boxShadow: "0 4px 12px -6px rgba(255,130,63,0.5)",
+        }}
+      >
+        Accept
+      </button>
+    </div>
+  );
+}
+
 function shortLocality(loc: string): string {
   // "Fort Greene, Brooklyn" → "Fort Greene"
   return loc.split(",")[0].trim();
