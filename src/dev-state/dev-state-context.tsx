@@ -38,6 +38,14 @@ export type DevLifecycle =
   | "in-progress"
   | "complete";
 
+/**
+ * Booking source. Only meaningful when DevLifecycle === "get-ready" — controls
+ * whether the Get Ready screen renders the on-demand prep countdown or the
+ * scheduled "Leave by" framing. For every other lifecycle state, this field
+ * has no effect.
+ */
+export type DevBookingSource = "auto" | "on-demand" | "scheduled";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
@@ -45,6 +53,7 @@ export interface DevState {
   mode: DevMode;
   dayContext: DevDayContext;
   lifecycle: DevLifecycle;
+  bookingSource: DevBookingSource;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -54,6 +63,7 @@ const DEFAULT_STATE: DevState = {
   mode: "auto",
   dayContext: "auto",
   lifecycle: "none",
+  bookingSource: "auto",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -67,6 +77,7 @@ interface Ctx {
   setMode: (v: DevMode) => void;
   setDayContext: (v: DevDayContext) => void;
   setLifecycle: (v: DevLifecycle) => void;
+  setBookingSource: (v: DevBookingSource) => void;
   reset: () => void;
 }
 
