@@ -162,6 +162,46 @@ function TabBar({
 function UpcomingTab() {
   const today = LIVE_ACTIVE_DAY.bookingsToday as Booking[];
 
+  // Pending scheduled requests — mock seed. These are bookings the client
+  // has requested but the pro hasn't yet accepted. They expire after 6h
+  // (countdown-style copy); on accept they fold into the confirmed list.
+  const [pending, setPending] = useState<Booking[]>(() => [
+    {
+      id: "p1",
+      clientName: "Simone Carter",
+      clientInitial: "S",
+      service: "Silk press + trim · Saturday 11 AM",
+      startsAt: "11:00",
+      durationMin: 90,
+      priceUsd: 160,
+      location: "Prospect Heights, Brooklyn",
+      avatarHue: "amber",
+    },
+    {
+      id: "p2",
+      clientName: "Devon M.",
+      clientInitial: "D",
+      service: "Knotless braids · Sunday 9 AM",
+      startsAt: "9:00",
+      durationMin: 240,
+      priceUsd: 220,
+      location: "Park Slope, Brooklyn",
+      avatarHue: "violet",
+    },
+  ]);
+  // Per-card expiry copy. A real implementation would derive these from a
+  // server timestamp; for the mock we just keep them as static labels so the
+  // designer can see the visual.
+  const expiryByPendingId: Record<string, string> = {
+    p1: "expires in 6h",
+    p2: "expires in 23 min",
+  };
+
+  const handleAccept = (id: string) =>
+    setPending((prev) => prev.filter((b) => b.id !== id));
+  const handleDecline = (id: string) =>
+    setPending((prev) => prev.filter((b) => b.id !== id));
+
   if (today.length === 0) {
     return (
       <EmptyBlock
@@ -192,6 +232,28 @@ function UpcomingTab() {
 
   return (
     <div className="flex flex-col pb-6">
+      {pending.length > 0 ? (
+        <BookingsGroup>
+          <BookingsSectionHeader
+            title="Pending"
+            meta={`${pending.length} ${pending.length === 1 ? "request" : "requests"}`}
+          />
+          <div className="flex flex-col gap-2.5">
+            {pending.map((b) => (
+              <BookingRowCard
+                key={b.id}
+                booking={b}
+                pending={{
+                  expiresLabel: expiryByPendingId[b.id] ?? "expires soon",
+                  onAccept: () => handleAccept(b.id),
+                  onDecline: () => handleDecline(b.id),
+                }}
+              />
+            ))}
+          </div>
+        </BookingsGroup>
+      ) : null}
+
       <BookingsGroup>
         <BookingsSectionHeader
           title="Today"
