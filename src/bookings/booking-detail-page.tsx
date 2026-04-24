@@ -30,6 +30,12 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   const navigate = useNavigate();
   const { state: dev, setLifecycle } = useDevState();
   const booking = findBookingById(bookingId);
+  // Local optimistic status — accept/decline mutate this without leaving the
+  // page so the pro sees the result immediately. Defaults safely when the
+  // booking is missing; hooks must run unconditionally before any return.
+  const [status, setStatus] = useState<BookingStatus>(
+    booking?.status ?? "cancelled",
+  );
 
   if (!booking) {
     return (
@@ -45,9 +51,6 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     );
   }
 
-  // Local optimistic status — accept/decline mutate this without leaving the
-  // page so the pro sees the result immediately.
-  const [status, setStatus] = useState<BookingStatus>(booking.status);
   const lifecycleActive =
     dev.lifecycle !== "none" && dev.lifecycle !== "incoming";
 
