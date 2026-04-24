@@ -859,6 +859,7 @@ function DetailActionBar({
         <StartBookingButton
           label={action.label}
           early={action.early}
+          minsUntil={action.minsUntil}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
           onConfirm={onStart}
