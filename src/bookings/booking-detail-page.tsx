@@ -161,7 +161,7 @@ function DetailHeader({ title, onBack }: { title: string; onBack: () => void }) 
 /* ---------------- Hero ---------------- */
 
 function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatus }) {
-  const { isDark, text, cardBorder } = useHomeTheme();
+  const { isDark, text } = useHomeTheme();
   // Pending hides last name (privacy). Otherwise show full name.
   const displayName =
     status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
@@ -172,11 +172,14 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
   // since chats and calls happen elsewhere post-service.
   const showContact =
     status === "pending" || status === "confirmed" || status === "in-progress";
+  // Theme-aware ring: cardBorder is tuned for white card surfaces and goes
+  // invisible on the dark page background. Use a brighter cream stroke in
+  // dark mode so the circle reads at the same weight as it does in light.
   const iconBtn: React.CSSProperties = {
     width: 36,
     height: 36,
     borderRadius: 9999,
-    border: `1px solid ${cardBorder}`,
+    border: `1px solid ${isDark ? "rgba(240,235,216,0.28)" : "rgba(6,28,39,0.18)"}`,
     backgroundColor: "transparent",
     color: text,
     display: "flex",
