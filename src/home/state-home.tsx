@@ -570,6 +570,7 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
   const count = bookings.length;
   const next = bookings[0];
   const stack = bookings.slice(0, 3);
+  const overflow = Math.max(0, count - stack.length);
 
   return (
     <CardTheme>
@@ -586,7 +587,7 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
             "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -14px rgba(6,28,39,0.18)",
         }}
       >
-        <AvatarStack bookings={stack} />
+        <AvatarStack bookings={stack} overflow={overflow} />
         <div className="min-w-0 flex-1">
           <div
             style={{
@@ -619,41 +620,75 @@ function TodayRestList({ bookings }: { bookings: Booking[] }) {
   );
 }
 
-function AvatarStack({ bookings }: { bookings: Booking[] }) {
+/**
+ * Stacked avatar preview using the canonical bagel/cream monogram.
+ * No per-client color variance — every monogram is the same cream fill with
+ * deep-bagel initials, matching BookingRowCard's <Monogram>. Two-letter
+ * initials always (we derive from clientName as a safety net for any data
+ * that snuck in with a single letter). Up to 3 avatars + "+N" overflow chip.
+ */
+function AvatarStack({ bookings, overflow = 0 }: { bookings: Booking[]; overflow?: number }) {
   const { cardSurface } = useHomeTheme();
   const SIZE = 30;
   const OVERLAP = 10;
+  const items = bookings.length + (overflow > 0 ? 1 : 0);
   return (
     <div
       className="flex shrink-0 items-center"
-      style={{ width: SIZE + (bookings.length - 1) * (SIZE - OVERLAP) }}
+      style={{ width: SIZE + (items - 1) * (SIZE - OVERLAP) }}
     >
-      {bookings.map((b, i) => {
-        const hue = AVATAR_HUES[b.avatarHue ?? "peach"];
-        return (
-          <div
-            key={b.id}
-            className="flex items-center justify-center rounded-full"
-            style={{
-              width: SIZE,
-              height: SIZE,
-              backgroundColor: hue.bg,
-              color: hue.fg,
-              border: `2px solid ${cardSurface}`,
-              fontFamily: UI,
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              marginLeft: i === 0 ? 0 : -OVERLAP,
-              zIndex: bookings.length - i,
-            }}
-          >
-            {b.clientInitial}
-          </div>
-        );
-      })}
+      {bookings.map((b, i) => (
+        <div
+          key={b.id}
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: SIZE,
+            height: SIZE,
+            backgroundColor: "rgba(255,130,63,0.16)",
+            color: "#7A2E0E",
+            border: `2px solid ${cardSurface}`,
+            fontFamily: UI,
+            fontSize: 10.5,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            marginLeft: i === 0 ? 0 : -OVERLAP,
+            zIndex: items - i,
+          }}
+        >
+          {twoInitials(b.clientName, b.clientInitial)}
+        </div>
+      ))}
+      {overflow > 0 ? (
+        <div
+          className="flex items-center justify-center rounded-full"
+          style={{
+            width: SIZE,
+            height: SIZE,
+            backgroundColor: "rgba(255,130,63,0.16)",
+            color: "#7A2E0E",
+            border: `2px solid ${cardSurface}`,
+            fontFamily: UI,
+            fontSize: 10.5,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            marginLeft: -OVERLAP,
+            zIndex: 0,
+          }}
+        >
+          +{overflow}
+        </div>
+      ) : null}
     </div>
   );
+}
+
+/** Always two letters. Falls back to deriving from the full name if the
+ * provided initial is empty or single-letter. */
+function twoInitials(name: string, fallback?: string): string {
+  if (fallback && fallback.length >= 2) return fallback.slice(0, 2).toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function Chevron({ color }: { color: string }) {
@@ -677,15 +712,36 @@ function Chevron({ color }: { color: string }) {
   );
 }
 
-/** "10:30" → "10:30 AM"; "13:00" → "1:00 PM"; passthrough if already meridiem. */
+/**
+ * Canonical app time format. Rules:
+ *   - On the hour → "1 PM" (no ":00")
+ *   - Off the hour → "1:30 PM"
+ *   - No leading zero on the hour
+ * Accepts any of: "13:00", "1:30 PM", "1 PM", "7:00".
+ * Treats 1–6 (no meridiem) as PM to match salon afternoon mock data
+ * (e.g. "1:00" → "1 PM", "7:00" → "7 AM").
+ */
 function formatStartTime(raw: string): string {
-  if (/[ap]m/i.test(raw)) return raw.toUpperCase().replace(/\s+/g, " ");
-  const [hStr, mStr = "00"] = raw.split(":");
-  const h = Number(hStr);
-  if (Number.isNaN(h)) return raw;
-  const meridiem = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${mStr.padStart(2, "0")} ${meridiem}`;
+  // Already meridiem? Normalize and strip ":00" on the hour.
+  const meridiemMatch = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+  if (meridiemMatch) {
+    const h = parseInt(meridiemMatch[1], 10);
+    const mm = meridiemMatch[2] ?? "00";
+    const sfx = meridiemMatch[3].toUpperCase();
+    return mm === "00" ? `${h} ${sfx}` : `${h}:${mm} ${sfx}`;
+  }
+  // Bare 24h "HH:MM" or "H:MM".
+  const m = raw.match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if (!m) return raw;
+  let h = parseInt(m[1], 10);
+  const mm = m[2] ?? "00";
+  let suffix: "AM" | "PM";
+  if (h === 0) { h = 12; suffix = "AM"; }
+  else if (h === 12) { suffix = "PM"; }
+  else if (h > 12) { h -= 12; suffix = "PM"; }
+  else if (h >= 1 && h <= 6) { suffix = "PM"; }
+  else { suffix = "AM"; }
+  return mm === "00" ? `${h} ${suffix}` : `${h}:${mm} ${suffix}`;
 }
 
 /* ---------------- Earnings + goal card ---------------- */
