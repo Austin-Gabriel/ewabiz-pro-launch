@@ -3,6 +3,7 @@ import { CardTheme, HOME_SANS, useHomeTheme } from "./home-shell";
 import { EwaMark } from "@/components/ewa-logo";
 import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
+import { BookingRowCard } from "@/bookings/booking-row-card";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -273,7 +274,7 @@ function OfflineBody({
   return (
     <div className="flex flex-1 flex-col gap-3 pt-2">
       <UpNextCard booking={next} />
-      {rest.length > 0 ? <MoreTodayRow remaining={rest} /> : null}
+      {rest.length > 0 ? <TodayRestList bookings={rest} /> : null}
       <EarningsGoalCard
         todayUsd={todayEarningsUsd}
         weekToDateUsd={weekToDateUsd}
