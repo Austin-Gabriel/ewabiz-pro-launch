@@ -9,6 +9,7 @@ import {
   formatExpiresIn,
   formatUsd,
   STATUS_LABEL,
+  clientRelationshipLabel,
   type Booking,
   type BookingStatus,
 } from "@/data/mock-bookings";
@@ -84,8 +85,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         )}
         {status === "completed" ? <RatingCard booking={booking} /> : null}
         {booking.note ? <NotesCard note={booking.note} /> : null}
-        <ClientCard booking={booking} status={status} />
-        {status === "pending" || status === "confirmed" ? <PolicyLink /> : null}
+        <PolicyLink />
       </div>
 
       <DetailActionBar
@@ -161,38 +161,99 @@ function DetailHeader({ title, onBack }: { title: string; onBack: () => void }) 
 /* ---------------- Hero ---------------- */
 
 function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatus }) {
-  const { text } = useHomeTheme();
+  const { text, cardBorder } = useHomeTheme();
+  // Pending hides last name (privacy). Otherwise show full name.
+  const displayName =
+    status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
+  // Relationship label (tiered, no numbered counts).
+  const relationship = clientRelationshipLabel(booking);
+  // Contact actions only when the working relationship is live.
+  const showContact = status === "confirmed" || status === "in-progress";
+  const iconBtn: React.CSSProperties = {
+    width: 36,
+    height: 36,
+    borderRadius: 9999,
+    border: `1px solid ${cardBorder}`,
+    backgroundColor: "transparent",
+    color: text,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  };
   return (
-    <div className="flex items-start justify-between gap-3 pt-3">
-      <div className="min-w-0 flex-1">
-        <h2
-          style={{
-            fontFamily: UI,
-            fontSize: 26,
-            fontWeight: 700,
-            color: text,
-            letterSpacing: "-0.02em",
-            margin: 0,
-            lineHeight: 1.15,
-          }}
-        >
-          {booking.clientName}
-        </h2>
-        <p
-          style={{
-            fontFamily: UI,
-            fontSize: 13.5,
-            color: text,
-            opacity: 0.65,
-            marginTop: 6,
-            fontVariantNumeric: "tabular-nums",
-            textDecoration: status === "cancelled" ? "line-through" : "none",
-          }}
-        >
-          {formatBookingDate(booking.startsAt)}
-        </p>
+    <div className="flex flex-col gap-3 pt-3">
+      {/* Top row: status pill aligned right, on its own line so the name
+          can breathe at full width with the avatar. */}
+      <div className="flex justify-end">
+        <StatusPill status={status} />
       </div>
-      <StatusPill status={status} />
+      {/* Identity row: avatar + (name, relationship · date) + contact icons. */}
+      <div className="flex items-center gap-3.5">
+        <div
+          className="flex shrink-0 items-center justify-center rounded-full"
+          style={{
+            width: 52,
+            height: 52,
+            backgroundColor: "rgba(255,130,63,0.16)",
+            color: "#7A2E0E",
+            fontFamily: UI,
+            fontSize: 17,
+            fontWeight: 600,
+          }}
+        >
+          {booking.clientInitial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2
+            style={{
+              fontFamily: UI,
+              fontSize: 22,
+              fontWeight: 700,
+              color: text,
+              letterSpacing: "-0.02em",
+              margin: 0,
+              lineHeight: 1.15,
+            }}
+          >
+            {displayName}
+          </h2>
+          <p
+            style={{
+              fontFamily: UI,
+              fontSize: 12.5,
+              color: text,
+              opacity: 0.6,
+              marginTop: 4,
+              lineHeight: 1.3,
+              fontVariantNumeric: "tabular-nums",
+              textDecoration: status === "cancelled" ? "line-through" : "none",
+            }}
+          >
+            {relationship} · {formatBookingDate(booking.startsAt)}
+          </p>
+        </div>
+        {showContact ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label={`Message ${displayName}`}
+              className="transition-opacity active:opacity-60"
+              style={iconBtn}
+            >
+              <ChatBubbleIcon size={15} />
+            </button>
+            <button
+              type="button"
+              aria-label={`Call ${displayName}`}
+              className="transition-opacity active:opacity-60"
+              style={iconBtn}
+            >
+              <PhoneIcon size={15} />
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -659,107 +720,6 @@ function NotesCard({ note }: { note: string }) {
       </p>
     </DetailCard>
   );
-}
-
-function ClientCard({ booking, status }: { booking: Booking; status: BookingStatus }) {
-  const { text, cardText, cardBorder } = useHomeTheme();
-  const showFullName = status !== "pending";
-  const displayName = showFullName
-    ? booking.clientName
-    : booking.clientName.split(" ")[0];
-  const history = booking.priorBookingsWithPro ?? 0;
-  const historyLabel =
-    history === 0
-      ? "First-time client"
-      : `${ordinal(history + 1)} booking with you`;
-  // Inline contact actions: chat is always available; calling is hidden once
-  // the booking is completed/cancelled (mirrors the lifecycle convention).
-  const showCall = status !== "completed" && status !== "cancelled";
-  const iconBtn: React.CSSProperties = {
-    width: 36,
-    height: 36,
-    borderRadius: 9999,
-    border: `1px solid ${cardBorder}`,
-    backgroundColor: "transparent",
-    color: cardText,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  };
-  void text;
-
-  return (
-    <DetailCard>
-      <CardLabel>Client</CardLabel>
-      <div className="flex items-center gap-3.5">
-        <div
-          className="flex shrink-0 items-center justify-center rounded-full"
-          style={{
-            width: 44,
-            height: 44,
-            backgroundColor: "rgba(255,130,63,0.16)",
-            color: "#7A2E0E",
-            fontFamily: UI,
-            fontSize: 15,
-            fontWeight: 600,
-          }}
-        >
-          {booking.clientInitial}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div
-            style={{
-              fontFamily: UI,
-              fontSize: 15,
-              fontWeight: 600,
-              color: cardText,
-              letterSpacing: "-0.005em",
-            }}
-          >
-            {displayName}
-          </div>
-          <div
-            style={{
-              fontFamily: UI,
-              fontSize: 12,
-              color: cardText,
-              opacity: 0.55,
-              marginTop: 2,
-            }}
-          >
-            {historyLabel}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={`Message ${displayName}`}
-            className="transition-opacity active:opacity-60"
-            style={iconBtn}
-          >
-            <ChatBubbleIcon size={15} />
-          </button>
-          {showCall ? (
-            <button
-              type="button"
-              aria-label={`Call ${displayName}`}
-              className="transition-opacity active:opacity-60"
-              style={iconBtn}
-            >
-              <PhoneIcon size={15} />
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </DetailCard>
-  );
-}
-
-function ordinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
 function ChatBubbleIcon({ size = 15 }: { size?: number }) {
