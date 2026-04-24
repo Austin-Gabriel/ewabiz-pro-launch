@@ -834,8 +834,6 @@ function DetailActionBar({
                 textAlign: "center",
                 marginTop: 0,
                 marginBottom: 8,
-                textShadow:
-                  "0 0 6px rgba(255,130,63,0.45), 0 0 14px rgba(255,130,63,0.25)",
               }}
             >
               {formatExpiresIn(booking.expiresAt)}
