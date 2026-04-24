@@ -149,9 +149,6 @@ function Body({
     </div>
   );
 }
-    </div>
-  );
-}
 
 function Price({ priceUsd, cancelled }: { priceUsd: number; cancelled?: boolean }) {
   if (cancelled) {
