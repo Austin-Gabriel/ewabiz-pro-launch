@@ -181,8 +181,6 @@ function Body({
             letterSpacing: "-0.005em",
             marginTop: 6,
             lineHeight: 1.3,
-            textShadow:
-              "0 0 6px rgba(255,130,63,0.45), 0 0 14px rgba(255,130,63,0.25)",
           }}
         >
           {pendingStatus}
