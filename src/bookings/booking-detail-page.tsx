@@ -72,6 +72,12 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     setLifecycle("get-ready");
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
   };
+  const handleStartEarly = () => {
+    // Early-start skips the prep countdown and drops the pro straight into
+    // "On your way" — they've explicitly confirmed they're heading out now.
+    setLifecycle("en-route");
+    navigate({ to: "/bookings", search: { tab: "in-progress" } });
+  };
   const handleOpenActive = () =>
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
 
@@ -103,6 +109,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         onAccept={handleAccept}
         onDecline={handleDecline}
         onStart={handleStartBooking}
+        onStartEarly={handleStartEarly}
         onOpenActive={handleOpenActive}
       />
 
@@ -786,6 +793,7 @@ function DetailActionBar({
   onAccept,
   onDecline,
   onStart,
+  onStartEarly,
   onOpenActive,
 }: {
   booking: Booking;
@@ -794,6 +802,7 @@ function DetailActionBar({
   onAccept: () => void;
   onDecline: () => void;
   onStart: () => void;
+  onStartEarly: () => void;
   onOpenActive: () => void;
 }) {
   const { bg, borderCol } = useHomeTheme();
@@ -859,7 +868,7 @@ function DetailActionBar({
           label={action.label}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
-          onConfirm={onStart}
+          onConfirm={onStartEarly}
         />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
