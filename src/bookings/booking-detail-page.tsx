@@ -870,6 +870,8 @@ function DetailActionBar({
           neighborhood={booking.neighborhood}
           onConfirm={onStartEarly}
         />
+      ) : action.kind === "start-info" ? (
+        <PrimaryButton label={action.label} onClick={() => {}} disabled />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
       ) : action.kind === "book-again" ? (
@@ -901,6 +903,7 @@ type DetailAction =
   | { kind: "pending" }
   | { kind: "start" }
   | { kind: "start-early"; label: string }
+  | { kind: "start-info"; label: string }
   | { kind: "open-active" }
   | { kind: "book-again" }
   | { kind: "book-similar" }
@@ -926,13 +929,15 @@ function deriveAction(
       const minsUntil = Math.round(
         (booking.startsAt.getTime() - Date.now()) / 60000,
       );
-      // Inside the travel window (≤ 60m) the pro starts the booking
-      // unprompted. Earlier in the day, "Start now" still works but routes
-      // through a confirmation sheet so they don't trigger the lifecycle by
-      // accident — copy preserves "Starts in Xh Ym" so they see exactly how
-      // early they're going.
-      if (minsUntil <= 60) return { kind: "start" };
-      return { kind: "start-early", label: `Starts in ${formatLeadTime(minsUntil)}` };
+      // Window logic:
+      //  - >15m before start: informational only, disabled "Starts in Xh Ym"
+      //  - 10-15m before start: tappable "Start booking" via confirmation sheet
+      //  - ≤10m before start (or already started): direct "Start booking"
+      if (minsUntil <= 10) return { kind: "start" };
+      if (minsUntil <= 15) {
+        return { kind: "start-early", label: "Start booking" };
+      }
+      return { kind: "start-info", label: `Starts in ${formatLeadTime(minsUntil)}` };
     }
     return { kind: "cancel" };
   }
