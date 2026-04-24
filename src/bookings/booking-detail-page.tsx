@@ -72,6 +72,12 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     setLifecycle("get-ready");
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
   };
+  const handleStartEarly = () => {
+    // Early-start skips the prep countdown and drops the pro straight into
+    // "On your way" — they've explicitly confirmed they're heading out now.
+    setLifecycle("en-route");
+    navigate({ to: "/bookings", search: { tab: "in-progress" } });
+  };
   const handleOpenActive = () =>
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
 
@@ -103,6 +109,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         onAccept={handleAccept}
         onDecline={handleDecline}
         onStart={handleStartBooking}
+        onStartEarly={handleStartEarly}
         onOpenActive={handleOpenActive}
       />
 
