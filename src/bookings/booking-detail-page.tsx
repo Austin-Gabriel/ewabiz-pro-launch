@@ -793,6 +793,7 @@ function DetailActionBar({
   onAccept,
   onDecline,
   onStart,
+  onStartEarly,
   onOpenActive,
 }: {
   booking: Booking;
@@ -801,6 +802,7 @@ function DetailActionBar({
   onAccept: () => void;
   onDecline: () => void;
   onStart: () => void;
+  onStartEarly: () => void;
   onOpenActive: () => void;
 }) {
   const { bg, borderCol } = useHomeTheme();
@@ -866,7 +868,7 @@ function DetailActionBar({
           label={action.label}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
-          onConfirm={onStart}
+          onConfirm={onStartEarly}
         />
       ) : action.kind === "open-active" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
