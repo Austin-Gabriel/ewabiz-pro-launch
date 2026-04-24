@@ -71,6 +71,26 @@ export interface Booking {
 
   /** Pending request expiry timestamp (only meaningful when status === pending). */
   expiresAt?: Date;
+
+  /* ----- Completed-only fields ----- */
+  /** Actual elapsed service duration if it differs from `durationMin`. */
+  actualDurationMin?: number;
+  /** Tip the client added on completion. */
+  tipUsd?: number;
+  /** Payout date label (e.g. "Apr 20"). Undefined while pending payout. */
+  paidOutOn?: string;
+  /** Pro's rating of the client (1–5). Undefined if not yet rated. */
+  proRatingOfClient?: number;
+
+  /* ----- Cancelled-only fields ----- */
+  /** Who initiated the cancellation. */
+  cancelledBy?: "client" | "pro" | "expired";
+  /** When it was cancelled (display string, already formatted). */
+  cancelledAt?: string;
+  /** Optional client- or pro-supplied reason. */
+  cancellationReason?: string;
+  /** Cancellation fee paid out to the pro, in USD. 0 means none. */
+  cancellationFeeUsd?: number;
 }
 
 /* --------- Initials helper --------- */
