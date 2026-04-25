@@ -645,8 +645,11 @@ function formatStackedTime(t: string): [string, "AM" | "PM"] {
     else if (h >= 1 && h <= 6) { suffix = "PM"; }
     else { suffix = "AM"; }
   }
-  // Preserve the on-the-hour shape ("1") vs. the mm:mm shape ("10:30").
-  const timeStr = mm ? `${h}:${mm}` : String(h);
+  // Rail always shows "H:MM" so on-the-hour times read as "1:00 / PM"
+  // rather than "1 / PM" — the rail's geometry expects two characters per
+  // line. (Other surfaces that use formatTime directly still drop the
+  // ":00" via the user's preferred no-leading-zero rule.)
+  const timeStr = `${h}:${mm ?? "00"}`;
   return [timeStr, suffix];
 }
 
