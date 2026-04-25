@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import {
   Dialog,
@@ -21,6 +21,10 @@ import {
   type Booking,
   type BookingStatus,
 } from "@/data/mock-bookings";
+import {
+  getBookingButtonState,
+  type StartBookingButtonState,
+} from "@/lib/booking-button-state";
 
 /**
  * Canonical booking detail page. Reads from the canonical booking registry
