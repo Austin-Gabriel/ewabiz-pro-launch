@@ -116,6 +116,12 @@ function atTime(daysFromToday: number, hour: number, minute = 0): Date {
   return d;
 }
 
+// Prototype action-time anchor for the booking CTA demo state. Keeps Maya
+// inside the start window while later same-day bookings render "Starts in …".
+export function bookingButtonDemoCurrentTime(): Date {
+  return atTime(0, 10, 20);
+}
+
 function inHours(hours: number): Date {
   return new Date(Date.now() + hours * 60 * 60 * 1000);
 }
