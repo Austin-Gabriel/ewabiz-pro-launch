@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import {
   Dialog,
@@ -49,6 +49,15 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   const [status, setStatus] = useState<BookingStatus>(
     booking?.status ?? "cancelled",
   );
+
+  // Live "now" — ticks every 30s so the start-button copy recomputes as
+  // real time advances. `new Date()` evaluated inline on every render is
+  // not enough, because nothing else triggers a re-render with time alone.
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTime(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   if (!booking) {
     return (
@@ -107,6 +116,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         booking={booking}
         status={status}
         lifecycleActive={lifecycleActive}
+        currentTime={currentTime}
         onAccept={handleAccept}
         onDecline={handleDecline}
         onStart={handleStartBooking}
@@ -790,6 +800,7 @@ function DetailActionBar({
   booking,
   status,
   lifecycleActive,
+  currentTime,
   onAccept,
   onDecline,
   onStart,
@@ -798,6 +809,7 @@ function DetailActionBar({
   booking: Booking;
   status: BookingStatus;
   lifecycleActive: boolean;
+  currentTime: Date;
   onAccept: () => void;
   onDecline: () => void;
   onStart: () => void;
@@ -806,7 +818,7 @@ function DetailActionBar({
   const { bg, borderCol, text } = useHomeTheme();
   const buttonState = getBookingButtonState(
     { startsAt: booking.startsAt, status, lifecycleActive },
-    new Date(),
+    currentTime,
   );
 
   const showActionBar =

@@ -627,8 +627,11 @@ function EmptyBlock({ title, sub }: { title: string; sub: string }) {
 /* ---------------- Time helpers ---------------- */
 
 function formatStackedTime(t: string): [string, "AM" | "PM"] {
-  // Accepts "10:30" or "10:30 AM". Returns ["10:30", "AM"].
-  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  // Accepts every shape formatTime() can emit: "10:30 AM", "1 PM", "10:30",
+  // even "13:00". Without optional minutes the regex was failing on the
+  // on-the-hour PM form ("1 PM") and returning ["1 PM", "AM"] — which
+  // showed up as "1 PM" stacked over "AM" on the rail.
+  const m = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
   if (!m) return [t, "AM"];
   let h = parseInt(m[1], 10);
   const mm = m[2];
@@ -642,7 +645,9 @@ function formatStackedTime(t: string): [string, "AM" | "PM"] {
     else if (h >= 1 && h <= 6) { suffix = "PM"; }
     else { suffix = "AM"; }
   }
-  return [`${h}:${mm}`, suffix];
+  // Preserve the on-the-hour shape ("1") vs. the mm:mm shape ("10:30").
+  const timeStr = mm ? `${h}:${mm}` : String(h);
+  return [timeStr, suffix];
 }
 
 function gapBetween(prevStart: Date, prevDuration: number, nextStart: Date): string | undefined {
