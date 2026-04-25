@@ -809,7 +809,13 @@ function DetailActionBar({
     new Date(),
   );
 
-  const showActionBar = status === "pending" || buttonState.state === "countdown" || buttonState.state === "ready" || buttonState.state === "in_progress";
+  const showActionBar =
+    status === "pending" ||
+    buttonState.state === "countdown" ||
+    buttonState.state === "ready" ||
+    buttonState.state === "in_progress" ||
+    buttonState.state === "completed" ||
+    (buttonState.state === "cancelled" && booking.cancelledBy === "client");
 
   if (!showActionBar) return null;
 
@@ -870,6 +876,10 @@ function DetailActionBar({
         />
       ) : buttonState.state === "in_progress" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
+      ) : buttonState.state === "completed" ? (
+        <SecondaryActionButton label="Book again" onClick={() => {}} />
+      ) : buttonState.state === "cancelled" && booking.cancelledBy === "client" ? (
+        <SecondaryActionButton label="Book similar" onClick={() => {}} />
       ) : null}
     </div>
   );
@@ -914,30 +924,27 @@ function PrimaryButton({
  * straight into "On your way" (scheduled bookings skip Get Ready).
  */
 function StartBookingButton({
-  label,
-  early,
-  minsUntil,
+  buttonState,
   firstName,
   neighborhood,
   onConfirm,
 }: {
-  label: string;
-  early: boolean;
-  minsUntil?: number;
+  buttonState: StartBookingButtonState;
   firstName: string;
   neighborhood: string;
   onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const title = early
+  const isEarlyStart = buttonState.state === "countdown";
+  const title = isEarlyStart
     ? `Start ${firstName}'s booking early?`
     : `Start ${firstName}'s booking?`;
-  const body = early
-    ? `The booking is in ${formatLeadTime(minsUntil ?? 0)}. You'll head to ${neighborhood} now. The client will be notified.`
+  const body = isEarlyStart
+    ? `The booking ${buttonState.copy.toLowerCase()}. You'll head to ${neighborhood} now. The client will be notified.`
     : `You'll head to ${neighborhood} now. The client will be notified.`;
   return (
     <>
-      <PrimaryButton label={label} onClick={() => setOpen(true)} />
+      <PrimaryButton label={buttonState.copy} onClick={() => setOpen(true)} />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="max-w-sm rounded-2xl"
