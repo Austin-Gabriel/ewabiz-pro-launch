@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import {
   Dialog,
@@ -21,6 +21,10 @@ import {
   type Booking,
   type BookingStatus,
 } from "@/data/mock-bookings";
+import {
+  getBookingButtonState,
+  type StartBookingButtonState,
+} from "@/lib/booking-button-state";
 
 /**
  * Canonical booking detail page. Reads from the canonical booking registry
@@ -800,12 +804,18 @@ function DetailActionBar({
   onOpenActive: () => void;
 }) {
   const { bg, borderCol, text } = useHomeTheme();
-  const action = useMemo(
-    () => deriveAction(booking, status, lifecycleActive),
-    [booking, status, lifecycleActive],
+  const buttonState = getBookingButtonState(
+    { startsAt: booking.startsAt, status, lifecycleActive },
+    new Date(),
   );
 
-  if (!action) return null;
+  const showActionBar =
+    status === "pending" ||
+    buttonState.state === "countdown" ||
+    buttonState.state === "ready" ||
+    buttonState.state === "in_progress";
+
+  if (!showActionBar) return null;
 
   return (
     <div
@@ -816,7 +826,7 @@ function DetailActionBar({
         borderTop: `1px solid ${borderCol}`,
       }}
     >
-      {action.kind === "pending" ? (
+      {status === "pending" ? (
         <>
           {booking.expiresAt ? (
             <p
@@ -855,99 +865,18 @@ function DetailActionBar({
             <PrimaryButton label="Accept" onClick={onAccept} />
           </div>
         </>
-      ) : action.kind === "start" ? (
+      ) : buttonState.state === "countdown" || buttonState.state === "ready" ? (
         <StartBookingButton
-          label={action.label}
-          early={action.early}
-          minsUntil={action.minsUntil}
+          buttonState={buttonState}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
           onConfirm={onStart}
         />
-      ) : action.kind === "open-active" ? (
+      ) : buttonState.state === "in_progress" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
-      ) : action.kind === "book-again" ? (
-        <SecondaryActionButton label="Book again" onClick={() => {}} />
-      ) : action.kind === "book-similar" ? (
-        <SecondaryActionButton label="Book similar" onClick={() => {}} />
-      ) : action.kind === "cancel" ? (
-        <button
-          type="button"
-          className="w-full py-3 transition-opacity active:opacity-60"
-          style={{
-            fontFamily: UI,
-            fontSize: 13,
-            color: MIDNIGHT,
-            opacity: 0.55,
-            background: "transparent",
-            border: "none",
-            textDecoration: "underline",
-          }}
-        >
-          Cancel booking
-        </button>
       ) : null}
     </div>
   );
-}
-
-type DetailAction =
-  | { kind: "pending" }
-  | { kind: "start"; label: string; early: boolean; minsUntil: number }
-  | { kind: "open-active" }
-  | { kind: "book-again" }
-  | { kind: "book-similar" }
-  | { kind: "cancel" }
-  | null;
-
-function deriveAction(
-  booking: Booking,
-  status: BookingStatus,
-  lifecycleActive: boolean,
-): DetailAction {
-  if (status === "pending") return { kind: "pending" };
-  if (status === "in-progress") return { kind: "open-active" };
-  if (status === "completed") return { kind: "book-again" };
-  if (status === "cancelled") {
-    if (booking.cancelledBy === "client") return { kind: "book-similar" };
-    return null;
-  }
-
-  if (status === "confirmed") {
-    if (lifecycleActive) return { kind: "open-active" };
-    if (isSameDay(booking.startsAt)) {
-      const minsUntil = Math.round(
-        (booking.startsAt.getTime() - Date.now()) / 60000,
-      );
-      // Same-day bookings are always tappable. The button is never grayed
-      // out — only the copy + the confirmation sheet adapt to how early
-      // the pro is starting:
-      //  - within 15m of start: "Start booking" + standard sheet
-      //  - >15m before start: "Starts in Xm" + early-start sheet
-      const early = minsUntil > 15;
-      const label = early ? `Starts in ${formatLeadTime(minsUntil)}` : "Start booking";
-      return { kind: "start", label, early, minsUntil };
-    }
-    return { kind: "cancel" };
-  }
-  return null;
-}
-
-function isSameDay(d: Date, now: Date = new Date()): boolean {
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-function formatLeadTime(mins: number): string {
-  if (mins <= 0) return "0m";
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 function PrimaryButton({
@@ -989,30 +918,27 @@ function PrimaryButton({
  * straight into "On your way" (scheduled bookings skip Get Ready).
  */
 function StartBookingButton({
-  label,
-  early,
-  minsUntil,
+  buttonState,
   firstName,
   neighborhood,
   onConfirm,
 }: {
-  label: string;
-  early: boolean;
-  minsUntil?: number;
+  buttonState: StartBookingButtonState;
   firstName: string;
   neighborhood: string;
   onConfirm: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const title = early
+  const isEarlyStart = buttonState.state === "countdown";
+  const title = isEarlyStart
     ? `Start ${firstName}'s booking early?`
     : `Start ${firstName}'s booking?`;
-  const body = early
-    ? `The booking is in ${formatLeadTime(minsUntil ?? 0)}. You'll head to ${neighborhood} now. The client will be notified.`
+  const body = isEarlyStart
+    ? `The booking ${buttonState.copy.toLowerCase()}. You'll head to ${neighborhood} now. The client will be notified.`
     : `You'll head to ${neighborhood} now. The client will be notified.`;
   return (
     <>
-      <PrimaryButton label={label} onClick={() => setOpen(true)} />
+      <PrimaryButton label={buttonState.copy} onClick={() => setOpen(true)} />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="max-w-sm rounded-2xl"
