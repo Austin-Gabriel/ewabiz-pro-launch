@@ -14,6 +14,7 @@ import { useDevState } from "@/dev-state/dev-state-context";
 import {
   findBookingById,
   formatBookingDate,
+  bookingButtonDemoCurrentTime,
   formatExpiresIn,
   formatUsd,
   STATUS_LABEL,
@@ -53,9 +54,9 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   // Live "now" — ticks every 30s so the start-button copy recomputes as
   // real time advances. `new Date()` evaluated inline on every render is
   // not enough, because nothing else triggers a re-render with time alone.
-  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(() => bookingButtonDemoCurrentTime());
   useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 30_000);
+    const id = setInterval(() => setCurrentTime(bookingButtonDemoCurrentTime()), 30_000);
     return () => clearInterval(id);
   }, []);
 
