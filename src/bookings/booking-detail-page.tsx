@@ -813,9 +813,7 @@ function DetailActionBar({
     status === "pending" ||
     buttonState.state === "countdown" ||
     buttonState.state === "ready" ||
-    buttonState.state === "in_progress" ||
-    buttonState.state === "completed" ||
-    (buttonState.state === "cancelled" && booking.cancelledBy === "client");
+    buttonState.state === "in_progress";
 
   if (!showActionBar) return null;
 
@@ -876,10 +874,6 @@ function DetailActionBar({
         />
       ) : buttonState.state === "in_progress" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
-      ) : buttonState.state === "completed" ? (
-        <SecondaryActionButton label="Book again" onClick={() => {}} />
-      ) : buttonState.state === "cancelled" && booking.cancelledBy === "client" ? (
-        <SecondaryActionButton label="Book similar" onClick={() => {}} />
       ) : null}
     </div>
   );
