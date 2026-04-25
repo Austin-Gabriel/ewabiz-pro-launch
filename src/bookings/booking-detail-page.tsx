@@ -804,12 +804,14 @@ function DetailActionBar({
   onOpenActive: () => void;
 }) {
   const { bg, borderCol, text } = useHomeTheme();
-  const action = useMemo(
-    () => deriveAction(booking, status, lifecycleActive),
-    [booking, status, lifecycleActive],
+  const buttonState = getBookingButtonState(
+    { startsAt: booking.startsAt, status, lifecycleActive },
+    new Date(),
   );
 
-  if (!action) return null;
+  const showActionBar = status === "pending" || buttonState.state === "countdown" || buttonState.state === "ready" || buttonState.state === "in_progress";
+
+  if (!showActionBar) return null;
 
   return (
     <div
@@ -820,7 +822,7 @@ function DetailActionBar({
         borderTop: `1px solid ${borderCol}`,
       }}
     >
-      {action.kind === "pending" ? (
+      {status === "pending" ? (
         <>
           {booking.expiresAt ? (
             <p
@@ -859,99 +861,18 @@ function DetailActionBar({
             <PrimaryButton label="Accept" onClick={onAccept} />
           </div>
         </>
-      ) : action.kind === "start" ? (
+      ) : buttonState.state === "countdown" || buttonState.state === "ready" ? (
         <StartBookingButton
-          label={action.label}
-          early={action.early}
-          minsUntil={action.minsUntil}
+          buttonState={buttonState}
           firstName={booking.clientName.split(" ")[0]}
           neighborhood={booking.neighborhood}
           onConfirm={onStart}
         />
-      ) : action.kind === "open-active" ? (
+      ) : buttonState.state === "in_progress" ? (
         <PrimaryButton label="Open active booking" onClick={onOpenActive} />
-      ) : action.kind === "book-again" ? (
-        <SecondaryActionButton label="Book again" onClick={() => {}} />
-      ) : action.kind === "book-similar" ? (
-        <SecondaryActionButton label="Book similar" onClick={() => {}} />
-      ) : action.kind === "cancel" ? (
-        <button
-          type="button"
-          className="w-full py-3 transition-opacity active:opacity-60"
-          style={{
-            fontFamily: UI,
-            fontSize: 13,
-            color: MIDNIGHT,
-            opacity: 0.55,
-            background: "transparent",
-            border: "none",
-            textDecoration: "underline",
-          }}
-        >
-          Cancel booking
-        </button>
       ) : null}
     </div>
   );
-}
-
-type DetailAction =
-  | { kind: "pending" }
-  | { kind: "start"; label: string; early: boolean; minsUntil: number }
-  | { kind: "open-active" }
-  | { kind: "book-again" }
-  | { kind: "book-similar" }
-  | { kind: "cancel" }
-  | null;
-
-function deriveAction(
-  booking: Booking,
-  status: BookingStatus,
-  lifecycleActive: boolean,
-): DetailAction {
-  if (status === "pending") return { kind: "pending" };
-  if (status === "in-progress") return { kind: "open-active" };
-  if (status === "completed") return { kind: "book-again" };
-  if (status === "cancelled") {
-    if (booking.cancelledBy === "client") return { kind: "book-similar" };
-    return null;
-  }
-
-  if (status === "confirmed") {
-    if (lifecycleActive) return { kind: "open-active" };
-    if (isSameDay(booking.startsAt)) {
-      const minsUntil = Math.round(
-        (booking.startsAt.getTime() - Date.now()) / 60000,
-      );
-      // Same-day bookings are always tappable. The button is never grayed
-      // out — only the copy + the confirmation sheet adapt to how early
-      // the pro is starting:
-      //  - within 15m of start: "Start booking" + standard sheet
-      //  - >15m before start: "Starts in Xm" + early-start sheet
-      const early = minsUntil > 15;
-      const label = early ? `Starts in ${formatLeadTime(minsUntil)}` : "Start booking";
-      return { kind: "start", label, early, minsUntil };
-    }
-    return { kind: "cancel" };
-  }
-  return null;
-}
-
-function isSameDay(d: Date, now: Date = new Date()): boolean {
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-function formatLeadTime(mins: number): string {
-  if (mins <= 0) return "0m";
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 function PrimaryButton({
