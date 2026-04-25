@@ -23,6 +23,20 @@ describe("getBookingButtonState", () => {
     );
   });
 
+  test("Maya-only demo timing keeps later same-day booking in countdown state", () => {
+    assert.deepEqual(
+      getBookingButtonState(
+        { ...baseBooking, startsAt: new Date(2026, 3, 25, 10, 30) },
+        new Date(2026, 3, 25, 10, 20),
+      ),
+      { state: "ready", copy: "Start booking", tappable: true },
+    );
+    assert.deepEqual(
+      getBookingButtonState(baseBooking, new Date(2026, 3, 25, 10, 20)),
+      { state: "countdown", copy: "Starts in 2h 40m", tappable: true },
+    );
+  });
+
   test("booking tomorrow returns hidden state", () => {
     assert.deepEqual(
       getBookingButtonState(
