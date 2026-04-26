@@ -812,14 +812,16 @@ function DocsBankingCard({
         ? "Multi-year history"
         : "Current year ready";
 
-  const bankStatus =
+  const bankSubtitle =
+    payoutState === "none" ? "Not connected" : "Chase ••4821";
+  const bankStatusLine =
     payoutState === "none"
-      ? "Not connected"
+      ? null
       : payoutState === "pending"
-        ? "Chase ••4821 · Verifying"
+        ? "Verifying"
         : payoutState === "failed-recent"
-          ? "Chase ••4821 · Needs attention"
-          : "Chase ••4821 · Verified";
+          ? "Needs attention"
+          : "Verified";
 
   const bankTone: "ok" | "warn" | "err" =
     payoutState === "failed-recent" || payoutState === "none"
@@ -857,7 +859,8 @@ function DocsBankingCard({
             </svg>
           }
           title="Payout method"
-          subtitle={bankStatus}
+          subtitle={bankSubtitle}
+          extra={bankStatusLine}
           tone={bankTone}
         />
       </div>
