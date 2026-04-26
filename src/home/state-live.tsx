@@ -264,7 +264,7 @@ function LiveStateCard({
     return (
       <Card emphasis="primary">
         <Eyebrow color={ORANGE}>
-          <PulseDot /> In Progress · {liveStatus.elapsedMin ?? 0} min
+          <PulseDot /> In Progress — {liveStatus.elapsedMin ?? 0} min
         </Eyebrow>
         <Headline>{nextBooking.clientName}</Headline>
         <SubLine>{nextBooking.service}</SubLine>
@@ -285,7 +285,7 @@ function LiveStateCard({
     return (
       <Card emphasis="primary">
         <Eyebrow color={ORANGE}>
-          <PulseDot /> En Route · {liveStatus.etaMin ?? 0} min ETA
+          <PulseDot /> En Route — {liveStatus.etaMin ?? 0} min ETA
         </Eyebrow>
         <Headline>{nextBooking.clientName}</Headline>
         <SubLine>{nextBooking.service}</SubLine>
@@ -310,7 +310,7 @@ function LiveStateCard({
         </Eyebrow>
         <Headline>{nextBooking.clientName}</Headline>
         <SubLine>
-          {nextBooking.service} · starts {nextBooking.startsAt}
+          {nextBooking.service} — starts {nextBooking.startsAt}
         </SubLine>
         {nextBooking.address ? <AddressRow address={nextBooking.address} /> : null}
         <PrimaryAction label="Open Navigation" icon="map" />
@@ -369,12 +369,12 @@ function UpNextBody({ nextBooking, totalToday }: { nextBooking: Booking; totalTo
           Up Next
           {totalToday > 0 ? (
             <span style={{ marginLeft: 8, opacity: 0.65, letterSpacing: "1.2px" }}>
-              · {totalToday} {totalToday === 1 ? "booking" : "bookings"} today
+              — {totalToday} {totalToday === 1 ? "booking" : "bookings"} today
             </span>
           ) : null}
         </Eyebrow>
         <span style={{ fontFamily: UI, fontSize: 12, color: text, opacity: 0.65, fontWeight: 500 }}>
-          {nextBooking.startsAt} · {nextBooking.durationMin} min
+          {nextBooking.startsAt} — {nextBooking.durationMin} min
         </span>
       </div>
       <div className="mt-2 flex items-center gap-3">

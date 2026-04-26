@@ -454,14 +454,14 @@ export function formatBookingDate(
   }
   if (d.getFullYear() === now.getFullYear()) {
     const md = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    return mode === "date" ? md : `${md} · ${time}`;
+    return mode === "date" ? md : `${md} at ${time}`;
   }
   const full = d.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-  return mode === "date" ? full : `${full} · ${time}`;
+  return mode === "date" ? full : `${full} at ${time}`;
 }
 
 function formatTime(d: Date): string {
@@ -520,7 +520,7 @@ export function clientRelationshipLabel(
   if (prior <= 0 || !booking.lastBookedAt) return tier;
   const sixMonthsMs = 1000 * 60 * 60 * 24 * 30 * 6;
   if (now.getTime() - booking.lastBookedAt.getTime() > sixMonthsMs) return tier;
-  return `${tier} · Last booked ${formatLastBooked(booking.lastBookedAt)}`;
+  return `${tier} — Last booked ${formatLastBooked(booking.lastBookedAt)}`;
 }
 
 function formatLastBooked(d: Date): string {

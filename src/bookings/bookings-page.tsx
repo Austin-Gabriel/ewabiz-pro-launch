@@ -414,7 +414,7 @@ function TodayHorizonGroup({
     <BookingsGroup>
       <BookingsSectionHeader
         title="Today"
-        meta={`${bookings.length} ${bookings.length === 1 ? "booking" : "bookings"} · ${formatUsd(totalUsd)}`}
+        meta={`${bookings.length} ${bookings.length === 1 ? "booking" : "bookings"} — ${formatUsd(totalUsd)}`}
         date={currentDateLabel()}
       />
       <BookingTimeline entries={entries} />
@@ -682,5 +682,5 @@ function currentDateLabel(d: Date = new Date()): string {
   const weekday = d.toLocaleDateString(undefined, { weekday: "long" });
   const month = d.toLocaleDateString(undefined, { month: "short" });
   const day = d.getDate();
-  return `${weekday} · ${month} ${day}`;
+  return `${weekday}, ${month} ${day}`;
 }
