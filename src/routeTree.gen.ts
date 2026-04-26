@@ -35,6 +35,7 @@ import { Route as KycStepRouteImport } from './routes/kyc.$step'
 import { Route as EarningsRecentRouteImport } from './routes/earnings.recent'
 import { Route as EarningsPayoutsRouteImport } from './routes/earnings.payouts'
 import { Route as BookingsIdRouteImport } from './routes/bookings.$id'
+import { Route as EarningsPayoutsIdRouteImport } from './routes/earnings.payouts.$id'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api.public.seed-demo'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -167,6 +168,11 @@ const BookingsIdRoute = BookingsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => BookingsRoute,
 } as any)
+const EarningsPayoutsIdRoute = EarningsPayoutsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => EarningsPayoutsRoute,
+} as any)
 const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   id: '/api/public/seed-demo',
   path: '/api/public/seed-demo',
@@ -192,7 +198,7 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
-  '/earnings/payouts': typeof EarningsPayoutsRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -221,7 +228,7 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
-  '/earnings/payouts': typeof EarningsPayoutsRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -251,7 +259,7 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
-  '/earnings/payouts': typeof EarningsPayoutsRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   id:
     | '__root__'
     | '/'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -556,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingsIdRouteImport
       parentRoute: typeof BookingsRoute
     }
+    '/earnings/payouts/$id': {
+      id: '/earnings/payouts/$id'
+      path: '/$id'
+      fullPath: '/earnings/payouts/$id'
+      preLoaderRoute: typeof EarningsPayoutsIdRouteImport
+      parentRoute: typeof EarningsPayoutsRoute
+    }
     '/api/public/seed-demo': {
       id: '/api/public/seed-demo'
       path: '/api/public/seed-demo'
@@ -578,13 +597,25 @@ const BookingsRouteWithChildren = BookingsRoute._addFileChildren(
   BookingsRouteChildren,
 )
 
+interface EarningsPayoutsRouteChildren {
+  EarningsPayoutsIdRoute: typeof EarningsPayoutsIdRoute
+}
+
+const EarningsPayoutsRouteChildren: EarningsPayoutsRouteChildren = {
+  EarningsPayoutsIdRoute: EarningsPayoutsIdRoute,
+}
+
+const EarningsPayoutsRouteWithChildren = EarningsPayoutsRoute._addFileChildren(
+  EarningsPayoutsRouteChildren,
+)
+
 interface EarningsRouteChildren {
-  EarningsPayoutsRoute: typeof EarningsPayoutsRoute
+  EarningsPayoutsRoute: typeof EarningsPayoutsRouteWithChildren
   EarningsRecentRoute: typeof EarningsRecentRoute
 }
 
 const EarningsRouteChildren: EarningsRouteChildren = {
-  EarningsPayoutsRoute: EarningsPayoutsRoute,
+  EarningsPayoutsRoute: EarningsPayoutsRouteWithChildren,
   EarningsRecentRoute: EarningsRecentRoute,
 }
 
