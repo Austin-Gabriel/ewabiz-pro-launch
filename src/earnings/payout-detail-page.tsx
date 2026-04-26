@@ -40,6 +40,7 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
 
   return (
     <EarningsSubShell title="Payout" backTo="/earnings/payouts">
+      <Timeline status={payout.status} />
       <EarningsCard>
         <div style={{ padding: 18, fontFamily: UI }}>
           <div className="flex items-center gap-2">
@@ -120,27 +121,108 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
       </EarningsCard>
 
       {payout.status === "failed" ? (
-        <button
-          type="button"
-          onClick={() => {
-            // Phase 3 hook: re-trigger payout via Stripe rails behind the scenes.
-          }}
-          className="mt-2 transition-opacity active:opacity-60"
-          style={{
-            fontFamily: UI,
-            fontSize: 15,
-            fontWeight: 600,
-            color: NAVY,
-            backgroundColor: "#FF823F",
-            padding: "14px 0",
-            borderRadius: 12,
-            width: "100%",
-          }}
-        >
-          Retry payout
-        </button>
+        <StickyRetryFooter />
       ) : null}
     </EarningsSubShell>
+  );
+}
+
+function Timeline({ status }: { status: "paid" | "in-transit" | "failed" }) {
+  const steps: { key: string; label: string }[] = [
+    { key: "earned", label: "Earned" },
+    { key: "bundled", label: "Bundled" },
+    { key: "sent", label: "Sent" },
+    { key: "landed", label: "Landed" },
+  ];
+  // Active index: paid → 3 (landed), in-transit → 2 (sent), failed → 2 (sent, but errored)
+  const activeIdx = status === "paid" ? 3 : 2;
+  const failed = status === "failed";
+  return (
+    <div
+      className="flex items-center justify-between"
+      style={{
+        padding: "10px 4px 4px",
+        fontFamily: UI,
+      }}
+    >
+      {steps.map((s, i) => {
+        const isActive = i <= activeIdx;
+        const isCurrent = i === activeIdx;
+        const dotColor = failed && isCurrent ? "#B91C1C" : isActive ? NAVY : "rgba(6,28,39,0.18)";
+        const labelOpacity = isActive ? 1 : 0.45;
+        return (
+          <div key={s.key} className="flex items-center" style={{ flex: i === steps.length - 1 ? "0 0 auto" : 1 }}>
+            <div className="flex flex-col items-center" style={{ width: 56 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: isCurrent ? 9 : 7,
+                  height: isCurrent ? 9 : 7,
+                  borderRadius: 999,
+                  backgroundColor: dotColor,
+                  border: isCurrent && !failed ? `2px solid ${NAVY}` : "none",
+                  boxShadow: isCurrent ? `0 0 0 3px rgba(6,28,39,0.06)` : "none",
+                }}
+              />
+              <span
+                style={{
+                  marginTop: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  color: NAVY,
+                  opacity: labelOpacity,
+                }}
+              >
+                {failed && isCurrent ? "Failed" : s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 ? (
+              <div
+                aria-hidden
+                style={{
+                  flex: 1,
+                  height: 1,
+                  backgroundColor: i < activeIdx ? NAVY : "rgba(6,28,39,0.12)",
+                  opacity: i < activeIdx ? 0.5 : 1,
+                  marginTop: -16,
+                }}
+              />
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StickyRetryFooter() {
+  return (
+    <div
+      className="sticky bottom-2 mt-2"
+      style={{ fontFamily: "inherit" }}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          // Phase 3 hook: re-trigger payout via Stripe rails behind the scenes.
+        }}
+        className="transition-opacity active:opacity-60"
+        style={{
+          width: "100%",
+          fontSize: 15,
+          fontWeight: 600,
+          color: NAVY,
+          backgroundColor: "#FF823F",
+          padding: "14px 0",
+          borderRadius: 12,
+          boxShadow: "0 8px 24px -8px rgba(255,130,63,0.5)",
+        }}
+      >
+        Retry payout
+      </button>
+    </div>
   );
 }
 
