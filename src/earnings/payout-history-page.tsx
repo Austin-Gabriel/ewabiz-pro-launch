@@ -92,7 +92,7 @@ function PayoutRow({ payout, divider }: { payout: Payout; divider: boolean }) {
 export function StatusPill({ status }: { status: PayoutStatus }) {
   const palette: Record<PayoutStatus, { bg: string; fg: string }> = {
     paid: { bg: "rgba(22,163,74,0.12)", fg: "#15803D" },
-    "in-transit": { bg: "rgba(6,28,39,0.06)", fg: NAVY },
+    "in-transit": { bg: "rgba(255,130,63,0.14)", fg: "#B8531C" },
     failed: { bg: "rgba(220,38,38,0.10)", fg: "#B91C1C" },
   };
   const c = palette[status];

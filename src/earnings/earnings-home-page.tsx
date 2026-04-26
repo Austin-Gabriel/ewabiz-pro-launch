@@ -287,6 +287,7 @@ function EmptyChart() {
 
 function PendingBalanceCard({ events }: { events: ReturnType<typeof earningsForDensity> }) {
   const pending = useMemo(() => pendingPayoutFor(events), [events]);
+  const hasPending = pending.amount > 0;
   return (
     <Card>
       <div style={{ padding: 16, fontFamily: UI }}>
@@ -296,7 +297,7 @@ function PendingBalanceCard({ events }: { events: ReturnType<typeof earningsForD
             style={{
               fontSize: 28,
               fontWeight: 600,
-              color: NAVY,
+              color: hasPending ? ORANGE : NAVY,
               fontVariantNumeric: "tabular-nums",
               letterSpacing: "-0.02em",
             }}
@@ -322,7 +323,7 @@ function PendingBalanceCard({ events }: { events: ReturnType<typeof earningsForD
             opacity: 0.7,
           }}
         >
-          {pending.amount > 0
+          {hasPending
             ? <>Arriving <span style={{ fontWeight: 600 }}>{pending.arrivesOn}</span> · direct deposit</>
             : "Nothing pending right now."}
         </div>
