@@ -25,6 +25,12 @@ import {
   pendingBalanceOverride,
   type ResolvedProState,
 } from "./earnings-state";
+import { payoutsForDensity, type Payout } from "@/data/mock-payouts";
+import {
+  balanceSplit,
+  inTransitPayoutId,
+  serviceSparkline,
+} from "./earnings-aggregates";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -68,6 +74,10 @@ export function EarningsHomePage() {
   const [period, setPeriod] = useState<EarningsPeriod>("week");
 
   const events = useMemo(() => earningsForDensity(density), [density]);
+  const payouts = useMemo(
+    () => payoutsForDensity(density === "none" ? "none" : density === "sparse" ? "sparse" : "rich"),
+    [density],
+  );
 
   return (
     <HomeShell>
@@ -76,13 +86,14 @@ export function EarningsHomePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         <Hero events={events} period={period} />
+        <BalanceTrio events={events} payouts={payouts} pendingOverride={dev.pendingBalance} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
-        <PendingBalanceCard events={events} pendingOverride={dev.pendingBalance} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
+        <PayoutsCard events={events} payouts={payouts} />
+        <DocsBankingCard payoutState={dev.payoutState} taxDocs={dev.taxDocs} />
         <FeesTransparencyCard />
-        <LinkRows />
       </div>
 
       <EarningsBottomTabs />
@@ -297,62 +308,137 @@ function EmptyChart() {
   );
 }
 
-/* ---------- Pending balance ---------- */
+/* ---------- Balance trio (Available · In transit · Pending) ---------- */
 
-function PendingBalanceCard({
+function BalanceTrio({
   events,
+  payouts,
   pendingOverride,
 }: {
   events: ReturnType<typeof earningsForDensity>;
+  payouts: Payout[];
   pendingOverride: ReturnType<typeof useDevState>["state"]["pendingBalance"];
 }) {
-  const computed = useMemo(() => pendingPayoutFor(events), [events]);
+  const split = useMemo(() => balanceSplit(events, payouts), [events, payouts]);
   const overrideAmount = pendingBalanceOverride(pendingOverride);
-  const pending = overrideAmount === null
-    ? computed
-    : { ...computed, amount: overrideAmount, bookingCount: overrideAmount === 0 ? 0 : Math.max(1, computed.bookingCount) };
-  const hasPending = pending.amount > 0;
+  const pending = overrideAmount === null ? split.pending : overrideAmount;
+  const inTransitId = inTransitPayoutId(payouts);
+  const computedPending = useMemo(() => pendingPayoutFor(events), [events]);
+  const inTransitArrives = payouts.find((p) => p.status === "in-transit")?.expectedArrival;
+
   return (
-    <Card>
-      <div style={{ padding: 16, fontFamily: UI }}>
-        <CardEyebrow>Pending payout</CardEyebrow>
-        <div className="mt-1 flex items-baseline justify-between">
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 600,
-              color: hasPending ? ORANGE : NAVY,
-              fontVariantNumeric: "tabular-nums",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            {formatMoney(pending.amount)}
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: NAVY,
-              opacity: 0.6,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {pending.bookingCount} {pending.bookingCount === 1 ? "booking" : "bookings"}
-          </div>
-        </div>
-        <div
+    <div className="grid grid-cols-3 gap-2">
+      <BalanceTile
+        dot="#15803D"
+        label="Available"
+        amount={split.available}
+        sub="paid out"
+        to="/earnings/payouts"
+      />
+      <BalanceTile
+        dot={ORANGE}
+        label="In transit"
+        amount={split.inTransit}
+        sub={inTransitArrives ? `arrives ${inTransitArrives}` : "—"}
+        to={inTransitId ? "/earnings/payouts/$id" : "/earnings/payouts"}
+        params={inTransitId ? { id: inTransitId } : undefined}
+        muted={split.inTransit === 0}
+      />
+      <BalanceTile
+        dot={NAVY}
+        label="Pending"
+        amount={pending}
+        sub={pending > 0 ? `arrives ${computedPending.arrivesOn}` : "nothing pending"}
+        to="/earnings/recent"
+        muted={pending === 0}
+      />
+    </div>
+  );
+}
+
+function BalanceTile({
+  dot,
+  label,
+  amount,
+  sub,
+  to,
+  params,
+  muted,
+}: {
+  dot: string;
+  label: string;
+  amount: number;
+  sub: string;
+  to: string;
+  params?: Record<string, string>;
+  muted?: boolean;
+}) {
+  const inner = (
+    <div
+      style={{
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(6,28,39,0.10)",
+        borderRadius: 12,
+        padding: "10px 11px",
+        fontFamily: UI,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        opacity: muted ? 0.7 : 1,
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          aria-hidden
+          style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: dot, flexShrink: 0 }}
+        />
+        <span
           style={{
-            marginTop: 6,
-            fontSize: 13,
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
             color: NAVY,
-            opacity: 0.7,
+            opacity: 0.6,
           }}
         >
-          {hasPending
-            ? <>Arriving <span style={{ fontWeight: 600 }}>{pending.arrivesOn}</span> · direct deposit</>
-            : "Nothing pending right now."}
-        </div>
+          {label}
+        </span>
       </div>
-    </Card>
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          color: NAVY,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.015em",
+          lineHeight: 1.1,
+        }}
+      >
+        {formatMoney(amount)}
+      </div>
+      <div
+        style={{
+          fontSize: 10.5,
+          color: NAVY,
+          opacity: 0.55,
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1.3,
+        }}
+      >
+        {sub}
+      </div>
+    </div>
+  );
+  // Cast to keep the type-narrowed router happy with dynamic params on the
+  // in-transit tile.
+  return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <Link to={to as any} params={params as any} style={{ textDecoration: "none" }}>
+      {inner}
+    </Link>
   );
 }
 
@@ -367,26 +453,72 @@ function TopServicesCard({ events, period }: { events: ReturnType<typeof earning
         <CardEyebrow>Top services</CardEyebrow>
         <div className="mt-3 flex flex-col" style={{ gap: 10 }}>
           {top.map((t) => (
-            <div key={t.service} className="flex items-baseline justify-between">
-              <div style={{ fontSize: 14, fontWeight: 500, color: NAVY }}>{t.service}</div>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: NAVY,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {formatMoney(t.amount)}{" "}
-                <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>
-                  · {t.bookings}
-                </span>
-              </div>
-            </div>
+            <ServiceRow key={t.service} service={t.service} amount={t.amount} bookings={t.bookings} events={events} />
           ))}
         </div>
       </div>
     </Card>
+  );
+}
+
+function ServiceRow({
+  service,
+  amount,
+  bookings,
+  events,
+}: {
+  service: string;
+  amount: number;
+  bookings: number;
+  events: ReturnType<typeof earningsForDensity>;
+}) {
+  const spark = useMemo(() => serviceSparkline(events, service), [events, service]);
+  return (
+    <div className="flex items-center justify-between">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: NAVY }}>{service}</div>
+      </div>
+      <Sparkline values={spark} />
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: NAVY,
+          fontVariantNumeric: "tabular-nums",
+          marginLeft: 12,
+          textAlign: "right",
+          minWidth: 76,
+        }}
+      >
+        {formatMoney(amount)}{" "}
+        <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>· {bookings}</span>
+      </div>
+    </div>
+  );
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const max = Math.max(1, ...values);
+  return (
+    <div className="flex items-end gap-0.5" style={{ height: 18, marginRight: 4 }}>
+      {values.map((v, i) => {
+        const h = Math.max(2, Math.round((v / max) * 18));
+        return (
+          <span
+            key={i}
+            aria-hidden
+            style={{
+              display: "inline-block",
+              width: 4,
+              height: h,
+              borderRadius: 1,
+              backgroundColor: v > 0 ? NAVY : "rgba(6,28,39,0.18)",
+              opacity: v > 0 ? 0.7 : 1,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
 
@@ -515,41 +647,263 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-/* ---------- Link rows ---------- */
+/* ---------- Payouts card (rich) ---------- */
 
-const LINK_ROWS = [
-  { label: "Recent earnings", to: "/earnings/recent" as const },
-  { label: "Payout history", to: "/earnings/payouts" as const },
-  { label: "Tax documents", to: "/earnings/tax-documents" as const },
-  { label: "Payout method", to: "/earnings/payout-method" as const },
-];
+function PayoutsCard({
+  events,
+  payouts,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  payouts: Payout[];
+}) {
+  const inTransit = payouts.find((p) => p.status === "in-transit");
+  const recent = useMemo(
+    () => payouts.filter((p) => p.status !== "in-transit").slice(0, 3),
+    [payouts],
+  );
+  const computedPending = useMemo(() => pendingPayoutFor(events), [events]);
 
-function LinkRows() {
   return (
     <Card>
-      <div className="flex flex-col">
-        {LINK_ROWS.map((r, i) => (
+      <div style={{ padding: 16, fontFamily: UI }}>
+        <div className="flex items-baseline justify-between">
+          <CardEyebrow>Payouts</CardEyebrow>
           <Link
-            key={r.label}
-            to={r.to}
-            className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+            to="/earnings/payouts"
             style={{
-              padding: "14px 16px",
-              borderBottom: i < LINK_ROWS.length - 1 ? "1px solid rgba(6,28,39,0.08)" : "none",
               fontFamily: UI,
-              fontSize: 14,
-              fontWeight: 500,
+              fontSize: 12,
+              fontWeight: 600,
               color: NAVY,
-              textAlign: "left",
+              opacity: 0.6,
               textDecoration: "none",
             }}
           >
-            <span>{r.label}</span>
-            <span style={{ opacity: 0.4, fontSize: 16 }}>→</span>
+            See all →
           </Link>
-        ))}
+        </div>
+
+        {/* Next payout strip */}
+        <div
+          className="mt-3"
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: "rgba(255,130,63,0.08)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#7A3A12",
+              opacity: 0.85,
+            }}
+          >
+            Next payout
+          </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                color: NAVY,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              {formatMoney(inTransit?.amount ?? computedPending.amount)}
+            </div>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.65, fontVariantNumeric: "tabular-nums" }}>
+              arrives {inTransit?.expectedArrival ?? computedPending.arrivesOn}
+            </div>
+          </div>
+        </div>
+
+        {recent.length > 0 ? (
+          <div className="mt-2 flex flex-col">
+            {recent.map((p, i) => (
+              <Link
+                key={p.id}
+                to="/earnings/payouts/$id"
+                params={{ id: p.id }}
+                className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+                style={{
+                  padding: "10px 2px",
+                  borderBottom:
+                    i < recent.length - 1 ? "1px solid rgba(6,28,39,0.06)" : "none",
+                  textDecoration: "none",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 999,
+                      backgroundColor: p.status === "failed" ? "#B91C1C" : "#15803D",
+                    }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: NAVY }}>
+                    {formatPayoutDateShort(p.date)}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: NAVY,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {formatMoney(p.amount)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </Card>
+  );
+}
+
+function formatPayoutDateShort(d: Date): string {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+/* ---------- Documents & banking card ---------- */
+
+function DocsBankingCard({
+  payoutState,
+  taxDocs,
+}: {
+  payoutState: ReturnType<typeof useDevState>["state"]["payoutState"];
+  taxDocs: ReturnType<typeof useDevState>["state"]["taxDocs"];
+}) {
+  const taxStatus =
+    taxDocs === "none"
+      ? "Not yet available"
+      : taxDocs === "multi-year"
+        ? "Multi-year history"
+        : "Current year ready";
+
+  const bankStatus =
+    payoutState === "none"
+      ? "Not connected"
+      : payoutState === "pending"
+        ? "Chase ••4821 · Verifying"
+        : payoutState === "failed-recent"
+          ? "Chase ••4821 · Needs attention"
+          : "Chase ••4821 · Verified";
+
+  const bankTone: "ok" | "warn" | "err" =
+    payoutState === "failed-recent" || payoutState === "none"
+      ? "err"
+      : payoutState === "pending"
+        ? "warn"
+        : "ok";
+
+  return (
+    <Card>
+      <div className="flex flex-col">
+        <DocBankRow
+          to="/earnings/tax-documents"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+              <path d="M14 3v5h5" />
+              <path d="M9 13h6" />
+              <path d="M9 17h4" />
+            </svg>
+          }
+          title="Tax documents"
+          subtitle={taxStatus}
+          divider
+        />
+        <DocBankRow
+          to="/earnings/payout-method"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10l9-6 9 6" />
+              <path d="M5 10v8" />
+              <path d="M12 10v8" />
+              <path d="M19 10v8" />
+              <path d="M3 20h18" />
+            </svg>
+          }
+          title="Payout method"
+          subtitle={bankStatus}
+          tone={bankTone}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function DocBankRow({
+  to,
+  icon,
+  title,
+  subtitle,
+  divider,
+  tone = "ok",
+}: {
+  to: string;
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+  divider?: boolean;
+  tone?: "ok" | "warn" | "err";
+}) {
+  const subColor = tone === "err" ? "#B91C1C" : tone === "warn" ? "#B8531C" : NAVY;
+  const subOpacity = tone === "ok" ? 0.6 : 0.95;
+  return (
+    <Link
+      to={to as "/earnings/tax-documents"}
+      className="flex items-center gap-3 transition-colors active:bg-black/[0.03]"
+      style={{
+        padding: "14px 16px",
+        borderBottom: divider ? "1px solid rgba(6,28,39,0.08)" : "none",
+        textDecoration: "none",
+        fontFamily: UI,
+      }}
+    >
+      <div
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 9,
+          backgroundColor: "rgba(6,28,39,0.05)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
+          {title}
+        </div>
+        <div
+          style={{
+            marginTop: 2,
+            fontSize: 12,
+            color: subColor,
+            opacity: subOpacity,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {subtitle}
+        </div>
+      </div>
+      <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
+    </Link>
   );
 }
 

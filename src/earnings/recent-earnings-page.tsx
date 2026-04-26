@@ -14,6 +14,7 @@ import {
   EarningsSubShell,
 } from "./earnings-shell";
 import { findBookingById } from "@/data/mock-bookings";
+import { groupEarningsByDay } from "./earnings-aggregates";
 
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
@@ -37,33 +38,48 @@ export function RecentEarningsPage() {
   const events = useMemo(() => earningsForDensity(densityFromDev(dev.dataDensity)), [dev.dataDensity]);
   const [filter, setFilter] = useState<Filter>("all");
   const [limit, setLimit] = useState(40);
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     const now = Date.now();
+    const q = query.trim().toLowerCase();
     return events.filter((e) => {
-      if (filter === "all") return true;
-      const ms = filter === "week" ? 7 : 30;
-      return now - e.date.getTime() <= ms * 24 * 60 * 60 * 1000;
+      if (filter !== "all") {
+        const ms = filter === "week" ? 7 : 30;
+        if (now - e.date.getTime() > ms * 24 * 60 * 60 * 1000) return false;
+      }
+      if (q && !e.clientLabel.toLowerCase().includes(q) && !e.service.toLowerCase().includes(q)) {
+        return false;
+      }
+      return true;
     });
-  }, [events, filter]);
+  }, [events, filter, query]);
 
   const visible = filtered.slice(0, limit);
   const hasMore = filtered.length > visible.length;
+  const groups = useMemo(() => groupEarningsByDay(visible), [visible]);
+  const filteredTotal = useMemo(() => filtered.reduce((s, e) => s + e.net, 0), [filtered]);
 
   return (
     <EarningsSubShell title="Recent earnings">
+      <SearchField value={query} onChange={setQuery} />
       <FilterChips value={filter} onChange={setFilter} />
 
       {visible.length === 0 ? (
         <EmptyState />
       ) : (
-        <EarningsCard>
-          <div className="flex flex-col">
-            {visible.map((e, i) => (
-              <EarningRow key={e.id} event={e} divider={i < visible.length - 1} />
-            ))}
+        groups.map((g) => (
+          <div key={g.label} className="flex flex-col gap-2">
+            <DayHeader label={g.label} weekday={g.weekday} total={g.total} count={g.events.length} />
+            <EarningsCard>
+              <div className="flex flex-col">
+                {g.events.map((e, i) => (
+                  <EarningRow key={e.id} event={e} divider={i < g.events.length - 1} />
+                ))}
+              </div>
+            </EarningsCard>
           </div>
-        </EarningsCard>
+        ))
       )}
 
       {hasMore ? (
@@ -82,7 +98,91 @@ export function RecentEarningsPage() {
           Load more →
         </button>
       ) : null}
+
+      {filtered.length > 0 ? (
+        <div
+          className="sticky bottom-2 mt-2 self-stretch"
+          style={{
+            backgroundColor: "rgba(6,28,39,0.92)",
+            color: "#F0EBD8",
+            borderRadius: 12,
+            padding: "10px 14px",
+            fontFamily: UI,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 8px 24px -10px rgba(6,28,39,0.4)",
+          }}
+        >
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.7 }}>
+            Filtered total
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+            {formatMoney(filteredTotal)} · {filtered.length}
+          </span>
+        </div>
+      ) : null}
     </EarningsSubShell>
+  );
+}
+
+function SearchField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div
+      className="flex items-center gap-2"
+      style={{
+        backgroundColor: "rgba(6,28,39,0.05)",
+        borderRadius: 10,
+        padding: "8px 12px",
+        fontFamily: UI,
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" />
+      </svg>
+      <input
+        type="search"
+        inputMode="search"
+        autoComplete="off"
+        placeholder="Search client or service"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="flex-1 bg-transparent outline-none"
+        style={{
+          fontFamily: UI,
+          fontSize: 13,
+          color: NAVY,
+          border: "none",
+        }}
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Clear search"
+          style={{ fontSize: 12, color: NAVY, opacity: 0.5 }}
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function DayHeader({ label, weekday, total, count }: { label: string; weekday: string; total: number; count: number }) {
+  return (
+    <div
+      className="flex items-baseline justify-between px-1"
+      style={{ fontFamily: UI, fontSize: 12, color: NAVY }}
+    >
+      <span style={{ fontWeight: 700, opacity: 0.7, letterSpacing: "0.02em" }}>
+        {label} · <span style={{ fontWeight: 500, opacity: 0.7 }}>{weekday}</span>
+      </span>
+      <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.6 }}>
+        {formatMoney(total)} · {count} {count === 1 ? "booking" : "bookings"}
+      </span>
+    </div>
   );
 }
 
@@ -120,6 +220,7 @@ function EarningRow({ event, divider }: { event: EarningEvent; divider: boolean 
   const navigate = useNavigate();
   const dateLabel = formatRowDate(event.date);
   const routable = !!findBookingById(event.bookingId);
+  const dotColor = event.status === "paid" ? "#15803D" : "#FF823F";
   return (
     <button
       type="button"
@@ -135,10 +236,23 @@ function EarningRow({ event, divider }: { event: EarningEvent; divider: boolean 
         cursor: routable ? "pointer" : "default",
       }}
     >
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
-          {event.clientLabel}
-        </div>
+      <div className="flex items-start gap-2.5" style={{ minWidth: 0, flex: 1 }}>
+        <span
+          aria-hidden
+          aria-label={event.status}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 999,
+            backgroundColor: dotColor,
+            marginTop: 7,
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
+            {event.clientLabel}
+          </div>
         <div
           style={{
             marginTop: 2,
@@ -149,6 +263,7 @@ function EarningRow({ event, divider }: { event: EarningEvent; divider: boolean 
           }}
         >
           {event.service} · {dateLabel}
+        </div>
         </div>
       </div>
       <div

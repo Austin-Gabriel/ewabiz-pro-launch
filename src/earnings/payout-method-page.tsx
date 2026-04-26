@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useDevState } from "@/dev-state/dev-state-context";
 import {
   EARNINGS_NAVY,
@@ -7,6 +8,9 @@ import {
   EarningsCardEyebrow,
   EarningsSubShell,
 } from "./earnings-shell";
+import { payoutsForDensity } from "@/data/mock-payouts";
+import { formatMoney } from "@/data/mock-earnings";
+import { recentPayoutsForAccount } from "./earnings-aggregates";
 
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
@@ -26,8 +30,12 @@ const ORANGE = "#FF823F";
  */
 export function PayoutMethodPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
   const { state: dev } = useDevState();
   const payoutState = dev.payoutState;
+  const density = dev.dataDensity === "empty" ? "none" : dev.dataDensity === "sparse" ? "sparse" : "rich";
+  const payouts = useMemo(() => payoutsForDensity(density), [density]);
+  const recent = useMemo(() => recentPayoutsForAccount(payouts, "4821", 3), [payouts]);
 
   if (payoutState === "none") {
     return <NoMethodState onConnect={() => setSheetOpen(true)} sheetOpen={sheetOpen} onClose={() => setSheetOpen(false)} />;
@@ -97,6 +105,83 @@ export function PayoutMethodPage() {
         </div>
       </EarningsCard>
 
+      {recent.length > 0 ? (
+        <EarningsCard>
+          <div style={{ padding: "16px 16px 4px", fontFamily: UI }}>
+            <div className="flex items-baseline justify-between">
+              <EarningsCardEyebrow>Recent to this account</EarningsCardEyebrow>
+              <Link
+                to="/earnings/payouts"
+                style={{
+                  fontFamily: UI,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: NAVY,
+                  opacity: 0.6,
+                  textDecoration: "none",
+                }}
+              >
+                See all →
+              </Link>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            {recent.map((p, i) => (
+              <Link
+                key={p.id}
+                to="/earnings/payouts/$id"
+                params={{ id: p.id }}
+                className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+                style={{
+                  padding: "12px 16px",
+                  borderTop: "1px solid rgba(6,28,39,0.06)",
+                  fontFamily: UI,
+                  textDecoration: "none",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 999,
+                      backgroundColor: p.status === "failed" ? "#B91C1C" : "#15803D",
+                    }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: NAVY }}>
+                    {p.expectedArrival}
+                  </span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: NAVY, fontVariantNumeric: "tabular-nums" }}>
+                  {formatMoney(p.amount)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </EarningsCard>
+      ) : null}
+
+      <EarningsCard>
+        <Link
+          to="/earnings/tax-documents"
+          className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+          style={{
+            padding: "14px 16px",
+            fontFamily: UI,
+            textDecoration: "none",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: NAVY }}>Tax info</div>
+            <div style={{ marginTop: 2, fontSize: 12, color: NAVY, opacity: 0.6 }}>
+              View 1099-K and annual reports
+            </div>
+          </div>
+          <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
+        </Link>
+      </EarningsCard>
+
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
@@ -117,6 +202,7 @@ export function PayoutMethodPage() {
 
       <button
         type="button"
+        onClick={() => setPauseOpen(true)}
         className="transition-opacity active:opacity-60"
         style={{
           fontFamily: UI,
@@ -131,6 +217,7 @@ export function PayoutMethodPage() {
       </button>
 
       {sheetOpen ? <Sheet onClose={() => setSheetOpen(false)} /> : null}
+      {pauseOpen ? <PauseSheet onClose={() => setPauseOpen(false)} /> : null}
     </EarningsSubShell>
   );
 }
@@ -293,6 +380,82 @@ function VerifiedPill() {
     >
       Verified
     </span>
+  );
+}
+
+function PauseSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(6,28,39,0.45)",
+        display: "flex",
+        alignItems: "flex-end",
+        zIndex: 50,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: "20px 20px 28px",
+          width: "100%",
+          fontFamily: UI,
+          color: NAVY,
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: "rgba(6,28,39,0.15)",
+            margin: "0 auto 16px",
+          }}
+        />
+        <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em" }}>
+          Pause payouts?
+        </div>
+        <div style={{ marginTop: 8, fontSize: 13, opacity: 0.7, lineHeight: 1.55 }}>
+          New earnings will keep accumulating, but no money will move to your bank until you resume.
+          You can resume any time — earnings paid in the meantime will roll into the next payout.
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 transition-opacity active:opacity-60"
+          style={{
+            width: "100%",
+            backgroundColor: "rgba(6,28,39,0.05)",
+            color: NAVY,
+            fontWeight: 600,
+            fontSize: 15,
+            padding: "13px 0",
+            borderRadius: 12,
+          }}
+        >
+          Pause payouts
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-2 transition-opacity active:opacity-60"
+          style={{
+            width: "100%",
+            color: NAVY,
+            opacity: 0.7,
+            fontSize: 14,
+            padding: "10px 0",
+          }}
+        >
+          Keep payouts active
+        </button>
+      </div>
+    </div>
   );
 }
 
