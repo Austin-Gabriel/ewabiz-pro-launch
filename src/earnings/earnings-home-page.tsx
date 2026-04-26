@@ -399,13 +399,11 @@ function ServiceRow({
   bookings: number;
   events: ReturnType<typeof earningsForDensity>;
 }) {
-  const spark = useMemo(() => serviceSparkline(events, service), [events, service]);
   return (
     <div className="flex items-center justify-between">
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 500, color: NAVY }}>{service}</div>
       </div>
-      <Sparkline values={spark} />
       <div
         style={{
           fontSize: 14,
@@ -422,31 +420,6 @@ function ServiceRow({
           {bookings} {bookings === 1 ? "booking" : "bookings"}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Sparkline({ values }: { values: number[] }) {
-  const max = Math.max(1, ...values);
-  return (
-    <div className="flex items-end gap-0.5" style={{ height: 18, marginRight: 4 }}>
-      {values.map((v, i) => {
-        const h = Math.max(2, Math.round((v / max) * 18));
-        return (
-          <span
-            key={i}
-            aria-hidden
-            style={{
-              display: "inline-block",
-              width: 4,
-              height: h,
-              borderRadius: 1,
-              backgroundColor: v > 0 ? NAVY : "rgba(6,28,39,0.18)",
-              opacity: v > 0 ? 0.7 : 1,
-            }}
-          />
-        );
-      })}
     </div>
   );
 }
