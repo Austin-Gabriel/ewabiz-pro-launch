@@ -464,9 +464,8 @@ function LinkRows() {
   const rows: { label: string; onClick: () => void }[] = [
     { label: "Recent earnings", onClick: () => navigate({ to: "/earnings/recent" }) },
     { label: "Payout history", onClick: () => navigate({ to: "/earnings/payouts" }) },
-    // Phase 3 will replace these with real navigations.
-    { label: "Tax documents", onClick: () => {} },
-    { label: "Payout method", onClick: () => {} },
+    { label: "Tax documents", onClick: () => navigate({ to: "/earnings/tax-documents" }) },
+    { label: "Payout method", onClick: () => navigate({ to: "/earnings/payout-method" }) },
   ];
   return (
     <Card>
