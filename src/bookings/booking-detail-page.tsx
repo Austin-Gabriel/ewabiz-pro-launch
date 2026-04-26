@@ -537,23 +537,86 @@ function PaymentCard({
   const platformFee = Math.round(booking.priceUsd * PLATFORM_FEE_PCT);
   const tip = booking.tipUsd ?? 0;
   const earnings = booking.priceUsd - platformFee + tip;
+  const clientPaid = booking.priceUsd + tip;
   const isCompleted = status === "completed";
   const payoutLine = isCompleted
     ? booking.paidOutOn
       ? `Paid out ${booking.paidOutOn}`
       : "Pending payout"
     : "Paid out within 24 hours of completion.";
+  const [showDetails, setShowDetails] = useState(false);
   return (
     <DetailCard>
       <CardLabel>Payment</CardLabel>
-      <Row label="Service total" value={formatUsd(booking.priceUsd)} />
-      <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
-      {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
+      <Row label="Client paid" value={formatUsd(clientPaid)} />
       <div
         className="my-3"
         style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
       />
       <Row label="Your earnings" value={formatUsd(earnings)} bold />
+      {tip > 0 ? (
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            color: MIDNIGHT,
+            opacity: 0.6,
+            marginTop: 6,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          Includes {formatUsd(tip)} tip
+        </p>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setShowDetails((v) => !v)}
+        className="mt-3 transition-opacity active:opacity-60"
+        style={{
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 600,
+          color: MIDNIGHT,
+          opacity: 0.6,
+          background: "none",
+          border: "none",
+          padding: 0,
+          textAlign: "left",
+        }}
+      >
+        {showDetails ? "Hide details" : "How is this calculated?"}
+      </button>
+      {showDetails ? (
+        <div
+          className="mt-2"
+          style={{
+            padding: 12,
+            borderRadius: 10,
+            backgroundColor: "rgba(6,28,39,0.04)",
+          }}
+        >
+          <Row label="Service total" value={formatUsd(booking.priceUsd)} />
+          {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
+          <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
+          <div
+            className="my-2"
+            style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
+          />
+          <Row label="Your earnings" value={formatUsd(earnings)} bold />
+          <p
+            style={{
+              fontFamily: UI,
+              fontSize: 11,
+              color: MIDNIGHT,
+              opacity: 0.55,
+              marginTop: 8,
+              lineHeight: 1.5,
+            }}
+          >
+            Platform fee covers payment processing, identity verification, and customer support.
+          </p>
+        </div>
+      ) : null}
       <p
         style={{
           fontFamily: UI,
