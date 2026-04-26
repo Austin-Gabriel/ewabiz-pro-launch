@@ -25,7 +25,6 @@ import {
 import { payoutsForDensity, type Payout } from "@/data/mock-payouts";
 import { ALL_BOOKINGS } from "@/data/mock-bookings";
 import {
-  serviceSparkline,
   thisWeekStats,
   upcomingStats,
   nextPayoutStats,
