@@ -70,8 +70,21 @@ export function ProfileSheet({ open, onClose }: Props) {
         </div>
 
         <div className="flex flex-col" style={{ borderTop: `1px solid ${borderCol}` }}>
+          <Row
+            label="Payout method"
+            onClick={() => {
+              onClose();
+              navigate({ to: "/earnings/payout-method" });
+            }}
+          />
+          <Row
+            label="Tax documents"
+            onClick={() => {
+              onClose();
+              navigate({ to: "/earnings/tax-documents" });
+            }}
+          />
           <Row label="Account settings" disabled />
-          <Row label="Payouts & banking" disabled />
           <Row label="Help & support" disabled />
           <button
             type="button"
@@ -93,12 +106,13 @@ export function ProfileSheet({ open, onClose }: Props) {
   );
 }
 
-function Row({ label, disabled }: { label: string; disabled?: boolean }) {
+function Row({ label, disabled, onClick }: { label: string; disabled?: boolean; onClick?: () => void }) {
   const { text, borderCol } = useHomeTheme();
   return (
     <button
       type="button"
       disabled={disabled}
+      onClick={onClick}
       className="flex w-full items-center justify-between py-3.5 transition-opacity disabled:opacity-50"
       style={{
         borderBottom: `1px solid ${borderCol}`,
