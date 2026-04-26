@@ -64,6 +64,7 @@ function BottomTabsForBookings() {
       onSelect={(k) => {
         if (k === "home") navigate({ to: "/home" });
         if (k === "bookings") navigate({ to: "/bookings" });
+        if (k === "earnings") navigate({ to: "/earnings" });
       }}
     />
   );
