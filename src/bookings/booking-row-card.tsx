@@ -60,13 +60,31 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending }: 
   // even if no onSelect was passed — the inline action buttons below stop
   // propagation so they don't double-fire.
   const isInteractive = Boolean(onSelect) || Boolean(pending);
-  const Wrapper: any = isInteractive ? "button" : "div";
+  // When the row has inline action buttons (pending state), the outer
+  // wrapper MUST NOT be a <button> — nesting <button> inside <button> is
+  // invalid HTML and breaks SSR hydration, which causes the client router
+  // to never take over (every <Link> click becomes a full page reload).
+  const hasNestedButtons = Boolean(pending);
+  const Wrapper: any = isInteractive && !hasNestedButtons ? "button" : "div";
+  const wrapperRoleProps = isInteractive && hasNestedButtons
+    ? {
+        role: "button" as const,
+        tabIndex: 0,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if ((e.key === "Enter" || e.key === " ") && onSelect) {
+            e.preventDefault();
+            onSelect();
+          }
+        },
+      }
+    : {};
 
   return (
     <div className="relative">
       <Wrapper
-        type={isInteractive ? "button" : undefined}
+        type={Wrapper === "button" ? "button" : undefined}
         onClick={onSelect}
+        {...wrapperRoleProps}
         className={
           "flex w-full flex-col gap-3 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
