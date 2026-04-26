@@ -117,8 +117,13 @@ export function RecentEarningsPage() {
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.7 }}>
             Filtered total
           </span>
-          <span style={{ fontSize: 15, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-            {formatMoney(filteredTotal)} · {filtered.length}
+          <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.3 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+              {formatMoney(filteredTotal)}
+            </span>
+            <span style={{ fontSize: 11, opacity: 0.7, fontVariantNumeric: "tabular-nums" }}>
+              {filtered.length} {filtered.length === 1 ? "booking" : "bookings"}
+            </span>
           </span>
         </div>
       ) : null}
@@ -173,14 +178,27 @@ function SearchField({ value, onChange }: { value: string; onChange: (v: string)
 function DayHeader({ label, weekday, total, count }: { label: string; weekday: string; total: number; count: number }) {
   return (
     <div
-      className="flex items-baseline justify-between px-1"
+      className="flex items-start justify-between px-1"
       style={{ fontFamily: UI, fontSize: 12, color: NAVY }}
     >
-      <span style={{ fontWeight: 700, opacity: 0.7, letterSpacing: "0.02em" }}>
-        {label} · <span style={{ fontWeight: 500, opacity: 0.7 }}>{weekday}</span>
+      <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.3 }}>
+        <span style={{ fontWeight: 700, opacity: 0.7, letterSpacing: "0.02em" }}>{label}</span>
+        <span style={{ fontWeight: 500, opacity: 0.55, fontSize: 11 }}>{weekday}</span>
       </span>
-      <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.6 }}>
-        {formatMoney(total)} · {count} {count === 1 ? "booking" : "bookings"}
+      <span
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          lineHeight: 1.3,
+          fontVariantNumeric: "tabular-nums",
+          opacity: 0.7,
+        }}
+      >
+        <span style={{ fontWeight: 600 }}>{formatMoney(total)}</span>
+        <span style={{ fontSize: 11, opacity: 0.8 }}>
+          {count} {count === 1 ? "booking" : "bookings"}
+        </span>
       </span>
     </div>
   );
@@ -259,10 +277,21 @@ function EarningRow({ event, divider }: { event: EarningEvent; divider: boolean 
             fontSize: 12,
             color: NAVY,
             opacity: 0.6,
+            lineHeight: 1.4,
+          }}
+        >
+          {event.service}
+        </div>
+        <div
+          style={{
+            marginTop: 1,
+            fontSize: 11,
+            color: NAVY,
+            opacity: 0.5,
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {event.service} · {dateLabel}
+          {dateLabel}
         </div>
         </div>
       </div>
