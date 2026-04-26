@@ -589,10 +589,7 @@ function EarningsChartCard({
                               textAlign: "center",
                             }}
                           >
-                            <div style={{ opacity: 0.7, fontSize: 9, fontWeight: 500 }}>
-                              {b.label}
-                            </div>
-                            <div>{formatMoney(b.total)}</div>
+                            {formatMoney(b.total)}
                           </div>
                         )}
                         <div

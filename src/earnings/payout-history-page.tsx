@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { PAYOUT_STATUS_LABEL, payoutsForDensity, type Payout, type PayoutStatus } from "@/data/mock-payouts";
 import { formatMoney } from "@/data/mock-earnings";
 import { useDevState } from "@/dev-state/dev-state-context";
+import { useHomeTheme } from "@/home/home-shell";
 import {
   EARNINGS_NAVY,
   EARNINGS_UI,
@@ -169,10 +170,13 @@ function Sparkline({ values }: { values: number[] }) {
 }
 
 function MonthHeader({ group }: { group: { shortLabel: string; total: number; payouts: Payout[] } }) {
+  // Sits on the page bg (not inside a white card), so use theme text — NAVY
+  // would vanish on dark mode's navy page bg.
+  const { text } = useHomeTheme();
   return (
     <div
       className="flex items-baseline justify-between px-1"
-      style={{ fontFamily: UI, fontSize: 12, color: NAVY }}
+      style={{ fontFamily: UI, fontSize: 12, color: text }}
     >
       <span style={{ fontWeight: 700, opacity: 0.7, letterSpacing: "0.02em" }}>
         {group.shortLabel}
@@ -197,6 +201,9 @@ function MonthHeader({ group }: { group: { shortLabel: string; total: number; pa
 }
 
 function ExportButton({ payouts }: { payouts: Payout[] }) {
+  // Sits on the page bg, outlined button. Both color and border-tint must
+  // come from the theme so the button reads on cream and on navy.
+  const { text, borderCol } = useHomeTheme();
   const handleExport = () => {
     const rows: (string | number)[][] = [
       ["Date", "Status", "Amount (USD)", "Bank", "Bookings included"],
@@ -220,10 +227,10 @@ function ExportButton({ payouts }: { payouts: Payout[] }) {
         fontFamily: UI,
         fontSize: 13,
         fontWeight: 600,
-        color: NAVY,
-        opacity: 0.7,
+        color: text,
+        opacity: 0.85,
         padding: "10px 14px",
-        border: "1px solid rgba(6,28,39,0.15)",
+        border: `1px solid ${borderCol}`,
         borderRadius: 10,
         backgroundColor: "transparent",
       }}

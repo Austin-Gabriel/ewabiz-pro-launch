@@ -314,6 +314,10 @@ export function periodBuckets(
   now: Date = new Date(),
 ): PeriodBucket[] {
   const day = 24 * 60 * 60 * 1000;
+  // Realize-only: every period excludes events scheduled after "now". Without
+  // this, the chart's total (sum of buckets) drifts above thisWeekStats.earned,
+  // which the KPI tile + headline number both display.
+  const nowMs = now.getTime();
 
   if (period === "today") {
     const start = new Date(now); start.setHours(0, 0, 0, 0);
@@ -321,7 +325,7 @@ export function periodBuckets(
     const buckets = labels.map((label) => ({ label, total: 0 }));
     for (const e of events) {
       const t = e.date.getTime();
-      if (t < start.getTime() || t > start.getTime() + day) continue;
+      if (t < start.getTime() || t > nowMs) continue;
       const hour = e.date.getHours();
       const idx = Math.min(5, Math.floor(hour / 4));
       buckets[idx].total += e.net;
@@ -340,7 +344,7 @@ export function periodBuckets(
     }
     for (const e of events) {
       const t = e.date.getTime();
-      if (t < startWeek || t > startToday.getTime() + day) continue;
+      if (t < startWeek || t > nowMs) continue;
       const idx = Math.min(6, Math.max(0, Math.floor((t - startWeek) / day)));
       buckets[idx].total += e.net;
     }
@@ -358,7 +362,7 @@ export function periodBuckets(
     ];
     for (const e of events) {
       const t = e.date.getTime();
-      if (t < start || t > startToday.getTime() + day) continue;
+      if (t < start || t > nowMs) continue;
       const idx = Math.min(3, Math.floor((t - start) / (7 * day)));
       buckets[idx].total += e.net;
     }
