@@ -355,7 +355,7 @@ export const HISTORY_BOOKINGS: Booking[] = [
     address: "1100 Bedford Ave, Brooklyn, NY",
     avatarHue: "amber",
     cancelledBy: "client",
-    cancelledAt: "Apr 18 · 4:12 PM",
+    cancelledAt: "Apr 18 at 4:12 PM",
     cancellationReason: "Something came up — so sorry!",
     cancellationFeeUsd: 25,
   }),
