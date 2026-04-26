@@ -46,6 +46,24 @@ export type DevLifecycle =
  */
 export type DevBookingSource = "auto" | "on-demand" | "scheduled";
 
+/**
+ * Earnings sub-axes. Only meaningful when proState resolves to "live" — for
+ * non-live pro states, Earnings is gated upstream (locked or empty waiting).
+ * Each field maps to a downstream surface: payoutState → /earnings/payout-method,
+ * pendingBalance → Earnings home pending card + in-transit payout amount,
+ * taxDocs → /earnings/tax-documents.
+ */
+export type DevPayoutState =
+  | "auto"
+  | "none"           // No payout method set
+  | "active"         // Verified, payouts flowing
+  | "pending"        // Awaiting bank verification
+  | "failed-recent"; // Most recent payout failed
+
+export type DevPendingBalance = "auto" | "zero" | "small" | "large";
+
+export type DevTaxDocs = "auto" | "none" | "current-year" | "multi-year";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
@@ -54,6 +72,9 @@ export interface DevState {
   dayContext: DevDayContext;
   lifecycle: DevLifecycle;
   bookingSource: DevBookingSource;
+  payoutState: DevPayoutState;
+  pendingBalance: DevPendingBalance;
+  taxDocs: DevTaxDocs;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -64,6 +85,9 @@ const DEFAULT_STATE: DevState = {
   dayContext: "auto",
   lifecycle: "none",
   bookingSource: "auto",
+  payoutState: "auto",
+  pendingBalance: "auto",
+  taxDocs: "auto",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -78,6 +102,9 @@ interface Ctx {
   setDayContext: (v: DevDayContext) => void;
   setLifecycle: (v: DevLifecycle) => void;
   setBookingSource: (v: DevBookingSource) => void;
+  setPayoutState: (v: DevPayoutState) => void;
+  setPendingBalance: (v: DevPendingBalance) => void;
+  setTaxDocs: (v: DevTaxDocs) => void;
   reset: () => void;
 }
 
@@ -134,11 +161,42 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setDayContext = useCallback((v: DevDayContext) => setState((s) => ({ ...s, dayContext: v })), []);
   const setLifecycle = useCallback((v: DevLifecycle) => setState((s) => ({ ...s, lifecycle: v })), []);
   const setBookingSource = useCallback((v: DevBookingSource) => setState((s) => ({ ...s, bookingSource: v })), []);
+  const setPayoutState = useCallback((v: DevPayoutState) => setState((s) => ({ ...s, payoutState: v })), []);
+  const setPendingBalance = useCallback((v: DevPendingBalance) => setState((s) => ({ ...s, pendingBalance: v })), []);
+  const setTaxDocs = useCallback((v: DevTaxDocs) => setState((s) => ({ ...s, taxDocs: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
-    () => ({ enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset }),
-    [enabled, state, setProState, setDataDensity, setTheme, setMode, setDayContext, setLifecycle, setBookingSource, reset],
+    () => ({
+      enabled,
+      state,
+      setProState,
+      setDataDensity,
+      setTheme,
+      setMode,
+      setDayContext,
+      setLifecycle,
+      setBookingSource,
+      setPayoutState,
+      setPendingBalance,
+      setTaxDocs,
+      reset,
+    }),
+    [
+      enabled,
+      state,
+      setProState,
+      setDataDensity,
+      setTheme,
+      setMode,
+      setDayContext,
+      setLifecycle,
+      setBookingSource,
+      setPayoutState,
+      setPendingBalance,
+      setTaxDocs,
+      reset,
+    ],
   );
 
   return <DevStateContext.Provider value={value}>{children}</DevStateContext.Provider>;
@@ -157,6 +215,9 @@ export function useDevState(): Ctx {
       setDayContext: () => {},
       setLifecycle: () => {},
       setBookingSource: () => {},
+      setPayoutState: () => {},
+      setPendingBalance: () => {},
+      setTaxDocs: () => {},
       reset: () => {},
     };
   }
