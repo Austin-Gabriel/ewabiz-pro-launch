@@ -343,16 +343,27 @@ function KpiTile({
       </div>
       <div
         style={{
-          fontSize: 11,
-          color: subColor,
-          opacity: subOpacity,
-          fontWeight: subWeight,
-          fontVariantNumeric: "tabular-nums",
-          lineHeight: 1.3,
           marginTop: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
         }}
       >
-        {sub}
+        {subLines.map((line, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: 11,
+              color: subColor,
+              opacity: i === 0 ? subOpacity : subOpacity * 0.85,
+              fontWeight: i === 0 ? subWeight : 500,
+              fontVariantNumeric: "tabular-nums",
+              lineHeight: 1.3,
+            }}
+          >
+            {line}
+          </span>
+        ))}
       </div>
     </div>
   );
