@@ -601,41 +601,263 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-/* ---------- Link rows ---------- */
+/* ---------- Payouts card (rich) ---------- */
 
-const LINK_ROWS = [
-  { label: "Recent earnings", to: "/earnings/recent" as const },
-  { label: "Payout history", to: "/earnings/payouts" as const },
-  { label: "Tax documents", to: "/earnings/tax-documents" as const },
-  { label: "Payout method", to: "/earnings/payout-method" as const },
-];
+function PayoutsCard({
+  events,
+  payouts,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  payouts: Payout[];
+}) {
+  const inTransit = payouts.find((p) => p.status === "in-transit");
+  const recent = useMemo(
+    () => payouts.filter((p) => p.status !== "in-transit").slice(0, 3),
+    [payouts],
+  );
+  const computedPending = useMemo(() => pendingPayoutFor(events), [events]);
 
-function LinkRows() {
   return (
     <Card>
-      <div className="flex flex-col">
-        {LINK_ROWS.map((r, i) => (
+      <div style={{ padding: 16, fontFamily: UI }}>
+        <div className="flex items-baseline justify-between">
+          <CardEyebrow>Payouts</CardEyebrow>
           <Link
-            key={r.label}
-            to={r.to}
-            className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+            to="/earnings/payouts"
             style={{
-              padding: "14px 16px",
-              borderBottom: i < LINK_ROWS.length - 1 ? "1px solid rgba(6,28,39,0.08)" : "none",
               fontFamily: UI,
-              fontSize: 14,
-              fontWeight: 500,
+              fontSize: 12,
+              fontWeight: 600,
               color: NAVY,
-              textAlign: "left",
+              opacity: 0.6,
               textDecoration: "none",
             }}
           >
-            <span>{r.label}</span>
-            <span style={{ opacity: 0.4, fontSize: 16 }}>→</span>
+            See all →
           </Link>
-        ))}
+        </div>
+
+        {/* Next payout strip */}
+        <div
+          className="mt-3"
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: "rgba(255,130,63,0.08)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#7A3A12",
+              opacity: 0.85,
+            }}
+          >
+            Next payout
+          </div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 600,
+                color: NAVY,
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "-0.015em",
+              }}
+            >
+              {formatMoney(inTransit?.amount ?? computedPending.amount)}
+            </div>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.65, fontVariantNumeric: "tabular-nums" }}>
+              arrives {inTransit?.expectedArrival ?? computedPending.arrivesOn}
+            </div>
+          </div>
+        </div>
+
+        {recent.length > 0 ? (
+          <div className="mt-2 flex flex-col">
+            {recent.map((p, i) => (
+              <Link
+                key={p.id}
+                to="/earnings/payouts/$id"
+                params={{ id: p.id }}
+                className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+                style={{
+                  padding: "10px 2px",
+                  borderBottom:
+                    i < recent.length - 1 ? "1px solid rgba(6,28,39,0.06)" : "none",
+                  textDecoration: "none",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 999,
+                      backgroundColor: p.status === "failed" ? "#B91C1C" : "#15803D",
+                    }}
+                  />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: NAVY }}>
+                    {formatPayoutDateShort(p.date)}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: NAVY,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {formatMoney(p.amount)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </Card>
+  );
+}
+
+function formatPayoutDateShort(d: Date): string {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+/* ---------- Documents & banking card ---------- */
+
+function DocsBankingCard({
+  payoutState,
+  taxDocs,
+}: {
+  payoutState: ReturnType<typeof useDevState>["state"]["payoutState"];
+  taxDocs: ReturnType<typeof useDevState>["state"]["taxDocs"];
+}) {
+  const taxStatus =
+    taxDocs === "none"
+      ? "Not yet available"
+      : taxDocs === "multi-year"
+        ? "Multi-year history"
+        : "Current year ready";
+
+  const bankStatus =
+    payoutState === "none"
+      ? "Not connected"
+      : payoutState === "pending"
+        ? "Chase ••4821 · Verifying"
+        : payoutState === "failed-recent"
+          ? "Chase ••4821 · Needs attention"
+          : "Chase ••4821 · Verified";
+
+  const bankTone: "ok" | "warn" | "err" =
+    payoutState === "failed-recent" || payoutState === "none"
+      ? "err"
+      : payoutState === "pending"
+        ? "warn"
+        : "ok";
+
+  return (
+    <Card>
+      <div className="flex flex-col">
+        <DocBankRow
+          to="/earnings/tax-documents"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+              <path d="M14 3v5h5" />
+              <path d="M9 13h6" />
+              <path d="M9 17h4" />
+            </svg>
+          }
+          title="Tax documents"
+          subtitle={taxStatus}
+          divider
+        />
+        <DocBankRow
+          to="/earnings/payout-method"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10l9-6 9 6" />
+              <path d="M5 10v8" />
+              <path d="M12 10v8" />
+              <path d="M19 10v8" />
+              <path d="M3 20h18" />
+            </svg>
+          }
+          title="Payout method"
+          subtitle={bankStatus}
+          tone={bankTone}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function DocBankRow({
+  to,
+  icon,
+  title,
+  subtitle,
+  divider,
+  tone = "ok",
+}: {
+  to: string;
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+  divider?: boolean;
+  tone?: "ok" | "warn" | "err";
+}) {
+  const subColor = tone === "err" ? "#B91C1C" : tone === "warn" ? "#B8531C" : NAVY;
+  const subOpacity = tone === "ok" ? 0.6 : 0.95;
+  return (
+    <Link
+      to={to as "/earnings/tax-documents"}
+      className="flex items-center gap-3 transition-colors active:bg-black/[0.03]"
+      style={{
+        padding: "14px 16px",
+        borderBottom: divider ? "1px solid rgba(6,28,39,0.08)" : "none",
+        textDecoration: "none",
+        fontFamily: UI,
+      }}
+    >
+      <div
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 9,
+          backgroundColor: "rgba(6,28,39,0.05)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
+          {title}
+        </div>
+        <div
+          style={{
+            marginTop: 2,
+            fontSize: 12,
+            color: subColor,
+            opacity: subOpacity,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {subtitle}
+        </div>
+      </div>
+      <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
+    </Link>
   );
 }
 
