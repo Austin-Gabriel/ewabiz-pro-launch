@@ -8,7 +8,7 @@
  * "Paid", "In transit", "Failed".
  */
 
-import { ALL_EARNINGS, type EarningEvent } from "./mock-earnings";
+import { ALL_EARNINGS, earningsForDensity, type EarningEvent, type EarningsDensity } from "./mock-earnings";
 
 export type PayoutStatus = "paid" | "in-transit" | "failed";
 
@@ -59,8 +59,8 @@ function fridayOfWeek(monday: Date): Date {
   return f;
 }
 
-function buildPayouts(): Payout[] {
-  const paidEvents = ALL_EARNINGS.filter((e) => e.status === "paid");
+function buildPayouts(source: EarningEvent[] = ALL_EARNINGS): Payout[] {
+  const paidEvents = source.filter((e) => e.status === "paid");
   const groups = new Map<string, EarningEvent[]>();
   for (const e of paidEvents) {
     const wk = startOfIsoWeek(e.date).toISOString();
@@ -95,7 +95,7 @@ function buildPayouts(): Payout[] {
 
   // In-transit: bundle pending events into a single upcoming payout that
   // lands next Friday. Only show one in-transit payout at a time.
-  const pending = ALL_EARNINGS.filter((e) => e.status === "pending");
+  const pending = source.filter((e) => e.status === "pending");
   if (pending.length > 0) {
     const now = new Date();
     const upcoming = new Date(now);
@@ -120,6 +120,15 @@ function buildPayouts(): Payout[] {
 }
 
 export const ALL_PAYOUTS: Payout[] = buildPayouts();
+
+/**
+ * Density-gated payouts. Mirrors `earningsForDensity` so dev-state empty /
+ * sparse / rich applies consistently across earnings AND payout surfaces.
+ */
+export function payoutsForDensity(d: EarningsDensity): Payout[] {
+  if (d === "none") return [];
+  return buildPayouts(earningsForDensity(d));
+}
 
 export function findPayoutById(id: string): Payout | undefined {
   return ALL_PAYOUTS.find((p) => p.id === id);

@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ALL_PAYOUTS, PAYOUT_STATUS_LABEL, type Payout, type PayoutStatus } from "@/data/mock-payouts";
+import { PAYOUT_STATUS_LABEL, payoutsForDensity, type Payout, type PayoutStatus } from "@/data/mock-payouts";
 import { formatMoney } from "@/data/mock-earnings";
+import { useDevState } from "@/dev-state/dev-state-context";
 import {
   EARNINGS_NAVY,
   EARNINGS_UI,
@@ -12,16 +14,24 @@ import {
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
 
+function densityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"]) {
+  if (d === "empty") return "none" as const;
+  if (d === "sparse") return "sparse" as const;
+  return "rich" as const;
+}
+
 export function PayoutHistoryPage() {
+  const { state: dev } = useDevState();
+  const payouts = useMemo(() => payoutsForDensity(densityFromDev(dev.dataDensity)), [dev.dataDensity]);
   return (
     <EarningsSubShell title="Payout history">
-      {ALL_PAYOUTS.length === 0 ? (
+      {payouts.length === 0 ? (
         <EmptyState />
       ) : (
         <EarningsCard>
           <div className="flex flex-col">
-            {ALL_PAYOUTS.map((p, i) => (
-              <PayoutRow key={p.id} payout={p} divider={i < ALL_PAYOUTS.length - 1} />
+            {payouts.map((p, i) => (
+              <PayoutRow key={p.id} payout={p} divider={i < payouts.length - 1} />
             ))}
           </div>
         </EarningsCard>

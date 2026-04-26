@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import {
-  ALL_EARNINGS,
   earningsForDensity,
   formatMoney,
   type EarningEvent,
@@ -57,11 +56,10 @@ const THRESHOLD = 600;
 export function TaxDocumentsPage() {
   const { state: dev } = useDevState();
   const events = useMemo(
-    () => (dev.dataDensity === "empty" ? [] : earningsForDensity(densityFromDev(dev.dataDensity))),
+    () => earningsForDensity(densityFromDev(dev.dataDensity)),
     [dev.dataDensity],
   );
-  const allEvents = useMemo(() => (events.length > 0 ? events : ALL_EARNINGS), [events]);
-  const years = useMemo(() => summarizeByYear(allEvents), [allEvents]);
+  const years = useMemo(() => summarizeByYear(events), [events]);
 
   return (
     <EarningsSubShell title="Tax documents">
