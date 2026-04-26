@@ -168,7 +168,18 @@ function Hero({ events, period }: { events: ReturnType<typeof earningsForDensity
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        {totals.bookings} {totals.bookings === 1 ? "booking" : "bookings"} · net of fees
+        {totals.bookings} {totals.bookings === 1 ? "booking" : "bookings"}
+      </div>
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 12,
+          color: text,
+          opacity: 0.45,
+          marginTop: 2,
+        }}
+      >
+        Net of fees
       </div>
     </div>
   );
@@ -285,8 +296,9 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 2 }}>{b.fullLabel}</div>
-      <div style={{ opacity: 0.85 }}>
-        {formatMoney(b.amount)} · {b.bookings} {b.bookings === 1 ? "booking" : "bookings"}
+      <div style={{ opacity: 0.85 }}>{formatMoney(b.amount)}</div>
+      <div style={{ opacity: 0.65, marginTop: 2 }}>
+        {b.bookings} {b.bookings === 1 ? "booking" : "bookings"}
       </div>
     </div>
   );
