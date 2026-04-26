@@ -504,8 +504,10 @@ function ServiceRow({
           minWidth: 76,
         }}
       >
-        {formatMoney(amount)}{" "}
-        <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>· {bookings}</span>
+        <div>{formatMoney(amount)}</div>
+        <div style={{ fontWeight: 400, opacity: 0.55, fontSize: 11, marginTop: 2 }}>
+          {bookings} {bookings === 1 ? "booking" : "bookings"}
+        </div>
       </div>
     </div>
   );
@@ -546,7 +548,7 @@ function TipSummaryCard({ events, period }: { events: ReturnType<typeof earnings
     <Card>
       <div style={{ padding: 16, fontFamily: UI }}>
         <CardEyebrow>Tips</CardEyebrow>
-        <div className="mt-2 flex items-baseline justify-between">
+        <div className="mt-2 flex items-end justify-between">
           <div
             style={{
               fontSize: 22,
@@ -558,8 +560,13 @@ function TipSummaryCard({ events, period }: { events: ReturnType<typeof earnings
           >
             {formatMoney(tips.total)}
           </div>
-          <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
-            {pct}% tipped · avg {formatMoney(tips.averageTip)}
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+              {pct}% tipped
+            </div>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+              Avg {formatMoney(tips.averageTip)}
+            </div>
           </div>
         </div>
       </div>
