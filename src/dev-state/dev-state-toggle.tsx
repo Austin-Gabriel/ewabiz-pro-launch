@@ -9,6 +9,9 @@ import {
   type DevDayContext,
   type DevLifecycle,
   type DevBookingSource,
+  type DevPayoutState,
+  type DevPendingBalance,
+  type DevTaxDocs,
 } from "@/dev-state/dev-state-context";
 
 /**
@@ -71,6 +74,28 @@ const BOOKING_SOURCES: { value: DevBookingSource; label: string; hint: string }[
   { value: "scheduled", label: "Scheduled", hint: "Get Ready shows Leave by behavior" },
 ];
 
+const PAYOUT_STATES: { value: DevPayoutState; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Active verified account" },
+  { value: "none", label: "No payout method", hint: "Bank not connected yet" },
+  { value: "active", label: "Active", hint: "Verified, payouts flowing" },
+  { value: "pending", label: "Pending verification", hint: "Awaiting bank confirm" },
+  { value: "failed-recent", label: "Recent failed payout", hint: "Last payout bounced" },
+];
+
+const PENDING_BALANCES: { value: DevPendingBalance; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "From mock earnings" },
+  { value: "zero", label: "$0 pending", hint: "Nothing in transit" },
+  { value: "small", label: "Small ($50–200)", hint: "A few completed bookings" },
+  { value: "large", label: "Large ($1,000+)", hint: "Big week" },
+];
+
+const TAX_DOC_STATES: { value: DevTaxDocs; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "From mock earnings history" },
+  { value: "none", label: "None ready", hint: "Below threshold or new pro" },
+  { value: "current-year", label: "Current year ready", hint: "One 1099-K available" },
+  { value: "multi-year", label: "Multi-year history", hint: "Several years of docs" },
+];
+
 export function DevStateToggle() {
   const {
     enabled,
@@ -82,6 +107,9 @@ export function DevStateToggle() {
     setDayContext,
     setLifecycle,
     setBookingSource,
+    setPayoutState,
+    setPendingBalance,
+    setTaxDocs,
     reset,
   } = useDevState();
   const [open, setOpen] = useState(false);
@@ -238,6 +266,28 @@ export function DevStateToggle() {
                 options={DATA_STATES}
                 onChange={(v) => setDataDensity(v as DevDataDensity)}
               />
+              {state.proState === "live" || state.proState === "auto" ? (
+                <>
+                  <Group
+                    title="Earnings · payout state"
+                    value={state.payoutState}
+                    options={PAYOUT_STATES}
+                    onChange={(v) => setPayoutState(v as DevPayoutState)}
+                  />
+                  <Group
+                    title="Earnings · pending balance"
+                    value={state.pendingBalance}
+                    options={PENDING_BALANCES}
+                    onChange={(v) => setPendingBalance(v as DevPendingBalance)}
+                  />
+                  <Group
+                    title="Earnings · tax docs"
+                    value={state.taxDocs}
+                    options={TAX_DOC_STATES}
+                    onChange={(v) => setTaxDocs(v as DevTaxDocs)}
+                  />
+                </>
+              ) : null}
               <Group
                 title="Theme override"
                 value={state.theme}
