@@ -89,7 +89,10 @@ function MenuBody({
               <div className="flex-1">
                 <div style={{ fontFamily: SANS_STACK, fontSize: 14, fontWeight: 500, color: text }}>{it.name}</div>
                 <div style={{ fontFamily: SANS_STACK, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 2 }}>
-                  {it.durationMin} min · ${it.priceUsd}
+                  {it.durationMin} min
+                </div>
+                <div style={{ fontFamily: SANS_STACK, fontSize: 11.5, color: text, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
+                  ${it.priceUsd}
                 </div>
               </div>
               <button

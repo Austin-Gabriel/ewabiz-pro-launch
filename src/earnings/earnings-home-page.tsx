@@ -265,7 +265,10 @@ function ContextSummaryCard({
         headline={upcoming.revenue > 0 ? formatMoney(upcoming.revenue) : "—"}
         sub={
           upcoming.revenue > 0
-            ? `${upcoming.appointments} ${upcoming.appointments === 1 ? "appt" : "appts"} · next 7 days`
+            ? [
+                `${upcoming.appointments} ${upcoming.appointments === 1 ? "appt" : "appts"}`,
+                "Next 7 days",
+              ]
             : "No upcoming"
         }
         muted={upcoming.revenue === 0}
@@ -273,7 +276,7 @@ function ContextSummaryCard({
       <KpiTile
         eyebrow="Next payout"
         headline={next ? next.weekdayLabel : "—"}
-        sub={next ? `${formatMoney(next.amount)} · ${next.shortDate}` : "Nothing in transit"}
+        sub={next ? [formatMoney(next.amount), next.shortDate] : "Nothing in transit"}
         muted={!next}
       />
     </div>
@@ -289,13 +292,14 @@ function KpiTile({
 }: {
   eyebrow: string;
   headline: string;
-  sub: string;
+  sub: string | string[];
   subTone?: "good" | "bad" | "neutral";
   muted?: boolean;
 }) {
   const subColor = subTone === "good" ? "#15803D" : subTone === "bad" ? "#B91C1C" : NAVY;
   const subOpacity = subTone === "neutral" ? 0.55 : 0.95;
   const subWeight = subTone === "neutral" ? 500 : 600;
+  const subLines = Array.isArray(sub) ? sub : [sub];
   return (
     <div
       style={{
@@ -339,16 +343,27 @@ function KpiTile({
       </div>
       <div
         style={{
-          fontSize: 11,
-          color: subColor,
-          opacity: subOpacity,
-          fontWeight: subWeight,
-          fontVariantNumeric: "tabular-nums",
-          lineHeight: 1.3,
           marginTop: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
         }}
       >
-        {sub}
+        {subLines.map((line, i) => (
+          <span
+            key={i}
+            style={{
+              fontSize: 11,
+              color: subColor,
+              opacity: i === 0 ? subOpacity : subOpacity * 0.85,
+              fontWeight: i === 0 ? subWeight : 500,
+              fontVariantNumeric: "tabular-nums",
+              lineHeight: 1.3,
+            }}
+          >
+            {line}
+          </span>
+        ))}
       </div>
     </div>
   );

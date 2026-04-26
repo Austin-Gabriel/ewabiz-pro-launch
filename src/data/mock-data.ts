@@ -193,7 +193,7 @@ export const INCOMING_REQUEST_EXAMPLE: IncomingRequest = {
   clientName: "Simone Carter",
   clientInitial: "SC",
   service: "Silk press",
-  requestedFor: "Today · 4:30 PM",
+  requestedFor: "Today at 4:30 PM",
   priceUsd: 160,
   payoutUsd: 142,
   location: "Prospect Heights, Brooklyn",
