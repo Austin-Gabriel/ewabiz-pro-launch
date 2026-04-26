@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
@@ -383,6 +383,39 @@ function EarningsChartCard({
   const total = buckets.reduce((s, b) => s + b.total, 0);
   const chartHeight = 96;
 
+  // Nice y-axis scale: 3 gridlines (0, mid, top) rounded to a sensible step.
+  const niceMax = useMemo(() => niceCeil(max), [max]);
+  const gridValues = useMemo(() => [0, niceMax / 2, niceMax], [niceMax]);
+
+  // Find tallest bar (first occurrence wins on ties).
+  const peakIndex = useMemo(() => {
+    let idx = -1;
+    let best = 0;
+    buckets.forEach((b, i) => {
+      if (b.total > best) {
+        best = b.total;
+        idx = i;
+      }
+    });
+    return idx;
+  }, [buckets]);
+
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    };
+  }, []);
+  const handleBarTap = (i: number) => {
+    setActiveIdx((prev) => (prev === i ? null : i));
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = setTimeout(() => setActiveIdx(null), 3000);
+  };
+
+  const Y_AXIS_W = 32;
+  const PEAK_LABEL_H = 16;
+
   return (
     <Card>
       <div style={{ padding: 16, fontFamily: UI }}>
@@ -418,67 +451,219 @@ function EarningsChartCard({
             <div
               role="img"
               aria-label="Earnings by period"
-              className="mt-3 flex items-end justify-between"
-              style={{ height: chartHeight, gap: 6 }}
+              className="mt-3"
+              style={{
+                position: "relative",
+                display: "flex",
+                paddingTop: PEAK_LABEL_H,
+              }}
             >
-              {buckets.map((b, i) => {
-                const h = b.total === 0 ? 2 : Math.max(3, Math.round((b.total / max) * chartHeight));
-                return (
+              {/* Y-axis labels */}
+              <div
+                aria-hidden
+                style={{
+                  width: Y_AXIS_W,
+                  height: chartHeight,
+                  position: "relative",
+                  flexShrink: 0,
+                }}
+              >
+                {gridValues
+                  .slice()
+                  .reverse()
+                  .map((v, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        right: 6,
+                        top: i === 0 ? 0 : i === gridValues.length - 1 ? undefined : "50%",
+                        bottom: i === gridValues.length - 1 ? 0 : undefined,
+                        transform:
+                          i === 0
+                            ? "translateY(-50%)"
+                            : i === gridValues.length - 1
+                              ? "translateY(50%)"
+                              : "translateY(-50%)",
+                        fontSize: 9,
+                        fontWeight: 600,
+                        color: NAVY,
+                        opacity: 0.4,
+                        fontVariantNumeric: "tabular-nums",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {formatAxisMoney(v)}
+                    </div>
+                  ))}
+              </div>
+
+              {/* Plot area */}
+              <div style={{ flex: 1, position: "relative", height: chartHeight }}>
+                {/* Gridlines */}
+                {gridValues.map((v, i) => {
+                  const top = chartHeight - (v / niceMax) * chartHeight;
+                  return (
+                    <div
+                      key={i}
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top,
+                        height: 1,
+                        backgroundColor: "rgba(6,28,39,0.10)",
+                      }}
+                    />
+                  );
+                })}
+
+                {/* Bars */}
+                <div
+                  className="flex items-end justify-between"
+                  style={{ position: "absolute", inset: 0, gap: 6 }}
+                >
+                  {buckets.map((b, i) => {
+                    const h = b.total === 0 ? 2 : Math.max(3, Math.round((b.total / niceMax) * chartHeight));
+                    const isPeak = i === peakIndex && b.total > 0;
+                    const isActive = i === activeIdx;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleBarTap(i)}
+                        aria-label={`${b.label}: ${formatMoney(b.total)}`}
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+                          height: chartHeight,
+                          position: "relative",
+                          background: "transparent",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {/* Peak label */}
+                        {isPeak && !isActive && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: h + 4,
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: NAVY,
+                              fontVariantNumeric: "tabular-nums",
+                              whiteSpace: "nowrap",
+                              lineHeight: 1,
+                            }}
+                          >
+                            {formatMoney(b.total)}
+                          </div>
+                        )}
+                        {/* Tap tooltip */}
+                        {isActive && (
+                          <div
+                            role="tooltip"
+                            style={{
+                              position: "absolute",
+                              bottom: h + 6,
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              backgroundColor: NAVY,
+                              color: "#FFFFFF",
+                              fontSize: 10,
+                              fontWeight: 600,
+                              padding: "5px 7px",
+                              borderRadius: 6,
+                              whiteSpace: "nowrap",
+                              lineHeight: 1.2,
+                              fontVariantNumeric: "tabular-nums",
+                              boxShadow: "0 2px 6px rgba(6,28,39,0.18)",
+                              zIndex: 2,
+                              textAlign: "center",
+                            }}
+                          >
+                            <div style={{ opacity: 0.7, fontSize: 9, fontWeight: 500 }}>
+                              {b.label}
+                            </div>
+                            <div>{formatMoney(b.total)}</div>
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            width: "100%",
+                            maxWidth: 28,
+                            height: h,
+                            borderRadius: 6,
+                            backgroundColor: b.total > 0 ? ORANGE : "rgba(6,28,39,0.08)",
+                            opacity: isActive ? 0.85 : 1,
+                            transition: "opacity 120ms ease",
+                          }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* X-axis labels */}
+            <div className="mt-2 flex" style={{ gap: 6 }}>
+              <div style={{ width: Y_AXIS_W, flexShrink: 0 }} />
+              <div className="flex flex-1 justify-between" style={{ gap: 6 }}>
+                {buckets.map((b, i) => (
                   <div
                     key={i}
                     style={{
                       flex: 1,
-                      display: "flex",
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-                      height: chartHeight,
+                      textAlign: "center",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: NAVY,
+                      opacity: 0.55,
+                      letterSpacing: "0.04em",
                     }}
                   >
-                    <div
-                      style={{
-                        width: "100%",
-                        maxWidth: 28,
-                        height: h,
-                        borderRadius: 6,
-                        backgroundColor: b.total > 0 ? ORANGE : "rgba(6,28,39,0.08)",
-                      }}
-                      title={`${b.label}: ${formatMoney(b.total)}`}
-                    />
+                    {b.label}
                   </div>
-                );
-              })}
-            </div>
-            <div
-              aria-hidden
-              style={{
-                marginTop: 8,
-                height: 1,
-                backgroundColor: "rgba(6,28,39,0.10)",
-              }}
-            />
-            <div className="mt-2 flex justify-between" style={{ gap: 6 }}>
-              {buckets.map((b, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    textAlign: "center",
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: NAVY,
-                    opacity: 0.55,
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {b.label}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </>
         )}
       </div>
     </Card>
   );
+}
+
+/* ---------- Chart helpers ---------- */
+
+function niceCeil(value: number): number {
+  if (value <= 0) return 1;
+  const exp = Math.pow(10, Math.floor(Math.log10(value)));
+  const n = value / exp;
+  let nice: number;
+  if (n <= 1) nice = 1;
+  else if (n <= 2) nice = 2;
+  else if (n <= 2.5) nice = 2.5;
+  else if (n <= 5) nice = 5;
+  else nice = 10;
+  return nice * exp;
+}
+
+function formatAxisMoney(value: number): string {
+  if (value === 0) return "$0";
+  if (value >= 1000) {
+    const k = value / 1000;
+    return `$${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
+  }
+  return `$${value % 1 === 0 ? value.toFixed(0) : value.toFixed(0)}`;
 }
 
 function TopServicesCard({ events, period }: { events: ReturnType<typeof earningsForDensity>; period: EarningsPeriod }) {
