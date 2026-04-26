@@ -32,6 +32,7 @@ import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
 import { Route as KycApprovedRouteImport } from './routes/kyc.approved'
 import { Route as KycStepRouteImport } from './routes/kyc.$step'
+import { Route as EarningsRecentRouteImport } from './routes/earnings.recent'
 import { Route as BookingsIdRouteImport } from './routes/bookings.$id'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api.public.seed-demo'
 
@@ -150,6 +151,11 @@ const KycStepRoute = KycStepRouteImport.update({
   path: '/$step',
   getParentRoute: () => KycRoute,
 } as any)
+const EarningsRecentRoute = EarningsRecentRouteImport.update({
+  id: '/recent',
+  path: '/recent',
+  getParentRoute: () => EarningsRoute,
+} as any)
 const BookingsIdRoute = BookingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -165,7 +171,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -192,7 +199,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -220,7 +228,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -264,6 +273,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -331,7 +343,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BiometricRoute: typeof BiometricRoute
   BookingsRoute: typeof BookingsRouteWithChildren
-  EarningsRoute: typeof EarningsRoute
+  EarningsRoute: typeof EarningsRouteWithChildren
   EnableFaceidRoute: typeof EnableFaceidRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
@@ -511,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KycStepRouteImport
       parentRoute: typeof KycRoute
     }
+    '/earnings/recent': {
+      id: '/earnings/recent'
+      path: '/recent'
+      fullPath: '/earnings/recent'
+      preLoaderRoute: typeof EarningsRecentRouteImport
+      parentRoute: typeof EarningsRoute
+    }
     '/bookings/$id': {
       id: '/bookings/$id'
       path: '/$id'
@@ -538,6 +557,18 @@ const BookingsRouteChildren: BookingsRouteChildren = {
 
 const BookingsRouteWithChildren = BookingsRoute._addFileChildren(
   BookingsRouteChildren,
+)
+
+interface EarningsRouteChildren {
+  EarningsRecentRoute: typeof EarningsRecentRoute
+}
+
+const EarningsRouteChildren: EarningsRouteChildren = {
+  EarningsRecentRoute: EarningsRecentRoute,
+}
+
+const EarningsRouteWithChildren = EarningsRoute._addFileChildren(
+  EarningsRouteChildren,
 )
 
 interface KycRouteChildren {
@@ -583,7 +614,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
   BookingsRoute: BookingsRouteWithChildren,
-  EarningsRoute: EarningsRoute,
+  EarningsRoute: EarningsRouteWithChildren,
   EnableFaceidRoute: EnableFaceidRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
