@@ -22,6 +22,7 @@ import { Route as JoinRouteImport } from './routes/join'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EnableFaceidRouteImport } from './routes/enable-faceid'
+import { Route as EarningsRouteImport } from './routes/earnings'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
@@ -99,6 +100,11 @@ const EnableFaceidRoute = EnableFaceidRouteImport.update({
   path: '/enable-faceid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EarningsRoute = EarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookingsRoute = BookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
+  '/earnings': typeof EarningsRoute
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
+  '/earnings': typeof EarningsRoute
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
+  '/earnings': typeof EarningsRoute
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/biometric'
     | '/bookings'
+    | '/earnings'
     | '/enable-faceid'
     | '/forgot-password'
     | '/home'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/biometric'
     | '/bookings'
+    | '/earnings'
     | '/enable-faceid'
     | '/forgot-password'
     | '/home'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/'
     | '/biometric'
     | '/bookings'
+    | '/earnings'
     | '/enable-faceid'
     | '/forgot-password'
     | '/home'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BiometricRoute: typeof BiometricRoute
   BookingsRoute: typeof BookingsRouteWithChildren
+  EarningsRoute: typeof EarningsRoute
   EnableFaceidRoute: typeof EnableFaceidRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       path: '/enable-faceid'
       fullPath: '/enable-faceid'
       preLoaderRoute: typeof EnableFaceidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earnings': {
+      id: '/earnings'
+      path: '/earnings'
+      fullPath: '/earnings'
+      preLoaderRoute: typeof EarningsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookings': {
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
   BookingsRoute: BookingsRouteWithChildren,
+  EarningsRoute: EarningsRoute,
   EnableFaceidRoute: EnableFaceidRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
