@@ -292,3 +292,96 @@ export function nextPayoutStats(payouts: Payout[], now: Date = new Date()): Next
     shortDate: inTransit.expectedArrival,
   };
 }
+
+/* ---------- Earnings home: period bar chart buckets ---------- */
+
+export interface PeriodBucket {
+  label: string;
+  total: number;
+}
+
+/**
+ * Build bar-chart buckets for the Earnings home chart, sized to the
+ * selected period:
+ *   today  → 6 buckets of 4h ("12a", "4a", ...)
+ *   week   → 7 buckets, one per day ("Mon", "Tue", ...)
+ *   month  → 4 buckets, one per week ("W1", "W2", ...)
+ *   year   → 12 buckets, one per month ("J", "F", ...)
+ */
+export function periodBuckets(
+  events: EarningEvent[],
+  period: "today" | "week" | "month" | "year",
+  now: Date = new Date(),
+): PeriodBucket[] {
+  const day = 24 * 60 * 60 * 1000;
+
+  if (period === "today") {
+    const start = new Date(now); start.setHours(0, 0, 0, 0);
+    const labels = ["12a", "4a", "8a", "12p", "4p", "8p"];
+    const buckets = labels.map((label) => ({ label, total: 0 }));
+    for (const e of events) {
+      const t = e.date.getTime();
+      if (t < start.getTime() || t > start.getTime() + day) continue;
+      const hour = e.date.getHours();
+      const idx = Math.min(5, Math.floor(hour / 4));
+      buckets[idx].total += e.net;
+    }
+    return buckets;
+  }
+
+  if (period === "week") {
+    const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
+    const startWeek = startToday.getTime() - 6 * day;
+    const dayShort = ["Su", "M", "T", "W", "Th", "F", "Sa"];
+    const buckets: PeriodBucket[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startWeek + i * day);
+      buckets.push({ label: dayShort[d.getDay()], total: 0 });
+    }
+    for (const e of events) {
+      const t = e.date.getTime();
+      if (t < startWeek || t > startToday.getTime() + day) continue;
+      const idx = Math.min(6, Math.max(0, Math.floor((t - startWeek) / day)));
+      buckets[idx].total += e.net;
+    }
+    return buckets;
+  }
+
+  if (period === "month") {
+    const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
+    const start = startToday.getTime() - 27 * day;
+    const buckets: PeriodBucket[] = [
+      { label: "W1", total: 0 },
+      { label: "W2", total: 0 },
+      { label: "W3", total: 0 },
+      { label: "W4", total: 0 },
+    ];
+    for (const e of events) {
+      const t = e.date.getTime();
+      if (t < start || t > startToday.getTime() + day) continue;
+      const idx = Math.min(3, Math.floor((t - start) / (7 * day)));
+      buckets[idx].total += e.net;
+    }
+    return buckets;
+  }
+
+  // year — last 12 months ending current month.
+  const monthInitials = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+  const buckets: PeriodBucket[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({ label: monthInitials[d.getMonth()], total: 0 });
+  }
+  const earliest = new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime();
+  for (const e of events) {
+    const t = e.date.getTime();
+    if (t < earliest || t > now.getTime()) continue;
+    const idx =
+      (e.date.getFullYear() - now.getFullYear()) * 12 +
+      (e.date.getMonth() - now.getMonth()) +
+      11;
+    if (idx < 0 || idx > 11) continue;
+    buckets[idx].total += e.net;
+  }
+  return buckets;
+}
