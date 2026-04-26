@@ -460,31 +460,30 @@ function Chevron({ open }: { open: boolean }) {
 /* ---------- Link rows ---------- */
 
 function LinkRows() {
-  const rows: { label: string; to: string }[] = [
-    { label: "Recent earnings", to: "/earnings/recent" },
-    { label: "Payout history", to: "/earnings/payouts" },
-    { label: "Tax documents", to: "/earnings/tax" },
-    { label: "Payout method", to: "/earnings/payout-method" },
+  const navigate = useNavigate();
+  const rows: { label: string; onClick: () => void }[] = [
+    { label: "Recent earnings", onClick: () => navigate({ to: "/earnings/recent" }) },
+    { label: "Payout history", onClick: () => navigate({ to: "/earnings/payouts" }) },
+    // Phase 3 will replace these with real navigations.
+    { label: "Tax documents", onClick: () => {} },
+    { label: "Payout method", onClick: () => {} },
   ];
   return (
     <Card>
       <div className="flex flex-col">
         {rows.map((r, i) => (
-          <LinkRow key={r.to} label={r.label} to={r.to} divider={i < rows.length - 1} />
+          <LinkRow key={r.label} label={r.label} onClick={r.onClick} divider={i < rows.length - 1} />
         ))}
       </div>
     </Card>
   );
 }
 
-function LinkRow({ label, to: _to, divider }: { label: string; to: string; divider: boolean }) {
+function LinkRow({ label, onClick, divider }: { label: string; onClick: () => void; divider: boolean }) {
   return (
     <button
       type="button"
-      onClick={() => {
-        // Phase 2/3 will wire these. Keeping the button non-routing today
-        // avoids 404s while the surfaces are still being built.
-      }}
+      onClick={onClick}
       className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
       style={{
         padding: "14px 16px",
