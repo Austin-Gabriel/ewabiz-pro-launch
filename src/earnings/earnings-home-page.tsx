@@ -26,10 +26,12 @@ import {
   type ResolvedProState,
 } from "./earnings-state";
 import { payoutsForDensity, type Payout } from "@/data/mock-payouts";
+import { ALL_BOOKINGS } from "@/data/mock-bookings";
 import {
-  balanceSplit,
-  inTransitPayoutId,
   serviceSparkline,
+  thisWeekStats,
+  upcomingStats,
+  nextPayoutStats,
 } from "./earnings-aggregates";
 
 const UI = HOME_SANS;
@@ -86,7 +88,7 @@ export function EarningsHomePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         <Hero events={events} period={period} />
-        <BalanceTrio events={events} payouts={payouts} pendingOverride={dev.pendingBalance} />
+        <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
