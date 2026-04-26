@@ -875,6 +875,7 @@ function DocBankRow({
   subtitle,
   divider,
   tone = "ok",
+  extra,
 }: {
   to: string;
   icon: ReactNode;
@@ -882,6 +883,7 @@ function DocBankRow({
   subtitle: string;
   divider?: boolean;
   tone?: "ok" | "warn" | "err";
+  extra?: string | null;
 }) {
   const subColor = tone === "err" ? "#B91C1C" : tone === "warn" ? "#B8531C" : NAVY;
   const subOpacity = tone === "ok" ? 0.6 : 0.95;
@@ -918,13 +920,26 @@ function DocBankRow({
           style={{
             marginTop: 2,
             fontSize: 12,
-            color: subColor,
-            opacity: subOpacity,
+            color: NAVY,
+            opacity: 0.6,
             fontVariantNumeric: "tabular-nums",
           }}
         >
           {subtitle}
         </div>
+        {extra ? (
+          <div
+            style={{
+              marginTop: 2,
+              fontSize: 12,
+              color: subColor,
+              opacity: subOpacity,
+              fontWeight: tone === "ok" ? 500 : 600,
+            }}
+          >
+            {extra}
+          </div>
+        ) : null}
       </div>
       <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
     </Link>
