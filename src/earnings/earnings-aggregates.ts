@@ -7,6 +7,7 @@
 
 import type { EarningEvent } from "@/data/mock-earnings";
 import type { Payout } from "@/data/mock-payouts";
+import type { Booking } from "@/data/mock-bookings";
 
 /* ---------- Earnings home: balance trio ---------- */
 
@@ -200,4 +201,94 @@ export function recentPayoutsForAccount(payouts: Payout[], last4: string, limit 
     .filter((p) => p.bankLast4 === last4 && p.status !== "in-transit")
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, limit);
+}
+
+/* ---------- Earnings home: context summary ---------- */
+
+const WEEKDAY_FULL = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+export interface ThisWeekStats {
+  earned: number;
+  bookings: number;
+  averagePerBooking: number;
+  /** Percent change vs prior 7 days. null when prior week was $0. */
+  deltaPct: number | null;
+  /** "up" | "down" | "flat" */
+  trend: "up" | "down" | "flat";
+}
+
+export function thisWeekStats(events: EarningEvent[], now: Date = new Date()): ThisWeekStats {
+  const day = 24 * 60 * 60 * 1000;
+  const startThis = now.getTime() - 7 * day;
+  const startPrior = now.getTime() - 14 * day;
+  let earned = 0;
+  let bookings = 0;
+  let prior = 0;
+  for (const e of events) {
+    const t = e.date.getTime();
+    if (t > now.getTime()) continue;
+    if (t >= startThis) {
+      earned += e.net;
+      bookings += 1;
+    } else if (t >= startPrior) {
+      prior += e.net;
+    }
+  }
+  const deltaPct = prior === 0 ? null : Math.round(((earned - prior) / prior) * 100);
+  const trend: ThisWeekStats["trend"] =
+    deltaPct === null ? "flat" : deltaPct > 1 ? "up" : deltaPct < -1 ? "down" : "flat";
+  return {
+    earned,
+    bookings,
+    averagePerBooking: bookings === 0 ? 0 : Math.round(earned / bookings),
+    deltaPct,
+    trend,
+  };
+}
+
+export interface UpcomingStats {
+  /** Sum of priceUsd for confirmed/pending bookings landing in next 7 days. */
+  revenue: number;
+  appointments: number;
+}
+
+export function upcomingStats(bookings: Booking[], now: Date = new Date()): UpcomingStats {
+  const day = 24 * 60 * 60 * 1000;
+  const end = now.getTime() + 7 * day;
+  let revenue = 0;
+  let appointments = 0;
+  for (const b of bookings) {
+    if (b.status !== "confirmed" && b.status !== "pending") continue;
+    const t = b.startsAt.getTime();
+    if (t < now.getTime() || t > end) continue;
+    revenue += b.priceUsd;
+    appointments += 1;
+  }
+  return { revenue, appointments };
+}
+
+export interface NextPayoutStats {
+  amount: number;
+  /** "Friday", "Tomorrow", "Today" — weekday label of arrival date. */
+  weekdayLabel: string;
+  /** "Apr 28" — short date for sub line if needed. */
+  shortDate: string;
+}
+
+export function nextPayoutStats(payouts: Payout[], now: Date = new Date()): NextPayoutStats | null {
+  const inTransit = payouts.find((p) => p.status === "in-transit");
+  if (!inTransit) return null;
+  const d = inTransit.date;
+  const day = 24 * 60 * 60 * 1000;
+  const startToday = new Date(now); startToday.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((d.getTime() - startToday.getTime()) / day);
+  const weekdayLabel =
+    diffDays === 0 ? "Today" : diffDays === 1 ? "Tomorrow" : WEEKDAY_FULL[d.getDay()];
+  return {
+    amount: inTransit.amount,
+    weekdayLabel,
+    shortDate: inTransit.expectedArrival,
+  };
 }

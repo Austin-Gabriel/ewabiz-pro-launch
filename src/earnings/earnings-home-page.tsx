@@ -26,10 +26,12 @@ import {
   type ResolvedProState,
 } from "./earnings-state";
 import { payoutsForDensity, type Payout } from "@/data/mock-payouts";
+import { ALL_BOOKINGS } from "@/data/mock-bookings";
 import {
-  balanceSplit,
-  inTransitPayoutId,
   serviceSparkline,
+  thisWeekStats,
+  upcomingStats,
+  nextPayoutStats,
 } from "./earnings-aggregates";
 
 const UI = HOME_SANS;
@@ -86,7 +88,7 @@ export function EarningsHomePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         <Hero events={events} period={period} />
-        <BalanceTrio events={events} payouts={payouts} pendingOverride={dev.pendingBalance} />
+        <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
@@ -166,7 +168,18 @@ function Hero({ events, period }: { events: ReturnType<typeof earningsForDensity
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        {totals.bookings} {totals.bookings === 1 ? "booking" : "bookings"} · net of fees
+        {totals.bookings} {totals.bookings === 1 ? "booking" : "bookings"}
+      </div>
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 12,
+          color: text,
+          opacity: 0.45,
+          marginTop: 2,
+        }}
+      >
+        Net of fees
       </div>
     </div>
   );
@@ -283,8 +296,9 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 2 }}>{b.fullLabel}</div>
-      <div style={{ opacity: 0.85 }}>
-        {formatMoney(b.amount)} · {b.bookings} {b.bookings === 1 ? "booking" : "bookings"}
+      <div style={{ opacity: 0.85 }}>{formatMoney(b.amount)}</div>
+      <div style={{ opacity: 0.65, marginTop: 2 }}>
+        {b.bookings} {b.bookings === 1 ? "booking" : "bookings"}
       </div>
     </div>
   );
@@ -308,137 +322,137 @@ function EmptyChart() {
   );
 }
 
-/* ---------- Balance trio (Available · In transit · Pending) ---------- */
+/* ---------- Context summary (This week / Upcoming / Next payout) ---------- */
 
-function BalanceTrio({
+function ContextSummaryCard({
   events,
   payouts,
-  pendingOverride,
 }: {
   events: ReturnType<typeof earningsForDensity>;
   payouts: Payout[];
-  pendingOverride: ReturnType<typeof useDevState>["state"]["pendingBalance"];
 }) {
-  const split = useMemo(() => balanceSplit(events, payouts), [events, payouts]);
-  const overrideAmount = pendingBalanceOverride(pendingOverride);
-  const pending = overrideAmount === null ? split.pending : overrideAmount;
-  const inTransitId = inTransitPayoutId(payouts);
-  const computedPending = useMemo(() => pendingPayoutFor(events), [events]);
-  const inTransitArrives = payouts.find((p) => p.status === "in-transit")?.expectedArrival;
+  const week = useMemo(() => thisWeekStats(events), [events]);
+  const upcoming = useMemo(() => upcomingStats(ALL_BOOKINGS), []);
+  const next = useMemo(() => nextPayoutStats(payouts), [payouts]);
+
+  // If everything is empty (new pro), render nothing — keeps the surface quiet.
+  if (week.earned === 0 && upcoming.revenue === 0 && !next) return null;
 
   return (
-    <div className="grid grid-cols-3 gap-2">
-      <BalanceTile
-        dot="#15803D"
-        label="Available"
-        amount={split.available}
-        sub="paid out"
-        to="/earnings/payouts"
-      />
-      <BalanceTile
-        dot={ORANGE}
-        label="In transit"
-        amount={split.inTransit}
-        sub={inTransitArrives ? `arrives ${inTransitArrives}` : "—"}
-        to={inTransitId ? "/earnings/payouts/$id" : "/earnings/payouts"}
-        params={inTransitId ? { id: inTransitId } : undefined}
-        muted={split.inTransit === 0}
-      />
-      <BalanceTile
-        dot={NAVY}
-        label="Pending"
-        amount={pending}
-        sub={pending > 0 ? `arrives ${computedPending.arrivesOn}` : "nothing pending"}
-        to="/earnings/recent"
-        muted={pending === 0}
-      />
+    <Card>
+      <div style={{ padding: 18, fontFamily: UI, display: "flex", flexDirection: "column", gap: 18 }}>
+        <SummarySection eyebrow="This week">
+          <SummaryHeadline>{formatMoney(week.earned)} earned</SummaryHeadline>
+          {week.deltaPct !== null ? (
+            <SummaryLine
+              tone={week.trend === "up" ? "good" : week.trend === "down" ? "bad" : "neutral"}
+            >
+              {week.trend === "up" ? "↑" : week.trend === "down" ? "↓" : "→"}{" "}
+              {Math.abs(week.deltaPct)}% vs last week
+            </SummaryLine>
+          ) : (
+            <SummaryLine tone="neutral">First week of activity</SummaryLine>
+          )}
+          <SummaryLine>
+            {week.bookings} {week.bookings === 1 ? "booking" : "bookings"}
+          </SummaryLine>
+          {week.bookings > 0 ? (
+            <SummaryLine>Avg {formatMoney(week.averagePerBooking)}</SummaryLine>
+          ) : null}
+        </SummarySection>
+
+        {upcoming.revenue > 0 ? (
+          <>
+            <Divider />
+            <SummarySection eyebrow="Upcoming">
+              <SummaryHeadline>{formatMoney(upcoming.revenue)} booked</SummaryHeadline>
+              <SummaryLine>Next 7 days</SummaryLine>
+              <SummaryLine>
+                {upcoming.appointments}{" "}
+                {upcoming.appointments === 1 ? "appointment" : "appointments"}
+              </SummaryLine>
+            </SummarySection>
+          </>
+        ) : null}
+
+        {next ? (
+          <>
+            <Divider />
+            <SummarySection eyebrow="Next payout">
+              <SummaryHeadline>{next.weekdayLabel}</SummaryHeadline>
+              <SummaryLine strong>{formatMoney(next.amount)}</SummaryLine>
+              <SummaryLine>Arrives {next.shortDate}</SummaryLine>
+            </SummarySection>
+          </>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
+function SummarySection({ eyebrow, children }: { eyebrow: string; children: ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <CardEyebrow>{eyebrow}</CardEyebrow>
+      <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
+        {children}
+      </div>
     </div>
   );
 }
 
-function BalanceTile({
-  dot,
-  label,
-  amount,
-  sub,
-  to,
-  params,
-  muted,
-}: {
-  dot: string;
-  label: string;
-  amount: number;
-  sub: string;
-  to: string;
-  params?: Record<string, string>;
-  muted?: boolean;
-}) {
-  const inner = (
+function SummaryHeadline({ children }: { children: ReactNode }) {
+  return (
     <div
       style={{
-        backgroundColor: "#FFFFFF",
-        border: "1px solid rgba(6,28,39,0.10)",
-        borderRadius: 12,
-        padding: "10px 11px",
         fontFamily: UI,
-        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        opacity: muted ? 0.7 : 1,
+        fontSize: 22,
+        fontWeight: 600,
+        color: NAVY,
+        letterSpacing: "-0.015em",
+        fontVariantNumeric: "tabular-nums",
+        lineHeight: 1.2,
       }}
     >
-      <div className="flex items-center gap-1.5">
-        <span
-          aria-hidden
-          style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: dot, flexShrink: 0 }}
-        />
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: NAVY,
-            opacity: 0.6,
-          }}
-        >
-          {label}
-        </span>
-      </div>
-      <div
-        style={{
-          fontSize: 18,
-          fontWeight: 600,
-          color: NAVY,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: "-0.015em",
-          lineHeight: 1.1,
-        }}
-      >
-        {formatMoney(amount)}
-      </div>
-      <div
-        style={{
-          fontSize: 10.5,
-          color: NAVY,
-          opacity: 0.55,
-          fontVariantNumeric: "tabular-nums",
-          lineHeight: 1.3,
-        }}
-      >
-        {sub}
-      </div>
+      {children}
     </div>
   );
-  // Cast to keep the type-narrowed router happy with dynamic params on the
-  // in-transit tile.
+}
+
+function SummaryLine({
+  children,
+  tone = "neutral",
+  strong,
+}: {
+  children: ReactNode;
+  tone?: "good" | "bad" | "neutral";
+  strong?: boolean;
+}) {
+  const color = tone === "good" ? "#15803D" : tone === "bad" ? "#B91C1C" : NAVY;
+  const opacity = tone === "neutral" ? (strong ? 0.85 : 0.6) : 0.95;
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <Link to={to as any} params={params as any} style={{ textDecoration: "none" }}>
-      {inner}
-    </Link>
+    <div
+      style={{
+        fontFamily: UI,
+        fontSize: 13,
+        fontWeight: strong ? 600 : 500,
+        color,
+        opacity,
+        fontVariantNumeric: "tabular-nums",
+        lineHeight: 1.4,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Divider() {
+  return (
+    <div
+      aria-hidden
+      style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)", margin: "0 -2px" }}
+    />
   );
 }
 
@@ -490,8 +504,10 @@ function ServiceRow({
           minWidth: 76,
         }}
       >
-        {formatMoney(amount)}{" "}
-        <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>· {bookings}</span>
+        <div>{formatMoney(amount)}</div>
+        <div style={{ fontWeight: 400, opacity: 0.55, fontSize: 11, marginTop: 2 }}>
+          {bookings} {bookings === 1 ? "booking" : "bookings"}
+        </div>
       </div>
     </div>
   );
@@ -532,7 +548,7 @@ function TipSummaryCard({ events, period }: { events: ReturnType<typeof earnings
     <Card>
       <div style={{ padding: 16, fontFamily: UI }}>
         <CardEyebrow>Tips</CardEyebrow>
-        <div className="mt-2 flex items-baseline justify-between">
+        <div className="mt-2 flex items-end justify-between">
           <div
             style={{
               fontSize: 22,
@@ -544,8 +560,13 @@ function TipSummaryCard({ events, period }: { events: ReturnType<typeof earnings
           >
             {formatMoney(tips.total)}
           </div>
-          <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
-            {pct}% tipped · avg {formatMoney(tips.averageTip)}
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+              {pct}% tipped
+            </div>
+            <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+              Avg {formatMoney(tips.averageTip)}
+            </div>
           </div>
         </div>
       </div>
@@ -791,14 +812,16 @@ function DocsBankingCard({
         ? "Multi-year history"
         : "Current year ready";
 
-  const bankStatus =
+  const bankSubtitle =
+    payoutState === "none" ? "Not connected" : "Chase ••4821";
+  const bankStatusLine =
     payoutState === "none"
-      ? "Not connected"
+      ? null
       : payoutState === "pending"
-        ? "Chase ••4821 · Verifying"
+        ? "Verifying"
         : payoutState === "failed-recent"
-          ? "Chase ••4821 · Needs attention"
-          : "Chase ••4821 · Verified";
+          ? "Needs attention"
+          : "Verified";
 
   const bankTone: "ok" | "warn" | "err" =
     payoutState === "failed-recent" || payoutState === "none"
@@ -836,7 +859,8 @@ function DocsBankingCard({
             </svg>
           }
           title="Payout method"
-          subtitle={bankStatus}
+          subtitle={bankSubtitle}
+          extra={bankStatusLine}
           tone={bankTone}
         />
       </div>
@@ -851,6 +875,7 @@ function DocBankRow({
   subtitle,
   divider,
   tone = "ok",
+  extra,
 }: {
   to: string;
   icon: ReactNode;
@@ -858,6 +883,7 @@ function DocBankRow({
   subtitle: string;
   divider?: boolean;
   tone?: "ok" | "warn" | "err";
+  extra?: string | null;
 }) {
   const subColor = tone === "err" ? "#B91C1C" : tone === "warn" ? "#B8531C" : NAVY;
   const subOpacity = tone === "ok" ? 0.6 : 0.95;
@@ -894,13 +920,26 @@ function DocBankRow({
           style={{
             marginTop: 2,
             fontSize: 12,
-            color: subColor,
-            opacity: subOpacity,
+            color: NAVY,
+            opacity: 0.6,
             fontVariantNumeric: "tabular-nums",
           }}
         >
           {subtitle}
         </div>
+        {extra ? (
+          <div
+            style={{
+              marginTop: 2,
+              fontSize: 12,
+              color: subColor,
+              opacity: subOpacity,
+              fontWeight: tone === "ok" ? 500 : 600,
+            }}
+          >
+            {extra}
+          </div>
+        ) : null}
       </div>
       <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
     </Link>
