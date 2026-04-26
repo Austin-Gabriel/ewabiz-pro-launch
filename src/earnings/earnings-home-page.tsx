@@ -19,6 +19,13 @@ import {
   type EarningsPeriod,
 } from "@/data/mock-earnings";
 import { useDevState } from "@/dev-state/dev-state-context";
+import { useAuth } from "@/auth/auth-context";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
+import {
+  resolveProState,
+  pendingBalanceOverride,
+  type ResolvedProState,
+} from "./earnings-state";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -50,6 +57,14 @@ function densityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"
 
 export function EarningsHomePage() {
   const { state: dev } = useDevState();
+  const auth = useAuth();
+  const { data: kyc } = useKyc();
+  const proState: ResolvedProState = resolveProState(dev.proState, auth, kyc);
+
+  // Upstream PRO STATE wins. Earnings is gated when not live.
+  if (proState === "mid-onboarding") return <LockedState />;
+  if (proState === "mid-pending") return <PendingApprovalState />;
+
   const density = densityFromDev(dev.dataDensity);
   const [period, setPeriod] = useState<EarningsPeriod>("week");
 
@@ -64,7 +79,7 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
-        <PendingBalanceCard events={events} />
+        <PendingBalanceCard events={events} pendingOverride={dev.pendingBalance} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <FeesTransparencyCard />
@@ -285,8 +300,18 @@ function EmptyChart() {
 
 /* ---------- Pending balance ---------- */
 
-function PendingBalanceCard({ events }: { events: ReturnType<typeof earningsForDensity> }) {
-  const pending = useMemo(() => pendingPayoutFor(events), [events]);
+function PendingBalanceCard({
+  events,
+  pendingOverride,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  pendingOverride: ReturnType<typeof useDevState>["state"]["pendingBalance"];
+}) {
+  const computed = useMemo(() => pendingPayoutFor(events), [events]);
+  const overrideAmount = pendingBalanceOverride(pendingOverride);
+  const pending = overrideAmount === null
+    ? computed
+    : { ...computed, amount: overrideAmount, bookingCount: overrideAmount === 0 ? 0 : Math.max(1, computed.bookingCount) };
   const hasPending = pending.amount > 0;
   return (
     <Card>
@@ -552,5 +577,105 @@ function EarningsBottomTabs() {
         if (k === "earnings") navigate({ to: "/earnings" });
       }}
     />
+  );
+}
+
+/* ---------- PRO STATE gates ---------- */
+
+/**
+ * Mid-onboarding lock. Pro hasn't completed setup yet. Earnings is a
+ * locked surface — calm, explanatory, with a CTA back to /home where the
+ * onboarding resume strip lives.
+ */
+function LockedState() {
+  const navigate = useNavigate();
+  return (
+    <HomeShell>
+      <PageHeader />
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24" style={{ fontFamily: UI }}>
+        <div
+          aria-hidden
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: "rgba(6,28,39,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V8a4 4 0 018 0v3" />
+          </svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
+          Earnings unlock at launch
+        </div>
+        <div style={{ marginTop: 8, fontSize: 14, color: NAVY, opacity: 0.7, textAlign: "center", lineHeight: 1.5, maxWidth: 280 }}>
+          Complete your setup and verification to start taking bookings — your earnings surface
+          activates the moment you're approved.
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/home" })}
+          className="mt-6 transition-opacity active:opacity-70"
+          style={{
+            fontFamily: UI,
+            fontSize: 14,
+            fontWeight: 600,
+            color: NAVY,
+            backgroundColor: ORANGE,
+            padding: "12px 22px",
+            borderRadius: 999,
+          }}
+        >
+          Continue setup
+        </button>
+      </div>
+      <EarningsBottomTabs />
+    </HomeShell>
+  );
+}
+
+/**
+ * Pending-approval empty state. Verification submitted, waiting on review.
+ * Tab is reachable but shows a quiet placeholder — no fake numbers.
+ */
+function PendingApprovalState() {
+  return (
+    <HomeShell>
+      <PageHeader />
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24" style={{ fontFamily: UI }}>
+        <div
+          aria-hidden
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: "rgba(255,130,63,0.10)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 18,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
+          Earnings will appear soon
+        </div>
+        <div style={{ marginTop: 8, fontSize: 14, color: NAVY, opacity: 0.7, textAlign: "center", lineHeight: 1.5, maxWidth: 300 }}>
+          Once you're approved and start taking bookings, your earnings, payouts, and tax documents
+          will live here.
+        </div>
+      </div>
+      <EarningsBottomTabs />
+    </HomeShell>
   );
 }

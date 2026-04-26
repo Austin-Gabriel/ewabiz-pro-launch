@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDevState } from "@/dev-state/dev-state-context";
 import {
   EARNINGS_NAVY,
   EARNINGS_UI,
@@ -9,18 +10,48 @@ import {
 
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
+const ORANGE = "#FF823F";
 
 /**
  * Payout Method — banking surface. Shows the connected bank account, payout
  * cadence, and verification state. Tone is private-banking calm: no warnings
  * unless something actually needs attention. "Change account" opens a sheet
  * placeholder; in production this would step through Stripe Connect.
+ *
+ * Driven by dev-state `payoutState`:
+ *   - none           → no connected account, primary CTA is "Connect bank"
+ *   - active / auto  → verified Chase account, normal surface
+ *   - pending        → bank shown with "Pending" pill + verification banner
+ *   - failed-recent  → verified bank + retry banner referencing the bounce
  */
 export function PayoutMethodPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { state: dev } = useDevState();
+  const payoutState = dev.payoutState;
+
+  if (payoutState === "none") {
+    return <NoMethodState onConnect={() => setSheetOpen(true)} sheetOpen={sheetOpen} onClose={() => setSheetOpen(false)} />;
+  }
 
   return (
     <EarningsSubShell title="Payout method">
+      {payoutState === "failed-recent" ? (
+        <Banner
+          tone="warning"
+          title="Last payout failed"
+          body="Bank verification expired before the last deposit landed. Retry to resume payouts."
+          ctaLabel="Retry payout"
+          onCta={() => setSheetOpen(true)}
+        />
+      ) : null}
+      {payoutState === "pending" ? (
+        <Banner
+          tone="info"
+          title="Verifying your account"
+          body="Two small deposits will arrive in 1–2 business days. Confirm them to activate payouts."
+        />
+      ) : null}
+
       <EarningsCard>
         <div style={{ padding: 18, fontFamily: UI }}>
           <EarningsCardEyebrow>Connected account</EarningsCardEyebrow>
@@ -40,7 +71,7 @@ export function PayoutMethodPage() {
                 Checking ••4821
               </div>
             </div>
-            <VerifiedPill />
+            <StatusPill kind={payoutState === "pending" ? "pending" : payoutState === "failed-recent" ? "attention" : "verified"} />
           </div>
         </div>
       </EarningsCard>
@@ -101,6 +132,135 @@ export function PayoutMethodPage() {
 
       {sheetOpen ? <Sheet onClose={() => setSheetOpen(false)} /> : null}
     </EarningsSubShell>
+  );
+}
+
+function NoMethodState({
+  onConnect,
+  sheetOpen,
+  onClose,
+}: {
+  onConnect: () => void;
+  sheetOpen: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <EarningsSubShell title="Payout method">
+      <EarningsCard>
+        <div style={{ padding: 22, fontFamily: UI, textAlign: "center" }}>
+          <BankGlyph />
+          <div style={{ marginTop: 14, fontSize: 16, fontWeight: 600, color: NAVY }}>
+            No bank connected
+          </div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 13,
+              color: NAVY,
+              opacity: 0.7,
+              lineHeight: 1.55,
+              maxWidth: 280,
+              margin: "6px auto 0",
+            }}
+          >
+            Connect a checking account to receive your weekly payouts. Verification takes about a
+            minute.
+          </div>
+        </div>
+      </EarningsCard>
+      <button
+        type="button"
+        onClick={onConnect}
+        className="mt-1 transition-opacity active:opacity-60"
+        style={{
+          fontFamily: UI,
+          fontSize: 15,
+          fontWeight: 600,
+          color: NAVY,
+          backgroundColor: ORANGE,
+          padding: "14px 0",
+          borderRadius: 12,
+          width: "100%",
+        }}
+      >
+        Connect bank
+      </button>
+      {sheetOpen ? <Sheet onClose={onClose} /> : null}
+    </EarningsSubShell>
+  );
+}
+
+function Banner({
+  tone,
+  title,
+  body,
+  ctaLabel,
+  onCta,
+}: {
+  tone: "warning" | "info";
+  title: string;
+  body: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+}) {
+  const palette =
+    tone === "warning"
+      ? { bg: "rgba(220,38,38,0.08)", fg: "#991B1B", accent: "#B91C1C" }
+      : { bg: "rgba(255,130,63,0.10)", fg: "#7A3A12", accent: ORANGE };
+  return (
+    <div
+      style={{
+        backgroundColor: palette.bg,
+        borderRadius: 12,
+        padding: 14,
+        fontFamily: UI,
+      }}
+    >
+      <div style={{ fontSize: 13, fontWeight: 700, color: palette.fg }}>{title}</div>
+      <div style={{ marginTop: 4, fontSize: 12.5, color: palette.fg, opacity: 0.85, lineHeight: 1.5 }}>
+        {body}
+      </div>
+      {ctaLabel ? (
+        <button
+          type="button"
+          onClick={onCta}
+          className="mt-2 transition-opacity active:opacity-70"
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: "0.02em",
+            color: palette.accent,
+          }}
+        >
+          {ctaLabel} →
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function StatusPill({ kind }: { kind: "verified" | "pending" | "attention" }) {
+  const palette = {
+    verified: { bg: "rgba(22,163,74,0.12)", fg: "#15803D", label: "Verified" },
+    pending: { bg: "rgba(255,130,63,0.14)", fg: "#B8531C", label: "Pending" },
+    attention: { bg: "rgba(220,38,38,0.10)", fg: "#B91C1C", label: "Attention" },
+  }[kind];
+  return (
+    <span
+      style={{
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+        padding: "2px 7px",
+        borderRadius: 999,
+        backgroundColor: palette.bg,
+        color: palette.fg,
+      }}
+    >
+      {palette.label}
+    </span>
   );
 }
 

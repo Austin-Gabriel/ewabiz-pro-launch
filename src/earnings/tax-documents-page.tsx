@@ -59,7 +59,34 @@ export function TaxDocumentsPage() {
     () => earningsForDensity(densityFromDev(dev.dataDensity)),
     [dev.dataDensity],
   );
-  const years = useMemo(() => summarizeByYear(events), [events]);
+  const years = useMemo(() => {
+    const all = summarizeByYear(events);
+    switch (dev.taxDocs) {
+      case "none":
+        return [];
+      case "current-year": {
+        const thisYear = new Date().getFullYear();
+        // Prefer real current-year row; otherwise synthesize a minimal one
+        // so the dev state is demonstrable even on empty datasets.
+        const found = all.find((y) => y.year === thisYear);
+        if (found) return [found];
+        return [{ year: thisYear, gross: 4820, net: 4099, bookings: 38 }];
+      }
+      case "multi-year": {
+        if (all.length >= 2) return all;
+        // Synthesize a 3-year history when mock data is too thin.
+        const thisYear = new Date().getFullYear();
+        return [
+          { year: thisYear, gross: 6240, net: 5304, bookings: 47 },
+          { year: thisYear - 1, gross: 18420, net: 15657, bookings: 142 },
+          { year: thisYear - 2, gross: 12180, net: 10353, bookings: 96 },
+        ];
+      }
+      case "auto":
+      default:
+        return all;
+    }
+  }, [events, dev.taxDocs]);
 
   return (
     <EarningsSubShell title="Tax documents">
