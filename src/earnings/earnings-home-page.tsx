@@ -1,19 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import {
   ALL_EARNINGS,
-  bucketsFor,
   earningsForDensity,
   formatMoney,
   pendingPayoutFor,
   tipSummaryFor,
   topServicesFor,
   totalsFor,
-  type ChartBucket,
   type EarningsDensity,
   type EarningsPeriod,
 } from "@/data/mock-earnings";
@@ -90,7 +87,6 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
-        <ChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <PayoutsCard events={events} payouts={payouts} />
