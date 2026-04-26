@@ -28,6 +28,7 @@ import {
   thisWeekStats,
   upcomingStats,
   nextPayoutStats,
+  periodBuckets,
 } from "./earnings-aggregates";
 
 const UI = HOME_SANS;
@@ -86,10 +87,10 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
+        <EarningsChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <PayoutsCard events={events} payouts={payouts} />
-        <DocsBankingCard payoutState={dev.payoutState} taxDocs={dev.taxDocs} />
         <FeesTransparencyCard />
       </div>
 
@@ -369,6 +370,116 @@ function KpiTile({
 }
 
 /* ---------- Top services ---------- */
+
+function EarningsChartCard({
+  events,
+  period,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  period: EarningsPeriod;
+}) {
+  const buckets = useMemo(() => periodBuckets(events, period), [events, period]);
+  const max = Math.max(1, ...buckets.map((b) => b.total));
+  const total = buckets.reduce((s, b) => s + b.total, 0);
+  const chartHeight = 96;
+
+  return (
+    <Card>
+      <div style={{ padding: 16, fontFamily: UI }}>
+        <div className="flex items-center justify-between">
+          <CardEyebrow>Earnings</CardEyebrow>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: NAVY,
+              opacity: 0.6,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {formatMoney(total)}
+          </div>
+        </div>
+        {total === 0 ? (
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 13,
+              color: NAVY,
+              opacity: 0.55,
+              textAlign: "center",
+              padding: "24px 0",
+            }}
+          >
+            No earnings in this period yet
+          </div>
+        ) : (
+          <>
+            <div
+              role="img"
+              aria-label="Earnings by period"
+              className="mt-3 flex items-end justify-between"
+              style={{ height: chartHeight, gap: 6 }}
+            >
+              {buckets.map((b, i) => {
+                const h = b.total === 0 ? 2 : Math.max(3, Math.round((b.total / max) * chartHeight));
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                      height: chartHeight,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: 28,
+                        height: h,
+                        borderRadius: 6,
+                        backgroundColor: b.total > 0 ? ORANGE : "rgba(6,28,39,0.08)",
+                      }}
+                      title={`${b.label}: ${formatMoney(b.total)}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              aria-hidden
+              style={{
+                marginTop: 8,
+                height: 1,
+                backgroundColor: "rgba(6,28,39,0.10)",
+              }}
+            />
+            <div className="mt-2 flex justify-between" style={{ gap: 6 }}>
+              {buckets.map((b, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    textAlign: "center",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: NAVY,
+                    opacity: 0.55,
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {b.label}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 function TopServicesCard({ events, period }: { events: ReturnType<typeof earningsForDensity>; period: EarningsPeriod }) {
   const top = useMemo(() => topServicesFor(events, period), [events, period]);
@@ -679,156 +790,6 @@ function PayoutsCard({
 function formatPayoutDateShort(d: Date): string {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${months[d.getMonth()]} ${d.getDate()}`;
-}
-
-/* ---------- Documents & banking card ---------- */
-
-function DocsBankingCard({
-  payoutState,
-  taxDocs,
-}: {
-  payoutState: ReturnType<typeof useDevState>["state"]["payoutState"];
-  taxDocs: ReturnType<typeof useDevState>["state"]["taxDocs"];
-}) {
-  const taxStatus =
-    taxDocs === "none"
-      ? "Not yet available"
-      : taxDocs === "multi-year"
-        ? "Multi-year history"
-        : "Current year ready";
-
-  const bankSubtitle =
-    payoutState === "none" ? "Not connected" : "Chase ••4821";
-  const bankStatusLine =
-    payoutState === "none"
-      ? null
-      : payoutState === "pending"
-        ? "Verifying"
-        : payoutState === "failed-recent"
-          ? "Needs attention"
-          : "Verified";
-
-  const bankTone: "ok" | "warn" | "err" =
-    payoutState === "failed-recent" || payoutState === "none"
-      ? "err"
-      : payoutState === "pending"
-        ? "warn"
-        : "ok";
-
-  return (
-    <Card>
-      <div className="flex flex-col">
-        <DocBankRow
-          to="/earnings/tax-documents"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
-              <path d="M14 3v5h5" />
-              <path d="M9 13h6" />
-              <path d="M9 17h4" />
-            </svg>
-          }
-          title="Tax documents"
-          subtitle={taxStatus}
-          divider
-        />
-        <DocBankRow
-          to="/earnings/payout-method"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 10l9-6 9 6" />
-              <path d="M5 10v8" />
-              <path d="M12 10v8" />
-              <path d="M19 10v8" />
-              <path d="M3 20h18" />
-            </svg>
-          }
-          title="Payout method"
-          subtitle={bankSubtitle}
-          extra={bankStatusLine}
-          tone={bankTone}
-        />
-      </div>
-    </Card>
-  );
-}
-
-function DocBankRow({
-  to,
-  icon,
-  title,
-  subtitle,
-  divider,
-  tone = "ok",
-  extra,
-}: {
-  to: string;
-  icon: ReactNode;
-  title: string;
-  subtitle: string;
-  divider?: boolean;
-  tone?: "ok" | "warn" | "err";
-  extra?: string | null;
-}) {
-  const subColor = tone === "err" ? "#B91C1C" : tone === "warn" ? "#B8531C" : NAVY;
-  const subOpacity = tone === "ok" ? 0.6 : 0.95;
-  return (
-    <Link
-      to={to as "/earnings/tax-documents"}
-      className="flex items-center gap-3 transition-colors active:bg-black/[0.03]"
-      style={{
-        padding: "14px 16px",
-        borderBottom: divider ? "1px solid rgba(6,28,39,0.08)" : "none",
-        textDecoration: "none",
-        fontFamily: UI,
-      }}
-    >
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 9,
-          backgroundColor: "rgba(6,28,39,0.05)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
-          {title}
-        </div>
-        <div
-          style={{
-            marginTop: 2,
-            fontSize: 12,
-            color: NAVY,
-            opacity: 0.6,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {subtitle}
-        </div>
-        {extra ? (
-          <div
-            style={{
-              marginTop: 2,
-              fontSize: 12,
-              color: subColor,
-              opacity: subOpacity,
-              fontWeight: tone === "ok" ? 500 : 600,
-            }}
-          >
-            {extra}
-          </div>
-        ) : null}
-      </div>
-      <span style={{ opacity: 0.4, fontSize: 16, color: NAVY }}>→</span>
-    </Link>
-  );
 }
 
 /* ---------- Card primitive ---------- */
