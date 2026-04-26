@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { earningsForPayout, findPayoutById } from "@/data/mock-payouts";
 import { formatMoney, type EarningEvent } from "@/data/mock-earnings";
@@ -35,6 +36,7 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
   const gross = items.reduce((s, e) => s + e.gross, 0);
   const tips = items.reduce((s, e) => s + e.tip, 0);
   const fees = items.reduce((s, e) => s + e.fee, 0);
+  const clientPaid = gross + tips;
 
   return (
     <EarningsSubShell title="Payout" backTo="/earnings/payouts">
@@ -91,12 +93,16 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
         <div style={{ padding: 16, fontFamily: UI }}>
           <EarningsCardEyebrow>Breakdown</EarningsCardEyebrow>
           <div className="mt-3 flex flex-col" style={{ gap: 8 }}>
-            <BreakdownLine label="Gross" value={formatMoney(gross)} />
-            <BreakdownLine label="Tips" value={`+ ${formatMoney(tips)}`} />
-            <BreakdownLine label="Platform fee" value={`− ${formatMoney(fees)}`} />
+            <BreakdownLine label="Clients paid" value={formatMoney(clientPaid)} />
             <div style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)", margin: "6px 0" }} />
-            <BreakdownLine label="Net payout" value={formatMoney(payout.amount)} bold />
+            <BreakdownLine label="Your earnings" value={formatMoney(payout.amount)} bold />
+            {tips > 0 ? (
+              <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+                Includes {formatMoney(tips)} in tips
+              </div>
+            ) : null}
           </div>
+          <DetailsToggle gross={gross} tips={tips} fees={fees} net={payout.amount} />
         </div>
       </EarningsCard>
 
@@ -153,6 +159,62 @@ function BreakdownLine({ label, value, bold }: { label: string; value: string; b
       <span style={{ opacity: bold ? 1 : 0.7, fontWeight: bold ? 600 : 400 }}>{label}</span>
       <span style={{ fontWeight: bold ? 700 : 500, fontVariantNumeric: "tabular-nums" }}>{value}</span>
     </div>
+  );
+}
+
+function DetailsToggle({
+  gross,
+  tips,
+  fees,
+  net,
+}: {
+  gross: number;
+  tips: number;
+  fees: number;
+  net: number;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="mt-3 transition-opacity active:opacity-60"
+        style={{
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 600,
+          color: NAVY,
+          opacity: 0.6,
+          background: "none",
+          border: "none",
+          padding: 0,
+          textAlign: "left",
+        }}
+      >
+        {open ? "Hide details" : "How is this calculated?"}
+      </button>
+      {open ? (
+        <div
+          className="mt-2 flex flex-col"
+          style={{
+            gap: 8,
+            padding: 12,
+            borderRadius: 10,
+            backgroundColor: "rgba(6,28,39,0.04)",
+          }}
+        >
+          <BreakdownLine label="Service totals" value={formatMoney(gross)} />
+          <BreakdownLine label="Tips" value={`+ ${formatMoney(tips)}`} />
+          <BreakdownLine label="Platform fee" value={`− ${formatMoney(fees)}`} />
+          <div style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)", margin: "2px 0" }} />
+          <BreakdownLine label="Your earnings" value={formatMoney(net)} bold />
+          <div style={{ fontSize: 11, color: NAVY, opacity: 0.55, lineHeight: 1.5 }}>
+            Platform fee covers payment processing, identity verification, and customer support.
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
@@ -6,7 +6,6 @@ import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import {
   ALL_EARNINGS,
-  FEE_PERCENT,
   bucketsFor,
   earningsForDensity,
   formatMoney,
@@ -422,10 +421,14 @@ function TipSummaryCard({ events, period }: { events: ReturnType<typeof earnings
   );
 }
 
-/* ---------- Fees transparency ---------- */
+/* ---------- Earnings breakdown (pro-takeaway framing) ---------- */
 
 function FeesTransparencyCard() {
   const [open, setOpen] = useState(false);
+  // Illustrative example — keeps numbers small + memorable so the math is
+  // legible at a glance. Not tied to a real booking.
+  const clientPays = 77;
+  const youEarn = 70;
   return (
     <Card>
       <button
@@ -435,26 +438,55 @@ function FeesTransparencyCard() {
         style={{ padding: 16, fontFamily: UI, textAlign: "left", color: NAVY }}
       >
         <div>
-          <CardEyebrow>Platform fee</CardEyebrow>
+          <CardEyebrow>How earnings work</CardEyebrow>
           <div style={{ fontSize: 14, fontWeight: 500, marginTop: 4, color: NAVY }}>
-            Ewà takes <span style={{ fontWeight: 600 }}>{FEE_PERCENT}%</span> per booking
+            See what you keep per booking
           </div>
         </div>
         <Chevron open={open} />
       </button>
       {open ? (
-        <div
-          style={{
-            padding: "0 16px 16px",
-            fontFamily: UI,
-            fontSize: 13,
-            color: NAVY,
-            opacity: 0.75,
-            lineHeight: 1.55,
-          }}
-        >
-          Covers payment processing, identity verification, fraud protection, and customer support.
-          Tips pass through to you 100%.
+        <div style={{ padding: "0 16px 16px", fontFamily: UI }}>
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              backgroundColor: "rgba(6,28,39,0.04)",
+            }}
+          >
+            <div className="flex items-baseline justify-between">
+              <span style={{ fontSize: 13, color: NAVY, opacity: 0.7 }}>Client pays</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: NAVY, fontVariantNumeric: "tabular-nums" }}>
+                {formatMoney(clientPays, { showCents: true })}
+              </span>
+            </div>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>Your earnings</span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: NAVY,
+                  fontVariantNumeric: "tabular-nums",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {formatMoney(youEarn, { showCents: true })}
+              </span>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 12,
+              color: NAVY,
+              opacity: 0.6,
+              lineHeight: 1.5,
+            }}
+          >
+            Includes payment processing, identity verification, and customer support.
+            Tips always pass through to you in full.
+          </div>
         </div>
       ) : null}
     </Card>
@@ -485,44 +517,39 @@ function Chevron({ open }: { open: boolean }) {
 
 /* ---------- Link rows ---------- */
 
+const LINK_ROWS = [
+  { label: "Recent earnings", to: "/earnings/recent" as const },
+  { label: "Payout history", to: "/earnings/payouts" as const },
+  { label: "Tax documents", to: "/earnings/tax-documents" as const },
+  { label: "Payout method", to: "/earnings/payout-method" as const },
+];
+
 function LinkRows() {
-  const navigate = useNavigate();
-  const rows: { label: string; onClick: () => void }[] = [
-    { label: "Recent earnings", onClick: () => navigate({ to: "/earnings/recent" }) },
-    { label: "Payout history", onClick: () => navigate({ to: "/earnings/payouts" }) },
-    { label: "Tax documents", onClick: () => navigate({ to: "/earnings/tax-documents" }) },
-    { label: "Payout method", onClick: () => navigate({ to: "/earnings/payout-method" }) },
-  ];
   return (
     <Card>
       <div className="flex flex-col">
-        {rows.map((r, i) => (
-          <LinkRow key={r.label} label={r.label} onClick={r.onClick} divider={i < rows.length - 1} />
+        {LINK_ROWS.map((r, i) => (
+          <Link
+            key={r.label}
+            to={r.to}
+            className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+            style={{
+              padding: "14px 16px",
+              borderBottom: i < LINK_ROWS.length - 1 ? "1px solid rgba(6,28,39,0.08)" : "none",
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 500,
+              color: NAVY,
+              textAlign: "left",
+              textDecoration: "none",
+            }}
+          >
+            <span>{r.label}</span>
+            <span style={{ opacity: 0.4, fontSize: 16 }}>→</span>
+          </Link>
         ))}
       </div>
     </Card>
-  );
-}
-
-function LinkRow({ label, onClick, divider }: { label: string; onClick: () => void; divider: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
-      style={{
-        padding: "14px 16px",
-        borderBottom: divider ? "1px solid rgba(6,28,39,0.08)" : "none",
-        fontFamily: UI,
-        fontSize: 14,
-        fontWeight: 500,
-        color: NAVY,
-        textAlign: "left",
-      }}
-    >
-      <span>{label}</span>
-      <span style={{ opacity: 0.4, fontSize: 16 }}>→</span>
-    </button>
   );
 }
 
