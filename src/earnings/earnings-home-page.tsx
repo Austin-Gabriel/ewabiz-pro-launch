@@ -19,6 +19,13 @@ import {
   type EarningsPeriod,
 } from "@/data/mock-earnings";
 import { useDevState } from "@/dev-state/dev-state-context";
+import { useAuth } from "@/auth/auth-context";
+import { useKyc } from "@/onboarding-states/kyc/kyc-context";
+import {
+  resolveProState,
+  pendingBalanceOverride,
+  type ResolvedProState,
+} from "./earnings-state";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -50,6 +57,14 @@ function densityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"
 
 export function EarningsHomePage() {
   const { state: dev } = useDevState();
+  const auth = useAuth();
+  const { data: kyc } = useKyc();
+  const proState: ResolvedProState = resolveProState(dev.proState, auth, kyc);
+
+  // Upstream PRO STATE wins. Earnings is gated when not live.
+  if (proState === "mid-onboarding") return <LockedState />;
+  if (proState === "mid-pending") return <PendingApprovalState />;
+
   const density = densityFromDev(dev.dataDensity);
   const [period, setPeriod] = useState<EarningsPeriod>("week");
 
@@ -64,7 +79,7 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
-        <PendingBalanceCard events={events} />
+        <PendingBalanceCard events={events} pendingOverride={dev.pendingBalance} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <FeesTransparencyCard />
@@ -285,8 +300,18 @@ function EmptyChart() {
 
 /* ---------- Pending balance ---------- */
 
-function PendingBalanceCard({ events }: { events: ReturnType<typeof earningsForDensity> }) {
-  const pending = useMemo(() => pendingPayoutFor(events), [events]);
+function PendingBalanceCard({
+  events,
+  pendingOverride,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  pendingOverride: ReturnType<typeof useDevState>["state"]["pendingBalance"];
+}) {
+  const computed = useMemo(() => pendingPayoutFor(events), [events]);
+  const overrideAmount = pendingBalanceOverride(pendingOverride);
+  const pending = overrideAmount === null
+    ? computed
+    : { ...computed, amount: overrideAmount, bookingCount: overrideAmount === 0 ? 0 : Math.max(1, computed.bookingCount) };
   const hasPending = pending.amount > 0;
   return (
     <Card>
