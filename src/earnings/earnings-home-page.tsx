@@ -308,62 +308,137 @@ function EmptyChart() {
   );
 }
 
-/* ---------- Pending balance ---------- */
+/* ---------- Balance trio (Available · In transit · Pending) ---------- */
 
-function PendingBalanceCard({
+function BalanceTrio({
   events,
+  payouts,
   pendingOverride,
 }: {
   events: ReturnType<typeof earningsForDensity>;
+  payouts: Payout[];
   pendingOverride: ReturnType<typeof useDevState>["state"]["pendingBalance"];
 }) {
-  const computed = useMemo(() => pendingPayoutFor(events), [events]);
+  const split = useMemo(() => balanceSplit(events, payouts), [events, payouts]);
   const overrideAmount = pendingBalanceOverride(pendingOverride);
-  const pending = overrideAmount === null
-    ? computed
-    : { ...computed, amount: overrideAmount, bookingCount: overrideAmount === 0 ? 0 : Math.max(1, computed.bookingCount) };
-  const hasPending = pending.amount > 0;
+  const pending = overrideAmount === null ? split.pending : overrideAmount;
+  const inTransitId = inTransitPayoutId(payouts);
+  const computedPending = useMemo(() => pendingPayoutFor(events), [events]);
+  const inTransitArrives = payouts.find((p) => p.status === "in-transit")?.expectedArrival;
+
   return (
-    <Card>
-      <div style={{ padding: 16, fontFamily: UI }}>
-        <CardEyebrow>Pending payout</CardEyebrow>
-        <div className="mt-1 flex items-baseline justify-between">
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 600,
-              color: hasPending ? ORANGE : NAVY,
-              fontVariantNumeric: "tabular-nums",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            {formatMoney(pending.amount)}
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: NAVY,
-              opacity: 0.6,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {pending.bookingCount} {pending.bookingCount === 1 ? "booking" : "bookings"}
-          </div>
-        </div>
-        <div
+    <div className="grid grid-cols-3 gap-2">
+      <BalanceTile
+        dot="#15803D"
+        label="Available"
+        amount={split.available}
+        sub="paid out"
+        to="/earnings/payouts"
+      />
+      <BalanceTile
+        dot={ORANGE}
+        label="In transit"
+        amount={split.inTransit}
+        sub={inTransitArrives ? `arrives ${inTransitArrives}` : "—"}
+        to={inTransitId ? "/earnings/payouts/$id" : "/earnings/payouts"}
+        params={inTransitId ? { id: inTransitId } : undefined}
+        muted={split.inTransit === 0}
+      />
+      <BalanceTile
+        dot={NAVY}
+        label="Pending"
+        amount={pending}
+        sub={pending > 0 ? `arrives ${computedPending.arrivesOn}` : "nothing pending"}
+        to="/earnings/recent"
+        muted={pending === 0}
+      />
+    </div>
+  );
+}
+
+function BalanceTile({
+  dot,
+  label,
+  amount,
+  sub,
+  to,
+  params,
+  muted,
+}: {
+  dot: string;
+  label: string;
+  amount: number;
+  sub: string;
+  to: string;
+  params?: Record<string, string>;
+  muted?: boolean;
+}) {
+  const inner = (
+    <div
+      style={{
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(6,28,39,0.10)",
+        borderRadius: 12,
+        padding: "10px 11px",
+        fontFamily: UI,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        opacity: muted ? 0.7 : 1,
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          aria-hidden
+          style={{ width: 6, height: 6, borderRadius: 999, backgroundColor: dot, flexShrink: 0 }}
+        />
+        <span
           style={{
-            marginTop: 6,
-            fontSize: 13,
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
             color: NAVY,
-            opacity: 0.7,
+            opacity: 0.6,
           }}
         >
-          {hasPending
-            ? <>Arriving <span style={{ fontWeight: 600 }}>{pending.arrivesOn}</span> · direct deposit</>
-            : "Nothing pending right now."}
-        </div>
+          {label}
+        </span>
       </div>
-    </Card>
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          color: NAVY,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.015em",
+          lineHeight: 1.1,
+        }}
+      >
+        {formatMoney(amount)}
+      </div>
+      <div
+        style={{
+          fontSize: 10.5,
+          color: NAVY,
+          opacity: 0.55,
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1.3,
+        }}
+      >
+        {sub}
+      </div>
+    </div>
+  );
+  // Cast to keep the type-narrowed router happy with dynamic params on the
+  // in-transit tile.
+  return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <Link to={to as any} params={params as any} style={{ textDecoration: "none" }}>
+      {inner}
+    </Link>
   );
 }
 
