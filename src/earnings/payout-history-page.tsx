@@ -96,9 +96,10 @@ function SummaryCard({ summary }: { summary: ReturnType<typeof payoutYearSummary
             label="Most recent"
             value={
               summary.mostRecentAmount !== null
-                ? `${formatMoney(summary.mostRecentAmount)} · ${summary.mostRecentLabel}`
+                ? formatMoney(summary.mostRecentAmount)
                 : "—"
             }
+            sub={summary.mostRecentLabel ?? undefined}
           />
         </div>
         <div
@@ -117,7 +118,7 @@ function SummaryCard({ summary }: { summary: ReturnType<typeof payoutYearSummary
   );
 }
 
-function SummaryStat({ label, value }: { label: string; value: string }) {
+function SummaryStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div
       style={{
@@ -132,6 +133,11 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
       <div style={{ marginTop: 2, fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
         {value}
       </div>
+      {sub ? (
+        <div style={{ marginTop: 1, fontSize: 11, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+          {sub}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -171,9 +177,20 @@ function MonthHeader({ group }: { group: { shortLabel: string; total: number; pa
       <span style={{ fontWeight: 700, opacity: 0.7, letterSpacing: "0.02em" }}>
         {group.shortLabel}
       </span>
-      <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.6 }}>
-        {formatMoney(group.total)} · {group.payouts.length}{" "}
-        {group.payouts.length === 1 ? "payout" : "payouts"}
+      <span
+        style={{
+          fontVariantNumeric: "tabular-nums",
+          opacity: 0.6,
+          textAlign: "right",
+          display: "flex",
+          flexDirection: "column",
+          lineHeight: 1.3,
+        }}
+      >
+        <span>{formatMoney(group.total)}</span>
+        <span style={{ fontSize: 11, opacity: 0.85 }}>
+          {group.payouts.length} {group.payouts.length === 1 ? "payout" : "payouts"}
+        </span>
       </span>
     </div>
   );
@@ -247,7 +264,7 @@ function PayoutRow({ payout, divider }: { payout: Payout; divider: boolean }) {
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {payout.bankName} · ••{payout.bankLast4}
+          {payout.bankName} ••{payout.bankLast4}
         </div>
       </div>
       <div

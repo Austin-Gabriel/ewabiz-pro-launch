@@ -320,8 +320,11 @@ function BookingLine({ event, divider }: { event: EarningEvent; divider: boolean
     >
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: NAVY }}>{event.clientLabel}</div>
-        <div style={{ marginTop: 2, fontSize: 12, color: NAVY, opacity: 0.6 }}>
-          {event.service} · {formatShort(event.date)}
+        <div style={{ marginTop: 2, fontSize: 12, color: NAVY, opacity: 0.6, lineHeight: 1.4 }}>
+          {event.service}
+        </div>
+        <div style={{ marginTop: 1, fontSize: 11, color: NAVY, opacity: 0.5, fontVariantNumeric: "tabular-nums" }}>
+          {formatShort(event.date)}
         </div>
       </div>
       <div

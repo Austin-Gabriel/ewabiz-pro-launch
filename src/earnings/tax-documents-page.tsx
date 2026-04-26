@@ -320,24 +320,49 @@ function YearRow({ summary, divider }: { summary: YearSummary; divider: boolean 
         opacity: eligible ? 1 : 0.55,
       }}
     >
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
-          {summary.year} · 1099-K
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.2 }}>
+            {summary.year} 1099-K
+          </div>
+          {eligible ? (
+            <>
+              <div
+                style={{
+                  marginTop: 3,
+                  fontSize: 12,
+                  color: NAVY,
+                  opacity: 0.6,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {formatMoney(summary.gross)} gross
+              </div>
+              <div
+                style={{
+                  marginTop: 1,
+                  fontSize: 12,
+                  color: NAVY,
+                  opacity: 0.6,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {summary.bookings} {summary.bookings === 1 ? "booking" : "bookings"}
+              </div>
+            </>
+          ) : (
+            <div
+              style={{
+                marginTop: 3,
+                fontSize: 12,
+                color: NAVY,
+                opacity: 0.6,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              Below reporting threshold ({formatMoney(THRESHOLD)})
+            </div>
+          )}
         </div>
-        <div
-          style={{
-            marginTop: 3,
-            fontSize: 12,
-            color: NAVY,
-            opacity: 0.6,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {eligible
-            ? `${formatMoney(summary.gross)} gross · ${summary.bookings} bookings`
-            : `Below reporting threshold (${formatMoney(THRESHOLD)})`}
-        </div>
-      </div>
       {eligible ? <DownloadGlyph /> : null}
     </button>
   );
