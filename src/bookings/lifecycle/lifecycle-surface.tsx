@@ -346,7 +346,10 @@ function IncomingRequest({
           {booking.clientName}
         </h1>
         <p style={{ ...subline(text), marginTop: 4, fontSize: 12.5 }}>
-          {booking.service} · {booking.durationMin} min
+          {booking.service}
+        </p>
+        <p style={{ ...subline(text), marginTop: 2, fontSize: 12, opacity: 0.65 }}>
+          {booking.durationMin} min
         </p>
         <p
           style={{
@@ -356,7 +359,7 @@ function IncomingRequest({
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {booking.distance} · {booking.etaMin} min away
+          {booking.distance} — {booking.etaMin} min away
         </p>
         <span
           style={{
@@ -531,7 +534,10 @@ function GetReadyPrepCountdown({ booking }: { booking: LifecycleBooking }) {
         Leave by {booking.leaveByAt}
       </p>
       <p style={{ ...subline(text), marginTop: 3, fontSize: 11, opacity: 0.55 }}>
-        You set {booking.prepMin} min prep · client expects you by {booking.arrivalAt}
+        You set {booking.prepMin} min prep
+      </p>
+      <p style={{ ...subline(text), marginTop: 2, fontSize: 11, opacity: 0.55 }}>
+        Client expects you by {booking.arrivalAt}
       </p>
     </div>
   );
@@ -588,7 +594,10 @@ function GetReadyLeaveBy({ booking }: { booking: LifecycleBooking }) {
           : `Arriving at ${booking.arrivalAt}`}
       </p>
       <p style={{ ...subline(text), marginTop: 4, fontSize: 11, opacity: 0.55 }}>
-        Scheduled booking · address now revealed
+        Scheduled booking
+      </p>
+      <p style={{ ...subline(text), marginTop: 2, fontSize: 11, opacity: 0.55 }}>
+        Address now revealed
       </p>
     </div>
   );
@@ -683,7 +692,10 @@ function DistanceHero({ booking }: { booking: LifecycleBooking }) {
         {booking.distance}
       </span>
       <p style={{ ...subline(text), marginTop: 8, fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
-        Est. {booking.etaMin} min · arriving {booking.arrivalAt}
+        Est. {booking.etaMin} min away
+      </p>
+      <p style={{ ...subline(text), marginTop: 2, fontSize: 12, opacity: 0.65, fontVariantNumeric: "tabular-nums" }}>
+        Arriving {booking.arrivalAt}
       </p>
     </div>
   );
@@ -812,7 +824,7 @@ function ArrivedPin({
           letterSpacing: "0.04em",
         }}
       >
-        DEMO PIN · {booking.pin}
+        DEMO PIN — {booking.pin}
       </p>
 
       <button
@@ -1047,7 +1059,7 @@ function Complete({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            +${booking.tipUsd} tip · thank you
+            +${booking.tipUsd} tip — thank you
           </p>
         ) : null}
       </div>
@@ -1114,7 +1126,7 @@ function RatingBlock({
       </div>
       <input
         type="text"
-        placeholder="Optional note · Great client, on time…"
+        placeholder="Optional note — e.g. great client, on time"
         value={note}
         onChange={(e) => onNote(e.target.value)}
         style={{
@@ -1294,7 +1306,7 @@ function NoShow({
                   fontWeight: sent ? 500 : 400,
                 }}
               >
-                {sent ? "✓" : "·"} Ping at {m} min{sent ? " · sent" : ""}
+                {sent ? "✓" : "•"} Ping at {m} min{sent ? " — sent" : ""}
               </li>
             );
           })}
@@ -1437,7 +1449,7 @@ function ClientCardInner({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {booking.service} · {booking.durationMin} min
+            {booking.service} — {booking.durationMin} min
           </div>
         </div>
         <span
@@ -1463,7 +1475,7 @@ function ClientCardInner({
         <div className="min-w-0 flex-1">
           <div style={{ fontFamily: UI, fontSize: 11.5, lineHeight: 1.35, opacity: 0.85 }}>{locationLine}</div>
           <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.55, marginTop: 1, fontVariantNumeric: "tabular-nums" }}>
-            {booking.distance} · {booking.etaMin} min away
+            {booking.distance} — {booking.etaMin} min away
           </div>
         </div>
       </div>
