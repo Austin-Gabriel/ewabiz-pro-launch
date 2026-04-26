@@ -12,6 +12,8 @@ import {
   EarningsCardEyebrow,
   EarningsSubShell,
 } from "./earnings-shell";
+import { taxYearToDate } from "./earnings-aggregates";
+import { downloadCsv } from "./csv-export";
 
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
@@ -59,6 +61,7 @@ export function TaxDocumentsPage() {
     () => earningsForDensity(densityFromDev(dev.dataDensity)),
     [dev.dataDensity],
   );
+  const ytd = useMemo(() => taxYearToDate(events), [events]);
   const years = useMemo(() => {
     const all = summarizeByYear(events);
     switch (dev.taxDocs) {
@@ -90,6 +93,7 @@ export function TaxDocumentsPage() {
 
   return (
     <EarningsSubShell title="Tax documents">
+      <YearToDateCard ytd={ytd} />
       {years.length === 0 ? (
         <EmptyState />
       ) : (
@@ -101,6 +105,8 @@ export function TaxDocumentsPage() {
           </div>
         </EarningsCard>
       )}
+
+      <OtherReportsCard events={events} />
 
       <EarningsCard>
         <div style={{ padding: 16, fontFamily: UI }}>
@@ -121,6 +127,179 @@ export function TaxDocumentsPage() {
         </div>
       </EarningsCard>
     </EarningsSubShell>
+  );
+}
+
+function YearToDateCard({ ytd }: { ytd: ReturnType<typeof taxYearToDate> }) {
+  const statusLabel =
+    ytd.status === "below-threshold"
+      ? "Below 1099 threshold"
+      : ytd.status === "eligible"
+        ? "1099 issued"
+        : "Estimated 1099 in January";
+  const statusTone = ytd.status === "below-threshold" ? "muted" : "orange";
+  return (
+    <EarningsCard>
+      <div style={{ padding: 18, fontFamily: UI }}>
+        <div className="flex items-center gap-2">
+          <EarningsCardEyebrow>{ytd.year} year-to-date</EarningsCardEyebrow>
+          <StatusPill label={statusLabel} tone={statusTone} />
+        </div>
+        <div
+          style={{
+            marginTop: 4,
+            fontSize: 30,
+            fontWeight: 600,
+            color: NAVY,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+          }}
+        >
+          {formatMoney(ytd.gross)}
+        </div>
+        <div style={{ marginTop: 4, fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
+          gross processed
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <YtdStat label="Net to you" value={formatMoney(ytd.net)} />
+          <YtdStat label="Bookings" value={String(ytd.bookings)} />
+        </div>
+      </div>
+    </EarningsCard>
+  );
+}
+
+function YtdStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: "8px 10px",
+        borderRadius: 10,
+        backgroundColor: "rgba(6,28,39,0.04)",
+        fontFamily: UI,
+        color: NAVY,
+      }}
+    >
+      <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.55, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        {label}
+      </div>
+      <div style={{ marginTop: 2, fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function StatusPill({ label, tone }: { label: string; tone: "muted" | "orange" }) {
+  const palette =
+    tone === "muted"
+      ? { bg: "rgba(6,28,39,0.08)", fg: NAVY }
+      : { bg: "rgba(255,130,63,0.14)", fg: "#7A3A12" };
+  return (
+    <span
+      style={{
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.04em",
+        textTransform: "uppercase",
+        padding: "2px 7px",
+        borderRadius: 999,
+        backgroundColor: palette.bg,
+        color: palette.fg,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function OtherReportsCard({ events }: { events: EarningEvent[] }) {
+  const exportAnnual = () => {
+    const year = new Date().getFullYear();
+    const inYear = events.filter((e) => e.date.getFullYear() === year);
+    const rows: (string | number)[][] = [
+      ["Date", "Client", "Service", "Gross", "Tip", "Fee", "Net"],
+      ...inYear.map((e) => [
+        e.date.toISOString().slice(0, 10),
+        e.clientLabel,
+        e.service,
+        e.gross,
+        e.tip,
+        e.fee,
+        e.net,
+      ]),
+    ];
+    downloadCsv(`Ewa-annual-${year}.csv`, rows);
+  };
+  const exportQuarterly = () => {
+    const year = new Date().getFullYear();
+    const buckets = new Map<string, { gross: number; net: number; bookings: number }>();
+    for (const e of events) {
+      if (e.date.getFullYear() !== year) continue;
+      const q = Math.floor(e.date.getMonth() / 3) + 1;
+      const key = `Q${q}`;
+      if (!buckets.has(key)) buckets.set(key, { gross: 0, net: 0, bookings: 0 });
+      const b = buckets.get(key)!;
+      b.gross += e.gross + e.tip;
+      b.net += e.net;
+      b.bookings += 1;
+    }
+    const rows: (string | number)[][] = [
+      ["Quarter", "Gross", "Net", "Bookings"],
+      ...["Q1", "Q2", "Q3", "Q4"].map((q) => {
+        const b = buckets.get(q) ?? { gross: 0, net: 0, bookings: 0 };
+        return [q, b.gross, b.net, b.bookings];
+      }),
+    ];
+    downloadCsv(`Ewa-quarterly-${year}.csv`, rows);
+  };
+  const rows = [
+    { label: "Annual summary", sub: "All bookings, this year", action: exportAnnual, format: "CSV" },
+    { label: "Quarterly breakdown", sub: "Gross & net per quarter", action: exportQuarterly, format: "CSV" },
+  ];
+  return (
+    <EarningsCard>
+      <div style={{ padding: "16px 16px 8px", fontFamily: UI }}>
+        <EarningsCardEyebrow>Other reports</EarningsCardEyebrow>
+      </div>
+      <div className="flex flex-col">
+        {rows.map((r, i) => (
+          <button
+            key={r.label}
+            type="button"
+            onClick={r.action}
+            className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
+            style={{
+              padding: "12px 16px",
+              borderTop: i === 0 ? "1px solid rgba(6,28,39,0.06)" : "1px solid rgba(6,28,39,0.06)",
+              fontFamily: UI,
+              textAlign: "left",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: NAVY }}>{r.label}</div>
+              <div style={{ marginTop: 2, fontSize: 12, color: NAVY, opacity: 0.6 }}>{r.sub}</div>
+            </div>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                color: NAVY,
+                opacity: 0.55,
+                padding: "3px 7px",
+                borderRadius: 999,
+                border: "1px solid rgba(6,28,39,0.15)",
+              }}
+            >
+              {r.format}
+            </span>
+          </button>
+        ))}
+      </div>
+    </EarningsCard>
   );
 }
 
