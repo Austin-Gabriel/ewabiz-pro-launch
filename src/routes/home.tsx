@@ -176,6 +176,10 @@ function HomePage() {
               });
               return;
             }
+            if (k === "earnings") {
+              navigate({ to: "/earnings" });
+              return;
+            }
             setActiveTab(k);
           }}
           badge={
