@@ -1,19 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import {
   ALL_EARNINGS,
-  bucketsFor,
   earningsForDensity,
   formatMoney,
   pendingPayoutFor,
   tipSummaryFor,
   topServicesFor,
   totalsFor,
-  type ChartBucket,
   type EarningsDensity,
   type EarningsPeriod,
 } from "@/data/mock-earnings";
@@ -90,7 +87,6 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
-        <ChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <PayoutsCard events={events} payouts={payouts} />
@@ -232,97 +228,7 @@ function PeriodToggle({ value, onChange }: { value: EarningsPeriod; onChange: (p
   );
 }
 
-/* ---------- Chart ---------- */
-
-function ChartCard({ events, period }: { events: ReturnType<typeof earningsForDensity>; period: EarningsPeriod }) {
-  const buckets = useMemo(() => bucketsFor(events, period), [events, period]);
-  return (
-    <Card>
-      <CardBodyForChart buckets={buckets} period={period} />
-    </Card>
-  );
-}
-
-function CardBodyForChart({ buckets, period }: { buckets: ChartBucket[]; period: EarningsPeriod }) {
-  const max = Math.max(1, ...buckets.map((b) => b.amount));
-  const hasData = buckets.some((b) => b.amount > 0);
-  return (
-    <div style={{ padding: 14 }}>
-      <CardEyebrow>{labelFor(period)}</CardEyebrow>
-      <div style={{ height: 168, marginTop: 10 }}>
-        {hasData ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={buckets} margin={{ top: 8, right: 4, bottom: 0, left: 4 }} barCategoryGap="22%">
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11, fill: NAVY, opacity: 0.55, fontFamily: UI }}
-              />
-              <YAxis hide domain={[0, max * 1.15]} />
-              <Tooltip
-                cursor={{ fill: "rgba(6,28,39,0.04)" }}
-                content={<ChartTooltip />}
-              />
-              <Bar dataKey="amount" radius={[3, 3, 0, 0]}>
-                {buckets.map((b, i) => (
-                  <Cell key={i} fill={b.amount > 0 ? NAVY : "rgba(6,28,39,0.10)"} fillOpacity={b.amount > 0 ? 0.85 : 1} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <EmptyChart />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartBucket }[] }) {
-  if (!active || !payload?.length) return null;
-  const b = payload[0].payload;
-  return (
-    <div
-      style={{
-        backgroundColor: NAVY,
-        color: "#F0EBD8",
-        padding: "8px 10px",
-        borderRadius: 8,
-        fontFamily: UI,
-        fontSize: 12,
-        fontVariantNumeric: "tabular-nums",
-        boxShadow: "0 8px 24px -10px rgba(6,28,39,0.4)",
-      }}
-    >
-      <div style={{ fontWeight: 600, marginBottom: 2 }}>{b.fullLabel}</div>
-      <div style={{ opacity: 0.85 }}>{formatMoney(b.amount)}</div>
-      <div style={{ opacity: 0.65, marginTop: 2 }}>
-        {b.bookings} {b.bookings === 1 ? "booking" : "bookings"}
-      </div>
-    </div>
-  );
-}
-
-function labelFor(period: EarningsPeriod): string {
-  if (period === "today") return "Today by hour";
-  if (period === "week") return "Last 7 days";
-  if (period === "month") return "Last 4 weeks";
-  return "Last 12 months";
-}
-
-function EmptyChart() {
-  return (
-    <div
-      className="flex h-full items-center justify-center"
-      style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.45 }}
-    >
-      No earnings yet
-    </div>
-  );
-}
-
-/* ---------- Context summary (This week / Upcoming / Next payout) ---------- */
+/* ---------- Context summary (KPI strip: This week / Upcoming / Next payout) ---------- */
 
 function ContextSummaryCard({
   events,
@@ -338,121 +244,113 @@ function ContextSummaryCard({
   // If everything is empty (new pro), render nothing — keeps the surface quiet.
   if (week.earned === 0 && upcoming.revenue === 0 && !next) return null;
 
+  const trendArrow = week.trend === "up" ? "↑" : week.trend === "down" ? "↓" : "→";
+  const trendTone: "good" | "bad" | "neutral" =
+    week.trend === "up" ? "good" : week.trend === "down" ? "bad" : "neutral";
+
   return (
-    <Card>
-      <div style={{ padding: 18, fontFamily: UI, display: "flex", flexDirection: "column", gap: 18 }}>
-        <SummarySection eyebrow="This week">
-          <SummaryHeadline>{formatMoney(week.earned)} earned</SummaryHeadline>
-          {week.deltaPct !== null ? (
-            <SummaryLine
-              tone={week.trend === "up" ? "good" : week.trend === "down" ? "bad" : "neutral"}
-            >
-              {week.trend === "up" ? "↑" : week.trend === "down" ? "↓" : "→"}{" "}
-              {Math.abs(week.deltaPct)}% vs last week
-            </SummaryLine>
-          ) : (
-            <SummaryLine tone="neutral">First week of activity</SummaryLine>
-          )}
-          <SummaryLine>
-            {week.bookings} {week.bookings === 1 ? "booking" : "bookings"}
-          </SummaryLine>
-          {week.bookings > 0 ? (
-            <SummaryLine>Avg {formatMoney(week.averagePerBooking)}</SummaryLine>
-          ) : null}
-        </SummarySection>
-
-        {upcoming.revenue > 0 ? (
-          <>
-            <Divider />
-            <SummarySection eyebrow="Upcoming">
-              <SummaryHeadline>{formatMoney(upcoming.revenue)} booked</SummaryHeadline>
-              <SummaryLine>Next 7 days</SummaryLine>
-              <SummaryLine>
-                {upcoming.appointments}{" "}
-                {upcoming.appointments === 1 ? "appointment" : "appointments"}
-              </SummaryLine>
-            </SummarySection>
-          </>
-        ) : null}
-
-        {next ? (
-          <>
-            <Divider />
-            <SummarySection eyebrow="Next payout">
-              <SummaryHeadline>{next.weekdayLabel}</SummaryHeadline>
-              <SummaryLine strong>{formatMoney(next.amount)}</SummaryLine>
-              <SummaryLine>Arrives {next.shortDate}</SummaryLine>
-            </SummarySection>
-          </>
-        ) : null}
-      </div>
-    </Card>
-  );
-}
-
-function SummarySection({ eyebrow, children }: { eyebrow: string; children: ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <CardEyebrow>{eyebrow}</CardEyebrow>
-      <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-        {children}
-      </div>
+    <div className="grid grid-cols-3 gap-2">
+      <KpiTile
+        eyebrow="This week"
+        headline={formatMoney(week.earned)}
+        sub={
+          week.deltaPct !== null
+            ? `${trendArrow} ${Math.abs(week.deltaPct)}% vs last week`
+            : "First week"
+        }
+        subTone={week.deltaPct !== null ? trendTone : "neutral"}
+      />
+      <KpiTile
+        eyebrow="Upcoming"
+        headline={upcoming.revenue > 0 ? formatMoney(upcoming.revenue) : "—"}
+        sub={
+          upcoming.revenue > 0
+            ? `${upcoming.appointments} ${upcoming.appointments === 1 ? "appt" : "appts"} · next 7 days`
+            : "No upcoming"
+        }
+        muted={upcoming.revenue === 0}
+      />
+      <KpiTile
+        eyebrow="Next payout"
+        headline={next ? next.weekdayLabel : "—"}
+        sub={next ? `${formatMoney(next.amount)} · ${next.shortDate}` : "Nothing in transit"}
+        muted={!next}
+      />
     </div>
   );
 }
 
-function SummaryHeadline({ children }: { children: ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: UI,
-        fontSize: 22,
-        fontWeight: 600,
-        color: NAVY,
-        letterSpacing: "-0.015em",
-        fontVariantNumeric: "tabular-nums",
-        lineHeight: 1.2,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function SummaryLine({
-  children,
-  tone = "neutral",
-  strong,
+function KpiTile({
+  eyebrow,
+  headline,
+  sub,
+  subTone = "neutral",
+  muted,
 }: {
-  children: ReactNode;
-  tone?: "good" | "bad" | "neutral";
-  strong?: boolean;
+  eyebrow: string;
+  headline: string;
+  sub: string;
+  subTone?: "good" | "bad" | "neutral";
+  muted?: boolean;
 }) {
-  const color = tone === "good" ? "#15803D" : tone === "bad" ? "#B91C1C" : NAVY;
-  const opacity = tone === "neutral" ? (strong ? 0.85 : 0.6) : 0.95;
+  const subColor = subTone === "good" ? "#15803D" : subTone === "bad" ? "#B91C1C" : NAVY;
+  const subOpacity = subTone === "neutral" ? 0.55 : 0.95;
+  const subWeight = subTone === "neutral" ? 500 : 600;
   return (
     <div
       style={{
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(6,28,39,0.10)",
+        borderRadius: 12,
+        padding: "10px 11px",
         fontFamily: UI,
-        fontSize: 13,
-        fontWeight: strong ? 600 : 500,
-        color,
-        opacity,
-        fontVariantNumeric: "tabular-nums",
-        lineHeight: 1.4,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.05)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        minHeight: 86,
+        opacity: muted ? 0.7 : 1,
       }}
     >
-      {children}
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: NAVY,
+          opacity: 0.6,
+          lineHeight: 1.2,
+        }}
+      >
+        {eyebrow}
+      </div>
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          color: NAVY,
+          fontVariantNumeric: "tabular-nums",
+          letterSpacing: "-0.015em",
+          lineHeight: 1.1,
+        }}
+      >
+        {headline}
+      </div>
+      <div
+        style={{
+          fontSize: 11,
+          color: subColor,
+          opacity: subOpacity,
+          fontWeight: subWeight,
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1.3,
+          marginTop: "auto",
+        }}
+      >
+        {sub}
+      </div>
     </div>
-  );
-}
-
-function Divider() {
-  return (
-    <div
-      aria-hidden
-      style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)", margin: "0 -2px" }}
-    />
   );
 }
 
