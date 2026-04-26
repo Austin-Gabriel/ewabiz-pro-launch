@@ -28,6 +28,7 @@ import {
   thisWeekStats,
   upcomingStats,
   nextPayoutStats,
+  periodBuckets,
 } from "./earnings-aggregates";
 
 const UI = HOME_SANS;
@@ -86,10 +87,10 @@ export function EarningsHomePage() {
         <Hero events={events} period={period} />
         <ContextSummaryCard events={events} payouts={payouts} />
         <PeriodToggle value={period} onChange={setPeriod} />
+        <EarningsChartCard events={events} period={period} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
         <PayoutsCard events={events} payouts={payouts} />
-        <DocsBankingCard payoutState={dev.payoutState} taxDocs={dev.taxDocs} />
         <FeesTransparencyCard />
       </div>
 
