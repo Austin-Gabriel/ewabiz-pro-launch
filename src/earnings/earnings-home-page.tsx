@@ -453,26 +453,72 @@ function TopServicesCard({ events, period }: { events: ReturnType<typeof earning
         <CardEyebrow>Top services</CardEyebrow>
         <div className="mt-3 flex flex-col" style={{ gap: 10 }}>
           {top.map((t) => (
-            <div key={t.service} className="flex items-baseline justify-between">
-              <div style={{ fontSize: 14, fontWeight: 500, color: NAVY }}>{t.service}</div>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: NAVY,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {formatMoney(t.amount)}{" "}
-                <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>
-                  · {t.bookings}
-                </span>
-              </div>
-            </div>
+            <ServiceRow key={t.service} service={t.service} amount={t.amount} bookings={t.bookings} events={events} />
           ))}
         </div>
       </div>
     </Card>
+  );
+}
+
+function ServiceRow({
+  service,
+  amount,
+  bookings,
+  events,
+}: {
+  service: string;
+  amount: number;
+  bookings: number;
+  events: ReturnType<typeof earningsForDensity>;
+}) {
+  const spark = useMemo(() => serviceSparkline(events, service), [events, service]);
+  return (
+    <div className="flex items-center justify-between">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: NAVY }}>{service}</div>
+      </div>
+      <Sparkline values={spark} />
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: NAVY,
+          fontVariantNumeric: "tabular-nums",
+          marginLeft: 12,
+          textAlign: "right",
+          minWidth: 76,
+        }}
+      >
+        {formatMoney(amount)}{" "}
+        <span style={{ fontWeight: 400, opacity: 0.55, fontSize: 12 }}>· {bookings}</span>
+      </div>
+    </div>
+  );
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  const max = Math.max(1, ...values);
+  return (
+    <div className="flex items-end gap-0.5" style={{ height: 18, marginRight: 4 }}>
+      {values.map((v, i) => {
+        const h = Math.max(2, Math.round((v / max) * 18));
+        return (
+          <span
+            key={i}
+            aria-hidden
+            style={{
+              display: "inline-block",
+              width: 4,
+              height: h,
+              borderRadius: 1,
+              backgroundColor: v > 0 ? NAVY : "rgba(6,28,39,0.18)",
+              opacity: v > 0 ? 0.7 : 1,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
 
