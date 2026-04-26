@@ -25,6 +25,12 @@ import {
   pendingBalanceOverride,
   type ResolvedProState,
 } from "./earnings-state";
+import { payoutsForDensity, type Payout } from "@/data/mock-payouts";
+import {
+  balanceSplit,
+  inTransitPayoutId,
+  serviceSparkline,
+} from "./earnings-aggregates";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -68,6 +74,10 @@ export function EarningsHomePage() {
   const [period, setPeriod] = useState<EarningsPeriod>("week");
 
   const events = useMemo(() => earningsForDensity(density), [density]);
+  const payouts = useMemo(
+    () => payoutsForDensity(density === "none" ? "none" : density === "sparse" ? "sparse" : "rich"),
+    [density],
+  );
 
   return (
     <HomeShell>
@@ -76,13 +86,14 @@ export function EarningsHomePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         <Hero events={events} period={period} />
+        <BalanceTrio events={events} payouts={payouts} pendingOverride={dev.pendingBalance} />
         <PeriodToggle value={period} onChange={setPeriod} />
         <ChartCard events={events} period={period} />
-        <PendingBalanceCard events={events} pendingOverride={dev.pendingBalance} />
         <TopServicesCard events={events} period={period} />
         <TipSummaryCard events={events} period={period} />
+        <PayoutsCard events={events} payouts={payouts} />
+        <DocsBankingCard payoutState={dev.payoutState} taxDocs={dev.taxDocs} />
         <FeesTransparencyCard />
-        <LinkRows />
       </div>
 
       <EarningsBottomTabs />
