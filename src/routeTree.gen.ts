@@ -32,8 +32,10 @@ import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
 import { Route as KycApprovedRouteImport } from './routes/kyc.approved'
 import { Route as KycStepRouteImport } from './routes/kyc.$step'
+import { Route as EarningsTaxDocumentsRouteImport } from './routes/earnings.tax-documents'
 import { Route as EarningsRecentRouteImport } from './routes/earnings.recent'
 import { Route as EarningsPayoutsRouteImport } from './routes/earnings.payouts'
+import { Route as EarningsPayoutMethodRouteImport } from './routes/earnings.payout-method'
 import { Route as BookingsIdRouteImport } from './routes/bookings.$id'
 import { Route as EarningsPayoutsIdRouteImport } from './routes/earnings.payouts.$id'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api.public.seed-demo'
@@ -153,6 +155,11 @@ const KycStepRoute = KycStepRouteImport.update({
   path: '/$step',
   getParentRoute: () => KycRoute,
 } as any)
+const EarningsTaxDocumentsRoute = EarningsTaxDocumentsRouteImport.update({
+  id: '/tax-documents',
+  path: '/tax-documents',
+  getParentRoute: () => EarningsRoute,
+} as any)
 const EarningsRecentRoute = EarningsRecentRouteImport.update({
   id: '/recent',
   path: '/recent',
@@ -161,6 +168,11 @@ const EarningsRecentRoute = EarningsRecentRouteImport.update({
 const EarningsPayoutsRoute = EarningsPayoutsRouteImport.update({
   id: '/payouts',
   path: '/payouts',
+  getParentRoute: () => EarningsRoute,
+} as any)
+const EarningsPayoutMethodRoute = EarningsPayoutMethodRouteImport.update({
+  id: '/payout-method',
+  path: '/payout-method',
   getParentRoute: () => EarningsRoute,
 } as any)
 const BookingsIdRoute = BookingsIdRouteImport.update({
@@ -198,8 +210,10 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payout-method': typeof EarningsPayoutMethodRoute
   '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
+  '/earnings/tax-documents': typeof EarningsTaxDocumentsRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -228,8 +242,10 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payout-method': typeof EarningsPayoutMethodRoute
   '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
+  '/earnings/tax-documents': typeof EarningsTaxDocumentsRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -259,8 +275,10 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payout-method': typeof EarningsPayoutMethodRoute
   '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
   '/earnings/recent': typeof EarningsRecentRoute
+  '/earnings/tax-documents': typeof EarningsTaxDocumentsRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -291,8 +309,10 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payout-method'
     | '/earnings/payouts'
     | '/earnings/recent'
+    | '/earnings/tax-documents'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -321,8 +341,10 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payout-method'
     | '/earnings/payouts'
     | '/earnings/recent'
+    | '/earnings/tax-documents'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -351,8 +373,10 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payout-method'
     | '/earnings/payouts'
     | '/earnings/recent'
+    | '/earnings/tax-documents'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -547,6 +571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KycStepRouteImport
       parentRoute: typeof KycRoute
     }
+    '/earnings/tax-documents': {
+      id: '/earnings/tax-documents'
+      path: '/tax-documents'
+      fullPath: '/earnings/tax-documents'
+      preLoaderRoute: typeof EarningsTaxDocumentsRouteImport
+      parentRoute: typeof EarningsRoute
+    }
     '/earnings/recent': {
       id: '/earnings/recent'
       path: '/recent'
@@ -559,6 +590,13 @@ declare module '@tanstack/react-router' {
       path: '/payouts'
       fullPath: '/earnings/payouts'
       preLoaderRoute: typeof EarningsPayoutsRouteImport
+      parentRoute: typeof EarningsRoute
+    }
+    '/earnings/payout-method': {
+      id: '/earnings/payout-method'
+      path: '/payout-method'
+      fullPath: '/earnings/payout-method'
+      preLoaderRoute: typeof EarningsPayoutMethodRouteImport
       parentRoute: typeof EarningsRoute
     }
     '/bookings/$id': {
@@ -610,13 +648,17 @@ const EarningsPayoutsRouteWithChildren = EarningsPayoutsRoute._addFileChildren(
 )
 
 interface EarningsRouteChildren {
+  EarningsPayoutMethodRoute: typeof EarningsPayoutMethodRoute
   EarningsPayoutsRoute: typeof EarningsPayoutsRouteWithChildren
   EarningsRecentRoute: typeof EarningsRecentRoute
+  EarningsTaxDocumentsRoute: typeof EarningsTaxDocumentsRoute
 }
 
 const EarningsRouteChildren: EarningsRouteChildren = {
+  EarningsPayoutMethodRoute: EarningsPayoutMethodRoute,
   EarningsPayoutsRoute: EarningsPayoutsRouteWithChildren,
   EarningsRecentRoute: EarningsRecentRoute,
+  EarningsTaxDocumentsRoute: EarningsTaxDocumentsRoute,
 }
 
 const EarningsRouteWithChildren = EarningsRoute._addFileChildren(
