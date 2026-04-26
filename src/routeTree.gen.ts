@@ -32,7 +32,10 @@ import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
 import { Route as KycApprovedRouteImport } from './routes/kyc.approved'
 import { Route as KycStepRouteImport } from './routes/kyc.$step'
+import { Route as EarningsRecentRouteImport } from './routes/earnings.recent'
+import { Route as EarningsPayoutsRouteImport } from './routes/earnings.payouts'
 import { Route as BookingsIdRouteImport } from './routes/bookings.$id'
+import { Route as EarningsPayoutsIdRouteImport } from './routes/earnings.payouts.$id'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api.public.seed-demo'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -150,10 +153,25 @@ const KycStepRoute = KycStepRouteImport.update({
   path: '/$step',
   getParentRoute: () => KycRoute,
 } as any)
+const EarningsRecentRoute = EarningsRecentRouteImport.update({
+  id: '/recent',
+  path: '/recent',
+  getParentRoute: () => EarningsRoute,
+} as any)
+const EarningsPayoutsRoute = EarningsPayoutsRouteImport.update({
+  id: '/payouts',
+  path: '/payouts',
+  getParentRoute: () => EarningsRoute,
+} as any)
 const BookingsIdRoute = BookingsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => BookingsRoute,
+} as any)
+const EarningsPayoutsIdRoute = EarningsPayoutsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => EarningsPayoutsRoute,
 } as any)
 const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   id: '/api/public/seed-demo',
@@ -165,7 +183,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -180,6 +198,8 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -187,12 +207,13 @@ export interface FileRoutesByFullPath {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -207,6 +228,8 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -214,13 +237,14 @@ export interface FileRoutesByTo {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/biometric': typeof BiometricRoute
   '/bookings': typeof BookingsRouteWithChildren
-  '/earnings': typeof EarningsRoute
+  '/earnings': typeof EarningsRouteWithChildren
   '/enable-faceid': typeof EnableFaceidRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
@@ -235,6 +259,8 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/welcome': typeof WelcomeRoute
   '/bookings/$id': typeof BookingsIdRoute
+  '/earnings/payouts': typeof EarningsPayoutsRouteWithChildren
+  '/earnings/recent': typeof EarningsRecentRoute
   '/kyc/$step': typeof KycStepRoute
   '/kyc/approved': typeof KycApprovedRoute
   '/kyc/pending': typeof KycPendingRoute
@@ -242,6 +268,7 @@ export interface FileRoutesById {
   '/onboarding/$step': typeof OnboardingStepRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -264,6 +291,8 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payouts'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -271,6 +300,7 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -291,6 +321,8 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payouts'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -298,6 +330,7 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   id:
     | '__root__'
     | '/'
@@ -318,6 +351,8 @@ export interface FileRouteTypes {
     | '/verify'
     | '/welcome'
     | '/bookings/$id'
+    | '/earnings/payouts'
+    | '/earnings/recent'
     | '/kyc/$step'
     | '/kyc/approved'
     | '/kyc/pending'
@@ -325,13 +360,14 @@ export interface FileRouteTypes {
     | '/onboarding/$step'
     | '/signup/services'
     | '/api/public/seed-demo'
+    | '/earnings/payouts/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BiometricRoute: typeof BiometricRoute
   BookingsRoute: typeof BookingsRouteWithChildren
-  EarningsRoute: typeof EarningsRoute
+  EarningsRoute: typeof EarningsRouteWithChildren
   EnableFaceidRoute: typeof EnableFaceidRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
@@ -511,12 +547,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KycStepRouteImport
       parentRoute: typeof KycRoute
     }
+    '/earnings/recent': {
+      id: '/earnings/recent'
+      path: '/recent'
+      fullPath: '/earnings/recent'
+      preLoaderRoute: typeof EarningsRecentRouteImport
+      parentRoute: typeof EarningsRoute
+    }
+    '/earnings/payouts': {
+      id: '/earnings/payouts'
+      path: '/payouts'
+      fullPath: '/earnings/payouts'
+      preLoaderRoute: typeof EarningsPayoutsRouteImport
+      parentRoute: typeof EarningsRoute
+    }
     '/bookings/$id': {
       id: '/bookings/$id'
       path: '/$id'
       fullPath: '/bookings/$id'
       preLoaderRoute: typeof BookingsIdRouteImport
       parentRoute: typeof BookingsRoute
+    }
+    '/earnings/payouts/$id': {
+      id: '/earnings/payouts/$id'
+      path: '/$id'
+      fullPath: '/earnings/payouts/$id'
+      preLoaderRoute: typeof EarningsPayoutsIdRouteImport
+      parentRoute: typeof EarningsPayoutsRoute
     }
     '/api/public/seed-demo': {
       id: '/api/public/seed-demo'
@@ -538,6 +595,32 @@ const BookingsRouteChildren: BookingsRouteChildren = {
 
 const BookingsRouteWithChildren = BookingsRoute._addFileChildren(
   BookingsRouteChildren,
+)
+
+interface EarningsPayoutsRouteChildren {
+  EarningsPayoutsIdRoute: typeof EarningsPayoutsIdRoute
+}
+
+const EarningsPayoutsRouteChildren: EarningsPayoutsRouteChildren = {
+  EarningsPayoutsIdRoute: EarningsPayoutsIdRoute,
+}
+
+const EarningsPayoutsRouteWithChildren = EarningsPayoutsRoute._addFileChildren(
+  EarningsPayoutsRouteChildren,
+)
+
+interface EarningsRouteChildren {
+  EarningsPayoutsRoute: typeof EarningsPayoutsRouteWithChildren
+  EarningsRecentRoute: typeof EarningsRecentRoute
+}
+
+const EarningsRouteChildren: EarningsRouteChildren = {
+  EarningsPayoutsRoute: EarningsPayoutsRouteWithChildren,
+  EarningsRecentRoute: EarningsRecentRoute,
+}
+
+const EarningsRouteWithChildren = EarningsRoute._addFileChildren(
+  EarningsRouteChildren,
 )
 
 interface KycRouteChildren {
@@ -583,7 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BiometricRoute: BiometricRoute,
   BookingsRoute: BookingsRouteWithChildren,
-  EarningsRoute: EarningsRoute,
+  EarningsRoute: EarningsRouteWithChildren,
   EnableFaceidRoute: EnableFaceidRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
