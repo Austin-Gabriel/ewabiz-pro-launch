@@ -371,6 +371,116 @@ function KpiTile({
 
 /* ---------- Top services ---------- */
 
+function EarningsChartCard({
+  events,
+  period,
+}: {
+  events: ReturnType<typeof earningsForDensity>;
+  period: EarningsPeriod;
+}) {
+  const buckets = useMemo(() => periodBuckets(events, period), [events, period]);
+  const max = Math.max(1, ...buckets.map((b) => b.total));
+  const total = buckets.reduce((s, b) => s + b.total, 0);
+  const chartHeight = 96;
+
+  return (
+    <Card>
+      <div style={{ padding: 16, fontFamily: UI }}>
+        <div className="flex items-center justify-between">
+          <CardEyebrow>Earnings</CardEyebrow>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: NAVY,
+              opacity: 0.6,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {formatMoney(total)}
+          </div>
+        </div>
+        {total === 0 ? (
+          <div
+            style={{
+              marginTop: 16,
+              fontSize: 13,
+              color: NAVY,
+              opacity: 0.55,
+              textAlign: "center",
+              padding: "24px 0",
+            }}
+          >
+            No earnings in this period yet
+          </div>
+        ) : (
+          <>
+            <div
+              role="img"
+              aria-label="Earnings by period"
+              className="mt-3 flex items-end justify-between"
+              style={{ height: chartHeight, gap: 6 }}
+            >
+              {buckets.map((b, i) => {
+                const h = b.total === 0 ? 2 : Math.max(3, Math.round((b.total / max) * chartHeight));
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                      height: chartHeight,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: 28,
+                        height: h,
+                        borderRadius: 6,
+                        backgroundColor: b.total > 0 ? ORANGE : "rgba(6,28,39,0.08)",
+                      }}
+                      title={`${b.label}: ${formatMoney(b.total)}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              aria-hidden
+              style={{
+                marginTop: 8,
+                height: 1,
+                backgroundColor: "rgba(6,28,39,0.10)",
+              }}
+            />
+            <div className="mt-2 flex justify-between" style={{ gap: 6 }}>
+              {buckets.map((b, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    textAlign: "center",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: NAVY,
+                    opacity: 0.55,
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {b.label}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 function TopServicesCard({ events, period }: { events: ReturnType<typeof earningsForDensity>; period: EarningsPeriod }) {
   const top = useMemo(() => topServicesFor(events, period), [events, period]);
   if (top.length === 0) return null;
