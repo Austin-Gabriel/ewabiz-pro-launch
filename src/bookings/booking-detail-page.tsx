@@ -268,7 +268,21 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
               textDecoration: status === "cancelled" ? "line-through" : "none",
             }}
           >
-            {relationship} · {formatBookingDate(booking.startsAt)}
+            {relationship}
+          </p>
+          <p
+            style={{
+              fontFamily: UI,
+              fontSize: 12.5,
+              color: text,
+              opacity: 0.55,
+              marginTop: 2,
+              lineHeight: 1.3,
+              fontVariantNumeric: "tabular-nums",
+              textDecoration: status === "cancelled" ? "line-through" : "none",
+            }}
+          >
+            {formatBookingDate(booking.startsAt)}
           </p>
         </div>
         {showContact ? (
@@ -420,9 +434,23 @@ function ServiceCard({ booking, dimmed }: { booking: Booking; dimmed?: boolean }
               }}
             >
               {showActual
-                ? `${booking.durationMin} min scheduled · ${booking.actualDurationMin} min actual`
+                ? `${booking.durationMin} min scheduled`
                 : `${booking.durationMin} min`}
             </div>
+            {showActual ? (
+              <div
+                style={{
+                  fontFamily: UI,
+                  fontSize: 13,
+                  color: MIDNIGHT,
+                  opacity: 0.65,
+                  marginTop: 2,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {booking.actualDurationMin} min actual
+            </div>
+            ) : null}
           </div>
           <span
             style={{
