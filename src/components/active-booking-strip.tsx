@@ -83,15 +83,15 @@ function stripLabel(state: DevLifecycle): string | null {
   const first = LIFECYCLE_BOOKING.clientName.split(" ")[0];
   switch (state) {
     case "get-ready":
-      return `Get ready · ${first} · leave in ${LIFECYCLE_BOOKING.prepMin} min`;
+      return `Get ready for ${first} — leave in ${LIFECYCLE_BOOKING.prepMin} min`;
     case "en-route":
-      return `On your way · ${first} · ${LIFECYCLE_BOOKING.etaMin} min`;
+      return `On your way to ${first} — ${LIFECYCLE_BOOKING.etaMin} min`;
     case "arrived":
-      return `Arrived · ${first} · enter PIN`;
+      return `Arrived at ${first} — enter PIN`;
     case "in-progress":
-      return `Service in progress · ${first}`;
+      return `Service in progress with ${first}`;
     case "complete":
-      return `Wrapping up · ${first}`;
+      return `Wrapping up with ${first}`;
     default:
       return null;
   }
