@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
+import { OnlineModeStrip } from "@/components/online-mode-strip";
 import {
   ALL_EARNINGS,
   earningsForDensity,
@@ -81,6 +82,7 @@ export function EarningsHomePage() {
 
   return (
     <HomeShell>
+      <OnlineModeStrip />
       <ActiveBookingStrip />
       <PageHeader />
 
@@ -1023,7 +1025,9 @@ function EarningsBottomTabs() {
       onSelect={(k: TabKey) => {
         if (k === "home") navigate({ to: "/home" });
         if (k === "bookings") navigate({ to: "/bookings" });
-        if (k === "earnings") navigate({ to: "/earnings" });
+        if (k === "calendar") navigate({ to: "/calendar" });
+        if (k === "earnings") return;
+        if (k === "profile") navigate({ to: "/home" });
       }}
     />
   );
