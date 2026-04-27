@@ -65,10 +65,6 @@ export function EarningsHomePage() {
   const { data: kyc } = useKyc();
   const proState: ResolvedProState = resolveProState(dev.proState, auth, kyc);
 
-  // Upstream PRO STATE wins. Earnings is gated when not live.
-  if (proState === "mid-onboarding") return <LockedState />;
-  if (proState === "mid-pending") return <PendingApprovalState />;
-
   const density = densityFromDev(dev.dataDensity);
   const [period, setPeriod] = useState<EarningsPeriod>("week");
 
