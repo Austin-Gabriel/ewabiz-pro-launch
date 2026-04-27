@@ -17,6 +17,7 @@ import {
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
+import { OnlineModeStrip } from "@/components/online-mode-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import {
   CalendarEditsProvider,
@@ -189,6 +190,7 @@ function CalendarPageInner() {
 
   return (
     <HomeShell>
+      <OnlineModeStrip />
       <ActiveBookingStrip />
       <Header
         subtitle={subtitle}
@@ -265,6 +267,8 @@ function CalendarPageInner() {
           if (k === "home") navigate({ to: "/home" });
           if (k === "bookings") navigate({ to: "/bookings" });
           if (k === "calendar") return;
+          if (k === "earnings") navigate({ to: "/earnings" });
+          if (k === "profile") navigate({ to: "/home" });
         }}
       />
 
