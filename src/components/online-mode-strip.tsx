@@ -12,7 +12,7 @@ const ORANGE = "#FF823F";
 const MIDNIGHT = "#061C27";
 
 export function OnlineModeStrip({ hide = false }: { hide?: boolean }) {
-  const { state: dev, setMode } = useDevState();
+  const { state: dev } = useDevState();
   if (hide) return null;
   if (dev.mode !== "online") return null;
   // If a lifecycle takeover (other than incoming) is active, the
@@ -49,22 +49,6 @@ export function OnlineModeStrip({ hide = false }: { hide?: boolean }) {
       <span className="min-w-0 flex-1 truncate">
         Online · Accepting new requests
       </span>
-      <button
-        type="button"
-        onClick={() => setMode("offline")}
-        className="rounded-full px-2.5 py-1 transition-opacity active:opacity-70"
-        style={{
-          backgroundColor: "rgba(6,28,39,0.10)",
-          color: MIDNIGHT,
-          fontFamily: UI,
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: "0.02em",
-          textTransform: "uppercase",
-        }}
-      >
-        Go offline
-      </button>
       <style>{`
         @keyframes ewa-online-pulse {
           0%, 100% { opacity: 1; }
