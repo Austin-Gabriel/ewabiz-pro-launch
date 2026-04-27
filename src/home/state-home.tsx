@@ -60,7 +60,7 @@ export function StateHome(props: StateHomeProps) {
   // sensible even with the dev panel untouched.
   const initialOnline = props.mode === "online";
   const [online, setOnline] = useState(initialOnline);
-  const { state: dev } = useDevState();
+  const { state: dev, setMode } = useDevState();
   // Any active lifecycle (other than the incoming takeover, which is its own
   // full-screen surface) means the pro is committed to a booking — they
   // cannot accept new on-demand requests until Complete is acknowledged.
@@ -74,12 +74,21 @@ export function StateHome(props: StateHomeProps) {
     else if (props.mode === "offline") setOnline(false);
   }, [props.mode]);
 
+  // Persist the toggle so navigating to other tabs keeps the Online state.
+  const handleToggle = () => {
+    setOnline((v) => {
+      const next = !v;
+      setMode(next ? "online" : "offline");
+      return next;
+    });
+  };
+
   return (
     <div className="relative z-[1] flex flex-1 flex-col px-4 pb-2 pt-1">
       <Header unreadCount={props.unreadCount ?? 0} />
       <ModeToggle
         online={online}
-        onToggle={() => setOnline((v) => !v)}
+        onToggle={handleToggle}
         lockedClientName={lifecycleActive ? LIFECYCLE_BOOKING.clientName.split(" ")[0] : undefined}
       />
 
@@ -101,7 +110,10 @@ export function StateHome(props: StateHomeProps) {
             weekToDateUsd={props.weekToDateUsd}
             weekProjectedUsd={props.weekProjectedUsd}
             weekGoalUsd={props.weekGoalUsd}
-            onGoOnline={() => setOnline(true)}
+            onGoOnline={() => {
+              setOnline(true);
+              setMode("online");
+            }}
           />
         )}
       </div>
