@@ -374,7 +374,7 @@ function UpNextInner({ booking }: { booking: Booking }) {
   const navigate = useNavigate();
   const startsIn = booking.startsInMin;
   const goToDetail = () =>
-    navigate({ to: "/bookings/$id", params: { id: booking.id } });
+    navigate({ to: "/bookings/$id", params: { id: booking.id }, search: { from: "home" } });
   return (
     <div
       className="rounded-3xl p-5"

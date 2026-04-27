@@ -26,6 +26,7 @@ type: design
 - Orange on category eyebrows / labels — keep them muted neutral
 - Orange on more than one anchor per screen
 - Orange on Paid pills, completed bookings, archival rows
+- Mixing action types in the same row (e.g. orange Navigate next to outlined Message + Call is fine because Message/Call are equal-weight secondaries; orange Accept next to orange Decline is NOT fine)
 
 **Hierarchy comes from weight + size, not color.** Big bold tabular numbers for what matters, tiny uppercase labels for categories, navy at 0.65 opacity for supporting copy.
 

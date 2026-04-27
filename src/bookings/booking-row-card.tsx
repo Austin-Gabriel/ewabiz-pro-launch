@@ -43,6 +43,8 @@ export interface BookingRowCardProps {
     onAccept: () => void;
     onDecline: () => void;
   };
+  /** Pending reschedule proposal — shows a small pill on the row. */
+  pendingReschedule?: { timeLeftLabel: string };
 }
 
 export function BookingRowCard(props: BookingRowCardProps) {
@@ -53,38 +55,25 @@ export function BookingRowCard(props: BookingRowCardProps) {
   );
 }
 
-function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending }: BookingRowCardProps) {
+function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending, pendingReschedule }: BookingRowCardProps) {
   const { cardSurface, cardBorder } = useHomeTheme();
-  const borderCol = isNext ? BAGEL_BORDER : cardBorder;
+  const borderCol = pendingReschedule ? "rgba(255,130,63,0.55)" : isNext ? BAGEL_BORDER : cardBorder;
   // Pending cards always behave as a button (taps the body to view detail)
   // even if no onSelect was passed — the inline action buttons below stop
   // propagation so they don't double-fire.
   const isInteractive = Boolean(onSelect) || Boolean(pending);
-  // When the row has inline action buttons (pending state), the outer
-  // wrapper MUST NOT be a <button> — nesting <button> inside <button> is
-  // invalid HTML and breaks SSR hydration, which causes the client router
-  // to never take over (every <Link> click becomes a full page reload).
-  const hasNestedButtons = Boolean(pending);
-  const Wrapper: any = isInteractive && !hasNestedButtons ? "button" : "div";
-  const wrapperRoleProps = isInteractive && hasNestedButtons
-    ? {
-        role: "button" as const,
-        tabIndex: 0,
-        onKeyDown: (e: React.KeyboardEvent) => {
-          if ((e.key === "Enter" || e.key === " ") && onSelect) {
-            e.preventDefault();
-            onSelect();
-          }
-        },
-      }
-    : {};
+  // If pending actions are shown, the outer cannot be a <button> (nested
+  // buttons are invalid). Use a div with onClick in that case.
+  const useButton = isInteractive && !pending;
+  const Wrapper: any = useButton ? "button" : "div";
 
   return (
     <div className="relative">
       <Wrapper
-        type={Wrapper === "button" ? "button" : undefined}
-        onClick={onSelect}
-        {...wrapperRoleProps}
+        type={useButton ? "button" : undefined}
+        role={!useButton && isInteractive ? "button" : undefined}
+        tabIndex={!useButton && isInteractive ? 0 : undefined}
+        onClick={isInteractive ? onSelect : undefined}
         className={
           "flex w-full flex-col gap-3 rounded-2xl px-4 py-3.5 text-left transition-opacity active:opacity-80"
         }
@@ -108,6 +97,9 @@ function BookingRowCardInner({ booking, isNext, cancelled, onSelect, pending }: 
         </div>
         {pending ? (
           <PendingActions onAccept={pending.onAccept} onDecline={pending.onDecline} />
+        ) : null}
+        {pendingReschedule ? (
+          <PendingReschedulePill timeLeftLabel={pendingReschedule.timeLeftLabel} />
         ) : null}
       </Wrapper>
       {isNext ? <NextPill /> : null}
@@ -347,6 +339,36 @@ function PendingActions({
   );
 }
 
+/**
+ * Compact pill rendered inline beneath the row body when the booking has a
+ * pending reschedule proposal. Surfaces the same "Pending reschedule" intent
+ * across Bookings > Upcoming so the pro spots it without opening detail.
+ */
+function PendingReschedulePill({ timeLeftLabel }: { timeLeftLabel: string }) {
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 self-start rounded-full"
+      style={{
+        backgroundColor: BAGEL_SOFT,
+        color: "#7A2E0E",
+        padding: "4px 10px",
+        fontFamily: UI,
+        fontSize: 11.5,
+        fontWeight: 600,
+        letterSpacing: "-0.005em",
+        border: `1px solid ${BAGEL_BORDER}`,
+      }}
+    >
+      <span
+        aria-hidden
+        className="rounded-full"
+        style={{ width: 6, height: 6, backgroundColor: BAGEL }}
+      />
+      Pending reschedule · {timeLeftLabel}
+    </div>
+  );
+}
+
 function shortLocality(loc: string): string {
   // "Fort Greene, Brooklyn" → "Fort Greene"
   return loc.split(",")[0].trim();
@@ -364,6 +386,8 @@ export interface TimelineEntry {
   gapBefore?: string;
   /** Pending request props if this entry is awaiting pro approval. */
   pending?: BookingRowCardProps["pending"];
+  /** Pending reschedule pill props, if a proposal is in flight. */
+  pendingReschedule?: BookingRowCardProps["pendingReschedule"];
   /** Tap handler — routes to the booking detail page. */
   onOpen?: () => void;
 }
@@ -408,6 +432,7 @@ function RailRow({ entry }: { entry: TimelineEntry }) {
           booking={entry.booking}
           isNext={entry.isNext}
           pending={entry.pending}
+          pendingReschedule={entry.pendingReschedule}
           onSelect={entry.onOpen}
         />
       </div>

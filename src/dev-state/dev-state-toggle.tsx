@@ -12,12 +12,20 @@ import {
   type DevPayoutState,
   type DevPendingBalance,
   type DevTaxDocs,
+  type DevWeekDensity,
+  type DevBlockedTime,
+  type DevAvailability,
+  type DevRescheduleState,
 } from "@/dev-state/dev-state-context";
+import { useReschedule } from "@/calendar/reschedule-context";
+import { ALL_BOOKINGS } from "@/data/mock-bookings";
 
 /**
  * Floating dev-only state toggle. Pinned bottom-right, above the bottom
- * tab bar. Tapping opens a slide-up panel with three radio groups:
- * Pro State, Data Density, Theme Override. Selections persist via
+ * tab bar. Tapping opens a slide-up panel with radio groups for pro state,
+ * data density, theme, mode, day context, lifecycle, booking source,
+ * earnings sub-axes, and calendar sub-axes (density / blocked time /
+ * availability / reschedule render state). Selections persist via
  * localStorage so they survive reloads in the session.
  */
 
@@ -96,6 +104,41 @@ const TAX_DOC_STATES: { value: DevTaxDocs; label: string; hint: string }[] = [
   { value: "multi-year", label: "Multi-year history", hint: "Several years of docs" },
 ];
 
+const WEEK_DENSITIES: { value: DevWeekDensity; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Use mock data as-is" },
+  { value: "empty", label: "Empty week", hint: "No bookings" },
+  { value: "light", label: "Light week", hint: "1–2 per day" },
+  { value: "typical", label: "Typical week", hint: "3–4 per day" },
+  { value: "packed", label: "Packed week", hint: "5+ per day" },
+];
+
+const BLOCKED_TIMES: { value: DevBlockedTime; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "No blocks unless seeded" },
+  { value: "none", label: "None", hint: "No blocked time" },
+  { value: "one-today", label: "1 block today", hint: "Single mid-afternoon block" },
+  { value: "multiple-week", label: "Multiple this week", hint: "A few across the week" },
+  { value: "vacation", label: "Vacation week", hint: "Whole week blocked" },
+];
+
+const AVAILABILITIES: { value: DevAvailability; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Standard hours" },
+  { value: "standard", label: "Standard", hint: "Mon–Fri 10–6" },
+  { value: "split-days", label: "Split days", hint: "Midday breaks" },
+  { value: "weekend-warrior", label: "Weekend warrior", hint: "Fri–Sun only" },
+  { value: "limited", label: "Limited", hint: "3 days only" },
+];
+
+const RESCHEDULE_STATES: { value: DevRescheduleState; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "Confirmed booking, no pending state" },
+  { value: "pending-out", label: "Pending out", hint: "Pro proposed; client must respond" },
+  { value: "pending-in", label: "Pending in", hint: "Client proposed; pro must respond" },
+  { value: "approved", label: "Approved", hint: "Counterparty accepted" },
+  { value: "declined", label: "Declined", hint: "Counterparty declined" },
+  { value: "expired", label: "Expired", hint: "Proposal timed out" },
+];
+
+const RESCHEDULE_FOCUS_ID = "b1";
+
 export function DevStateToggle() {
   const {
     enabled,
@@ -110,14 +153,18 @@ export function DevStateToggle() {
     setPayoutState,
     setPendingBalance,
     setTaxDocs,
+    setWeekDensity,
+    setBlockedTime,
+    setAvailability,
+    setRescheduleState,
     reset,
   } = useDevState();
+  const reschedule = useReschedule();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  // Lock body scroll when open
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -127,19 +174,61 @@ export function DevStateToggle() {
     };
   }, [open]);
 
-  // Scheduled bookings can't enter Get Ready — clear the lifecycle if the
-  // source flips while Get Ready is active.
   useEffect(() => {
     if (state.bookingSource === "scheduled" && state.lifecycle === "get-ready") {
       setLifecycle("none");
     }
   }, [state.bookingSource, state.lifecycle, setLifecycle]);
 
+  // Reschedule render-state bridge. Translates the chosen state into
+  // proposals on the focus booking so every reschedule-aware surface
+  // re-renders in sync.
+  useEffect(() => {
+    const focus = ALL_BOOKINGS.find((b) => b.id === RESCHEDULE_FOCUS_ID);
+    if (!focus) return;
+
+    if (state.rescheduleState === "none") {
+      reschedule.clearAll();
+      return;
+    }
+
+    const proposedStart = new Date(focus.startsAt);
+    proposedStart.setHours(proposedStart.getHours() + 2);
+    const baseInput = {
+      bookingId: focus.id,
+      clientLabel: focus.clientName,
+      originalStart: focus.startsAt,
+      originalDurationMin: focus.durationMin,
+      proposedStart,
+      proposedDurationMin: focus.durationMin,
+    };
+
+    if (state.rescheduleState === "pending-out") {
+      reschedule.clearAll();
+      reschedule.propose({ ...baseInput, direction: "outgoing" });
+    } else if (state.rescheduleState === "pending-in") {
+      reschedule.clearAll();
+      reschedule.propose({ ...baseInput, direction: "incoming" });
+    } else if (state.rescheduleState === "approved") {
+      reschedule.clearAll();
+      reschedule.propose({ ...baseInput, direction: "outgoing" });
+      setTimeout(() => reschedule.simulateAccept(focus.id), 0);
+    } else if (state.rescheduleState === "declined") {
+      reschedule.clearAll();
+      reschedule.propose({ ...baseInput, direction: "outgoing" });
+      setTimeout(() => reschedule.simulateDecline(focus.id), 0);
+    } else if (state.rescheduleState === "expired") {
+      reschedule.clearAll();
+      reschedule.propose({ ...baseInput, direction: "outgoing" });
+      setTimeout(() => reschedule.simulateExpire(focus.id), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.rescheduleState]);
+
   if (!mounted || !enabled) return null;
 
   return (
     <>
-      {/* Floating button */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -170,10 +259,8 @@ export function DevStateToggle() {
         />
       </button>
 
-      {/* Slide-up panel */}
       {open && (
         <div className="fixed inset-0 z-[70]" style={{ fontFamily: SANS }}>
-          {/* Backdrop */}
           <button
             type="button"
             aria-label="Close dev panel"
@@ -182,7 +269,6 @@ export function DevStateToggle() {
             style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
           />
 
-          {/* Sheet */}
           <div
             role="dialog"
             aria-label="Dev state toggle"
@@ -195,7 +281,6 @@ export function DevStateToggle() {
               animation: "ewa-sheet-up 320ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {/* Grabber */}
             <div className="flex justify-center pt-3">
               <span style={{ width: 36, height: 4, borderRadius: 4, backgroundColor: "rgba(240,235,216,0.18)" }} />
             </div>
@@ -288,6 +373,30 @@ export function DevStateToggle() {
                   />
                 </>
               ) : null}
+              <Group
+                title="Density (calendar)"
+                value={state.weekDensity}
+                options={WEEK_DENSITIES}
+                onChange={(v) => setWeekDensity(v as DevWeekDensity)}
+              />
+              <Group
+                title="Blocked time (calendar)"
+                value={state.blockedTime}
+                options={BLOCKED_TIMES}
+                onChange={(v) => setBlockedTime(v as DevBlockedTime)}
+              />
+              <Group
+                title="Availability (calendar)"
+                value={state.availability}
+                options={AVAILABILITIES}
+                onChange={(v) => setAvailability(v as DevAvailability)}
+              />
+              <Group
+                title="Reschedule state"
+                value={state.rescheduleState}
+                options={RESCHEDULE_STATES}
+                onChange={(v) => setRescheduleState(v as DevRescheduleState)}
+              />
               <Group
                 title="Theme override"
                 value={state.theme}
