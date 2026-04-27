@@ -17,6 +17,7 @@ import {
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
+import { OnlineStrip } from "@/components/online-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import {
   CalendarEditsProvider,
@@ -190,6 +191,7 @@ function CalendarPageInner() {
   return (
     <HomeShell>
       <ActiveBookingStrip />
+      <OnlineStrip />
       <Header
         subtitle={subtitle}
         onOverflow={() => setOverflowOpen(true)}
@@ -265,6 +267,7 @@ function CalendarPageInner() {
           if (k === "home") navigate({ to: "/home" });
           if (k === "bookings") navigate({ to: "/bookings" });
           if (k === "calendar") return;
+          if (k === "earnings") navigate({ to: "/earnings" });
         }}
       />
 

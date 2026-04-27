@@ -10,7 +10,24 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git fetch *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(git remote *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(echo '########## __TRACKED_VAR__ ##########')",
+      "Bash(echo \"----- YOURS -----\")",
+      "Bash(git show *)",
+      "Bash(echo \"\")",
+      "Bash(echo \"----- THEIRS -----\")",
+      "Read(//private/tmp/**)",
+      "Read(//tmp/**)",
+      "Bash(bun install *)",
+      "Bash(npm install *)",
+      "Bash(echo \"---EXIT:$?\")",
+      "Bash(gh pr create --base main --head merge/remix-integration --title 'Merge remix-of-ew-beauty-concierge: Calendar tab + reschedule' --body ' *)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
     ]
   }
 }

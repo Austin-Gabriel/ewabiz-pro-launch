@@ -7,6 +7,7 @@ import { KycProvider } from "@/onboarding-states/kyc/kyc-context";
 import { DevStateProvider } from "@/dev-state/dev-state-context";
 import { DevStateToggle } from "@/dev-state/dev-state-toggle";
 import { RescheduleProvider } from "@/calendar/reschedule-context";
+import { OnlineProvider } from "@/home/online-context";
 
 function NotFoundComponent() {
   return (
@@ -87,8 +88,10 @@ function RootComponent() {
         <OnboardingProvider>
           <KycProvider>
             <RescheduleProvider>
-              <Outlet />
-              <DevStateToggle />
+              <OnlineProvider>
+                <Outlet />
+                <DevStateToggle />
+              </OnlineProvider>
             </RescheduleProvider>
           </KycProvider>
         </OnboardingProvider>

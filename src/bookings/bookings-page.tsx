@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS } from "@/home/home-shell";
 import { BottomTabs } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
+import { OnlineStrip } from "@/components/online-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LifecycleBody } from "@/bookings/lifecycle/lifecycle-surface";
 import { formatUsd, type Booking } from "@/data/mock-data";
@@ -41,6 +42,7 @@ export function BookingsPage({
   return (
     <HomeShell>
       <ActiveBookingStrip hide={isInProgressTab} />
+      <OnlineStrip />
       <PageHeader />
       <TabBar tab={tab} onSelect={onTabChange} />
 

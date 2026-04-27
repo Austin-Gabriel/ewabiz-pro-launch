@@ -12,6 +12,7 @@ import {
   formatUsd,
 } from "@/data/mock-data";
 import { useReschedule, formatTimeLeft } from "@/calendar/reschedule-context";
+import { useOnline } from "@/home/online-context";
 
 /**
  * Native-mobile working surface for a beauty pro who travels to clients.
@@ -71,15 +72,20 @@ export function StateLive({
   liveStatus = { kind: "idle" },
   incomingRequest,
   pendingOnDemand,
-  onlineState = { kind: "available" },
+  onlineState,
   weeklyGoalUsd = 1500,
 }: StateLiveProps) {
   const navigate = useNavigate();
 
-  // Local toggle state — initialised from server-provided onlineState
-  const [state, setState] = useState<OnlineState>(onlineState);
-  // re-sync if parent changes (e.g. ?toggle=… preview overrides)
-  useEffect(() => setState(onlineState), [onlineState]);
+  // Online toggle state lives in a shared context so it persists across
+  // route changes (Home → Calendar → Home keeps the same value) and the
+  // OnlineStrip on other pages can read it.
+  const { state, setState } = useOnline();
+  // If the parent passed an explicit onlineState (preview override), sync it.
+  useEffect(() => {
+    if (onlineState) setState(onlineState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlineState]);
 
   const [blocked, setBlocked] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
