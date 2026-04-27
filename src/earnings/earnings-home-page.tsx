@@ -82,6 +82,7 @@ export function EarningsHomePage() {
 
   return (
     <HomeShell>
+      <OnlineModeStrip />
       <ActiveBookingStrip />
       <PageHeader />
 
@@ -1024,7 +1025,9 @@ function EarningsBottomTabs() {
       onSelect={(k: TabKey) => {
         if (k === "home") navigate({ to: "/home" });
         if (k === "bookings") navigate({ to: "/bookings" });
-        if (k === "earnings") navigate({ to: "/earnings" });
+        if (k === "calendar") navigate({ to: "/calendar" });
+        if (k === "earnings") return;
+        if (k === "profile") navigate({ to: "/home" });
       }}
     />
   );
