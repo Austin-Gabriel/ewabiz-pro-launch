@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useDevState } from "@/dev-state/dev-state-context";
 
 /**
  * Atmospheric shell shared by every auth screen (splash, welcome, sign-in,
@@ -56,14 +57,28 @@ export interface AuthShellProps {
 }
 
 export function AuthShell({ children, topLabel, onBack, glowBoost = 1, quietSquiggles = false }: AuthShellProps) {
-  const [isDark, setIsDark] = useState(true);
+  // Theme is sourced from the dev-state context (system | dark | light) so
+  // every shell — auth, home, kyc — flips together when the dev toggle or
+  // the OS preference changes. The local in-shell sun/moon button updates
+  // the same dev state so it persists across screens.
+  const { state: dev, setTheme } = useDevState();
+  const [systemDark, setSystemDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: light)");
-    if (mq.matches) setIsDark(false);
     setMounted(true);
+    if (typeof window !== "undefined" && window.matchMedia) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      setSystemDark(mq.matches);
+      const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+      mq.addEventListener?.("change", onChange);
+      return () => mq.removeEventListener?.("change", onChange);
+    }
   }, []);
+
+  const isDark =
+    dev.theme === "dark" ? true : dev.theme === "light" ? false : systemDark;
+  const setIsDark = (v: boolean) => setTheme(v ? "dark" : "light");
 
   const text = isDark ? "#F0EBD8" : "#061C27";
   const bg = isDark ? "#061C27" : "#F0EBD8";

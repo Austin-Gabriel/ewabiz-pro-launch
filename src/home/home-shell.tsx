@@ -91,7 +91,7 @@ export function HomeShell({ children, noTabBarSpacing = false }: HomeShellProps)
   }, []);
 
   const isDark =
-    dev.theme === "dark" ? true : dev.theme === "light" ? false : systemDark || true;
+    dev.theme === "dark" ? true : dev.theme === "light" ? false : systemDark;
   const setIsDark = (_v: boolean) => {
     /* theme is controlled via dev toggle / system preference */
   };
