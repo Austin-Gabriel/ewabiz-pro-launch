@@ -74,6 +74,11 @@ export function EarningsHomePage() {
     [density],
   );
 
+  // Upstream PRO STATE wins. Earnings is gated when not live.
+  // Gating happens AFTER hooks to keep hook order stable across renders.
+  if (proState === "mid-onboarding") return <LockedState />;
+  if (proState === "mid-pending") return <PendingApprovalState />;
+
   return (
     <HomeShell>
       <ActiveBookingStrip />
