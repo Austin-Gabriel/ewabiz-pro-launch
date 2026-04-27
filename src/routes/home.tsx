@@ -52,7 +52,8 @@ type LivePreview =
   | "in-progress"
   | "en-route"
   | "wrap-up"
-  | "incoming";
+  | "incoming"
+  | "on-demand";
 
 export const Route = createFileRoute("/home")({
   head: () => ({ meta: [{ title: "Home — Ewà Biz" }] }),
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/home")({
     if (s === "mid-onboarding" || s === "pending" || s === "live") {
       out.state = s;
     }
-    if (live === "in-progress" || live === "en-route" || live === "incoming") {
+    if (live === "in-progress" || live === "en-route" || live === "incoming" || live === "on-demand") {
       out.live = live;
     }
     if (live === "morning" || live === "heads-up" || live === "wrap-up") {
@@ -174,6 +175,10 @@ function HomePage() {
                 to: "/bookings",
                 search: otherLifecycleActive ? { tab: "in-progress" } : { tab: "upcoming" },
               });
+              return;
+            }
+            if (k === "calendar") {
+              navigate({ to: "/calendar" });
               return;
             }
             if (k === "earnings") {

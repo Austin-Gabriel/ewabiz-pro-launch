@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import {
@@ -26,6 +26,8 @@ import {
   getBookingButtonState,
   type StartBookingButtonState,
 } from "@/lib/booking-button-state";
+import { useReschedule, formatTimeLeft } from "@/calendar/reschedule-context";
+import { RescheduleSheet } from "@/calendar/reschedule-sheet";
 
 /**
  * Canonical booking detail page. Reads from the canonical booking registry
@@ -38,22 +40,46 @@ import {
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
 const MIDNIGHT = "#061C27";
+const CREAM = "#F0EBD8";
 const PLATFORM_FEE_PCT = 0.1;
 
 export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/bookings/$id" });
   const { state: dev, setLifecycle } = useDevState();
+  const reschedule = useReschedule();
   const booking = findBookingById(bookingId);
-  // Local optimistic status — accept/decline mutate this without leaving the
-  // page so the pro sees the result immediately. Defaults safely when the
-  // booking is missing; hooks must run unconditionally before any return.
   const [status, setStatus] = useState<BookingStatus>(
     booking?.status ?? "cancelled",
   );
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const proposal = booking ? reschedule.proposalFor(booking.id) : null;
+  const pendingProposal = proposal?.status === "pending" ? proposal : null;
+  // Subscribe to the reschedule tick so the countdown re-renders.
+  void reschedule.tick;
 
-  // Live "now" — ticks every 30s so the start-button copy recomputes as
-  // real time advances. `new Date()` evaluated inline on every render is
-  // not enough, because nothing else triggers a re-render with time alone.
+  // Back navigation honors the referrer recorded when the pro tapped the
+  // booking. Calendar restores its view + selected day; Bookings restores
+  // its tab; Home returns to /home. Falls back to /bookings on the same
+  // tab the booking's status implies.
+  const goBack = () => {
+    if (search.from === "calendar") {
+      navigate({
+        to: "/calendar",
+        search: { view: search.view, day: search.day },
+      });
+      return;
+    }
+    if (search.from === "home") {
+      navigate({ to: "/home" });
+      return;
+    }
+    navigate({
+      to: "/bookings",
+      search: { tab: search.tab ?? tabForStatus(status) },
+    });
+  };
+
   const [currentTime, setCurrentTime] = useState<Date>(() => bookingButtonDemoCurrentTime());
   useEffect(() => {
     const id = setInterval(() => setCurrentTime(bookingButtonDemoCurrentTime()), 30_000);
@@ -63,7 +89,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
   if (!booking) {
     return (
       <HomeShell>
-        <DetailHeader title="Booking" onBack={() => navigate({ to: "/bookings" })} />
+        <DetailHeader title="Booking" onBack={goBack} />
         <div className="flex flex-1 items-center justify-center px-6">
           <p style={{ fontFamily: UI, fontSize: 14, color: MIDNIGHT, opacity: 0.6 }}>
             We couldn't find that booking.
@@ -83,24 +109,43 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
     setTimeout(() => navigate({ to: "/bookings", search: { tab: "upcoming" } }), 250);
   };
   const handleStartBooking = () => {
-    // Scheduled bookings skip Get Ready entirely — the pro confirms and
-    // heads straight into "On your way". Get Ready is reserved for the
-    // on-demand flow where prep time matters.
     setLifecycle("en-route");
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
   };
   const handleOpenActive = () =>
     navigate({ to: "/bookings", search: { tab: "in-progress" } });
 
+  // Pending reschedule overrides the action bar:
+  //  - outgoing → pro is waiting; suppress Accept/Decline (no pending status)
+  //  - incoming → pro must respond; force action bar into accept/decline mode
+  const isIncomingPending = pendingProposal?.direction === "incoming";
+  const effectiveStatusForBar: BookingStatus = isIncomingPending ? "pending" : status;
+
   return (
     <HomeShell>
-      <DetailHeader
-        title="Booking"
-        onBack={() => navigate({ to: "/bookings", search: { tab: tabForStatus(status) } })}
-      />
+      <DetailHeader title="Booking" onBack={goBack} />
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-32 pt-2">
-        <HeroBlock booking={booking} status={status} />
+        {pendingProposal?.direction === "outgoing" ? (
+          <OutgoingRescheduleBanner
+            firstName={booking.clientName.split(" ")[0]}
+            timeLeftMs={pendingProposal.expiresAt.getTime() - Date.now()}
+            onCancel={() => reschedule.cancel(booking.id)}
+          />
+        ) : null}
+        {pendingProposal?.direction === "incoming" ? (
+          <IncomingRescheduleBanner
+            firstName={booking.clientName.split(" ")[0]}
+            proposedStart={pendingProposal.proposedStart}
+            timeLeftMs={pendingProposal.expiresAt.getTime() - Date.now()}
+          />
+        ) : null}
+        <HeroBlock
+          booking={booking}
+          status={status}
+          canReschedule={(status === "confirmed" || status === "pending") && !pendingProposal}
+          onReschedule={() => setRescheduleOpen(true)}
+        />
         <ServiceCard booking={booking} dimmed={status === "cancelled"} />
         <LocationCard booking={booking} revealAddress={false} />
         {status === "cancelled" ? (
@@ -113,19 +158,202 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         <PolicyLink />
       </div>
 
+      <RescheduleSheet
+        open={rescheduleOpen}
+        onClose={() => setRescheduleOpen(false)}
+        booking={booking}
+      />
+
       <DetailActionBar
         booking={booking}
-        status={status}
+        status={effectiveStatusForBar}
         lifecycleActive={lifecycleActive}
         currentTime={currentTime}
-        onAccept={handleAccept}
-        onDecline={handleDecline}
+        onAccept={isIncomingPending ? () => reschedule.simulateAccept(booking.id) : handleAccept}
+        onDecline={isIncomingPending ? () => reschedule.simulateDecline(booking.id) : handleDecline}
         onStart={handleStartBooking}
         onOpenActive={handleOpenActive}
       />
 
       <BottomTabsForDetail />
     </HomeShell>
+  );
+}
+
+function OutgoingRescheduleBanner({
+  firstName,
+  timeLeftMs,
+  onCancel,
+}: {
+  firstName: string;
+  timeLeftMs: number;
+  onCancel: () => void;
+}) {
+  const { isDark } = useHomeTheme();
+  const bodyColor = isDark ? CREAM : MIDNIGHT;
+  return (
+    <div
+      className="rounded-2xl px-4 py-3"
+      style={{
+        backgroundColor: "rgba(255,130,63,0.10)",
+        border: "1px solid rgba(255,130,63,0.55)",
+        boxShadow: `0 0 0 2px rgba(255,130,63,0.10)`,
+      }}
+    >
+      <div className="flex items-start gap-2.5">
+        <span
+          aria-hidden
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 9999,
+            backgroundColor: ORANGE,
+            marginTop: 6,
+            flexShrink: 0,
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 10.5,
+              fontWeight: 800,
+              letterSpacing: "1.4px",
+              textTransform: "uppercase",
+              color: ORANGE,
+            }}
+          >
+            Pending reschedule
+          </div>
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 14.5,
+              fontWeight: 700,
+              color: bodyColor,
+              marginTop: 3,
+              letterSpacing: "-0.005em",
+            }}
+          >
+            Awaiting {firstName}'s approval · {formatTimeLeft(timeLeftMs)}
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <BannerSecondaryBtn>Message {firstName}</BannerSecondaryBtn>
+        <BannerSecondaryBtn onClick={onCancel}>Cancel request</BannerSecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function IncomingRescheduleBanner({
+  firstName,
+  proposedStart,
+  timeLeftMs,
+}: {
+  firstName: string;
+  proposedStart: Date;
+  timeLeftMs: number;
+}) {
+  const { isDark } = useHomeTheme();
+  const bodyColor = isDark ? CREAM : MIDNIGHT;
+  const proposedLabel = formatBookingDate(proposedStart);
+  return (
+    <div
+      className="rounded-2xl px-4 py-3"
+      style={{
+        backgroundColor: "rgba(255,130,63,0.10)",
+        border: "1px solid rgba(255,130,63,0.55)",
+        boxShadow: `0 0 0 2px rgba(255,130,63,0.10)`,
+      }}
+    >
+      <div className="flex items-start gap-2.5">
+        <span
+          aria-hidden
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 9999,
+            backgroundColor: ORANGE,
+            marginTop: 6,
+            flexShrink: 0,
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 10.5,
+              fontWeight: 800,
+              letterSpacing: "1.4px",
+              textTransform: "uppercase",
+              color: ORANGE,
+            }}
+          >
+            Reschedule requested
+          </div>
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 14.5,
+              fontWeight: 700,
+              color: bodyColor,
+              marginTop: 3,
+              letterSpacing: "-0.005em",
+              lineHeight: 1.35,
+            }}
+          >
+            {firstName} wants to reschedule to {proposedLabel}.
+          </div>
+          <div
+            style={{
+              fontFamily: UI,
+              fontSize: 12.5,
+              color: bodyColor,
+              opacity: 0.7,
+              marginTop: 4,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            Respond within {formatTimeLeft(timeLeftMs)}.
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <BannerSecondaryBtn>Counter-propose</BannerSecondaryBtn>
+        <BannerSecondaryBtn>Message {firstName}</BannerSecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function BannerSecondaryBtn({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  const { isDark } = useHomeTheme();
+  const fg = isDark ? CREAM : MIDNIGHT;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl py-2.5 transition-opacity active:opacity-70"
+      style={{
+        border: `1.5px solid ${fg}`,
+        backgroundColor: "transparent",
+        color: fg,
+        fontFamily: UI,
+        fontSize: 13,
+        fontWeight: 700,
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -143,7 +371,6 @@ function BottomTabsForDetail() {
       onSelect={(k) => {
         if (k === "home") navigate({ to: "/home" });
         if (k === "bookings") navigate({ to: "/bookings" });
-        if (k === "earnings") navigate({ to: "/earnings" });
       }}
     />
   );
@@ -187,21 +414,23 @@ function DetailHeader({ title, onBack }: { title: string; onBack: () => void }) 
 
 /* ---------------- Hero ---------------- */
 
-function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatus }) {
+function HeroBlock({
+  booking,
+  status,
+  canReschedule,
+  onReschedule,
+}: {
+  booking: Booking;
+  status: BookingStatus;
+  canReschedule: boolean;
+  onReschedule: () => void;
+}) {
   const { isDark, text } = useHomeTheme();
-  // Pending hides last name (privacy). Otherwise show full name.
   const displayName =
     status === "pending" ? booking.clientName.split(" ")[0] : booking.clientName;
-  // Relationship label (tiered, no numbered counts).
   const relationship = clientRelationshipLabel(booking);
-  // Contact actions: available as soon as the request lands and through the
-  // appointment. Hidden once the booking is closed (completed/cancelled),
-  // since chats and calls happen elsewhere post-service.
   const showContact =
     status === "pending" || status === "confirmed" || status === "in-progress";
-  // Theme-aware ring: cardBorder is tuned for white card surfaces and goes
-  // invisible on the dark page background. Use a brighter cream stroke in
-  // dark mode so the circle reads at the same weight as it does in light.
   const iconBtn: React.CSSProperties = {
     width: 36,
     height: 36,
@@ -216,21 +445,15 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
   };
   return (
     <div className="flex flex-col gap-3 pt-3">
-      {/* Top row: status pill aligned right, on its own line so the name
-          can breathe at full width with the avatar. */}
       <div className="flex justify-end">
         <StatusPill status={status} />
       </div>
-      {/* Identity row: avatar + (name, relationship · date) + contact icons. */}
       <div className="flex items-center gap-3.5">
         <div
           className="flex shrink-0 items-center justify-center rounded-full"
           style={{
             width: 52,
             height: 52,
-            // The hero avatar sits directly on the page background (not on a
-            // white card like the list rows), so dark mode needs a brighter
-            // fill + lighter monogram to stay legible on midnight.
             backgroundColor: isDark
               ? "rgba(255,130,63,0.22)"
               : "rgba(255,130,63,0.16)",
@@ -263,30 +486,29 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
               color: text,
               opacity: 0.6,
               marginTop: 4,
-              lineHeight: 1.3,
+              lineHeight: 1.35,
               fontVariantNumeric: "tabular-nums",
               textDecoration: status === "cancelled" ? "line-through" : "none",
             }}
           >
             {relationship}
-          </p>
-          <p
-            style={{
-              fontFamily: UI,
-              fontSize: 12.5,
-              color: text,
-              opacity: 0.55,
-              marginTop: 2,
-              lineHeight: 1.3,
-              fontVariantNumeric: "tabular-nums",
-              textDecoration: status === "cancelled" ? "line-through" : "none",
-            }}
-          >
+            <br />
             {formatBookingDate(booking.startsAt)}
           </p>
         </div>
         {showContact ? (
           <div className="flex items-center gap-2">
+            {canReschedule ? (
+              <button
+                type="button"
+                aria-label={`Reschedule ${displayName}`}
+                onClick={onReschedule}
+                className="transition-opacity active:opacity-60"
+                style={iconBtn}
+              >
+                <CalendarReschedIcon size={15} />
+              </button>
+            ) : null}
             <button
               type="button"
               aria-label={`Message ${displayName}`}
@@ -307,6 +529,25 @@ function HeroBlock({ booking, status }: { booking: Booking; status: BookingStatu
         ) : null}
       </div>
     </div>
+  );
+}
+
+function CalendarReschedIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+      <path d="M14 16l2 2 4-4" />
+    </svg>
   );
 }
 
@@ -434,23 +675,9 @@ function ServiceCard({ booking, dimmed }: { booking: Booking; dimmed?: boolean }
               }}
             >
               {showActual
-                ? `${booking.durationMin} min scheduled`
+                ? `${booking.durationMin} min scheduled · ${booking.actualDurationMin} min actual`
                 : `${booking.durationMin} min`}
             </div>
-            {showActual ? (
-              <div
-                style={{
-                  fontFamily: UI,
-                  fontSize: 13,
-                  color: MIDNIGHT,
-                  opacity: 0.65,
-                  marginTop: 2,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {booking.actualDurationMin} min actual
-            </div>
-            ) : null}
           </div>
           <span
             style={{
@@ -565,86 +792,23 @@ function PaymentCard({
   const platformFee = Math.round(booking.priceUsd * PLATFORM_FEE_PCT);
   const tip = booking.tipUsd ?? 0;
   const earnings = booking.priceUsd - platformFee + tip;
-  const clientPaid = booking.priceUsd + tip;
   const isCompleted = status === "completed";
   const payoutLine = isCompleted
     ? booking.paidOutOn
       ? `Paid out ${booking.paidOutOn}`
       : "Pending payout"
     : "Paid out within 24 hours of completion.";
-  const [showDetails, setShowDetails] = useState(false);
   return (
     <DetailCard>
       <CardLabel>Payment</CardLabel>
-      <Row label="Client paid" value={formatUsd(clientPaid)} />
+      <Row label="Service total" value={formatUsd(booking.priceUsd)} />
+      <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
+      {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
       <div
         className="my-3"
         style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
       />
       <Row label="Your earnings" value={formatUsd(earnings)} bold />
-      {tip > 0 ? (
-        <p
-          style={{
-            fontFamily: UI,
-            fontSize: 12,
-            color: MIDNIGHT,
-            opacity: 0.6,
-            marginTop: 6,
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          Includes {formatUsd(tip)} tip
-        </p>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => setShowDetails((v) => !v)}
-        className="mt-3 transition-opacity active:opacity-60"
-        style={{
-          fontFamily: UI,
-          fontSize: 12,
-          fontWeight: 600,
-          color: MIDNIGHT,
-          opacity: 0.6,
-          background: "none",
-          border: "none",
-          padding: 0,
-          textAlign: "left",
-        }}
-      >
-        {showDetails ? "Hide details" : "How is this calculated?"}
-      </button>
-      {showDetails ? (
-        <div
-          className="mt-2"
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            backgroundColor: "rgba(6,28,39,0.04)",
-          }}
-        >
-          <Row label="Service total" value={formatUsd(booking.priceUsd)} />
-          {tip > 0 ? <Row label="Tip" value={`+ ${formatUsd(tip)}`} /> : null}
-          <Row label="Platform fee" value={`− ${formatUsd(platformFee)}`} muted />
-          <div
-            className="my-2"
-            style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)" }}
-          />
-          <Row label="Your earnings" value={formatUsd(earnings)} bold />
-          <p
-            style={{
-              fontFamily: UI,
-              fontSize: 11,
-              color: MIDNIGHT,
-              opacity: 0.55,
-              marginTop: 8,
-              lineHeight: 1.5,
-            }}
-          >
-            Platform fee covers payment processing, identity verification, and customer support.
-          </p>
-        </div>
-      ) : null}
       <p
         style={{
           fontFamily: UI,

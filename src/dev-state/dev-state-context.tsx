@@ -46,6 +46,8 @@ export type DevLifecycle =
  */
 export type DevBookingSource = "auto" | "on-demand" | "scheduled";
 
+/* ---- Earnings sub-axes ---- */
+
 /**
  * Earnings sub-axes. Only meaningful when proState resolves to "live" — for
  * non-live pro states, Earnings is gated upstream (locked or empty waiting).
@@ -55,14 +57,61 @@ export type DevBookingSource = "auto" | "on-demand" | "scheduled";
  */
 export type DevPayoutState =
   | "auto"
-  | "none"           // No payout method set
-  | "active"         // Verified, payouts flowing
-  | "pending"        // Awaiting bank verification
-  | "failed-recent"; // Most recent payout failed
+  | "none"
+  | "active"
+  | "pending"
+  | "failed-recent";
 
 export type DevPendingBalance = "auto" | "zero" | "small" | "large";
 
 export type DevTaxDocs = "auto" | "none" | "current-year" | "multi-year";
+
+/* ---- Calendar sub-axes ---- */
+
+/**
+ * Density of bookings to render across the visible calendar range.
+ * Drives BOTH Week view block density and Month view heat tints — single
+ * source of truth so the two views can never disagree.
+ */
+export type DevWeekDensity = "auto" | "empty" | "light" | "typical" | "packed";
+
+/** How much blocked time to seed across the week. */
+export type DevBlockedTime = "auto" | "none" | "one-today" | "multiple-week" | "vacation";
+
+/** Which availability shape the pro is keeping. */
+export type DevAvailability =
+  | "auto"
+  | "standard"
+  | "split-days"
+  | "weekend-warrior"
+  | "limited";
+
+/**
+ * Edited availability override. When present, completely supersedes the
+ * `availability` preset. Shape mirrors `AvailabilityWeek` from
+ * /src/calendar/calendar-data.ts (kept JSON-shaped here to avoid cross-domain
+ * type imports — the calendar layer narrows it on read).
+ *
+ * Keys are 0=Sun … 6=Sat. Empty array = day off.
+ */
+export type DevAvailabilityOverride = Record<
+  number,
+  { startMin: number; endMin: number }[]
+>;
+
+/**
+ * Reschedule render state. Drives what every reschedule-aware surface
+ * shows for the focus booking (calendar grid block, booking detail page,
+ * bookings list row). Setting this seeds or clears proposals on the
+ * focus booking so all surfaces re-render in sync.
+ */
+export type DevRescheduleState =
+  | "none"
+  | "pending-out"
+  | "pending-in"
+  | "approved"
+  | "declined"
+  | "expired";
 
 export interface DevState {
   proState: DevProState;
@@ -75,6 +124,11 @@ export interface DevState {
   payoutState: DevPayoutState;
   pendingBalance: DevPendingBalance;
   taxDocs: DevTaxDocs;
+  weekDensity: DevWeekDensity;
+  blockedTime: DevBlockedTime;
+  availability: DevAvailability;
+  availabilityOverride: DevAvailabilityOverride | null;
+  rescheduleState: DevRescheduleState;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -88,6 +142,11 @@ const DEFAULT_STATE: DevState = {
   payoutState: "auto",
   pendingBalance: "auto",
   taxDocs: "auto",
+  weekDensity: "auto",
+  blockedTime: "auto",
+  availability: "auto",
+  availabilityOverride: null,
+  rescheduleState: "none",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -105,6 +164,11 @@ interface Ctx {
   setPayoutState: (v: DevPayoutState) => void;
   setPendingBalance: (v: DevPendingBalance) => void;
   setTaxDocs: (v: DevTaxDocs) => void;
+  setWeekDensity: (v: DevWeekDensity) => void;
+  setBlockedTime: (v: DevBlockedTime) => void;
+  setAvailability: (v: DevAvailability) => void;
+  setAvailabilityOverride: (v: DevAvailabilityOverride | null) => void;
+  setRescheduleState: (v: DevRescheduleState) => void;
   reset: () => void;
 }
 
@@ -112,8 +176,6 @@ const DevStateContext = createContext<Ctx | null>(null);
 
 function readEnabled(): boolean {
   if (typeof window === "undefined") return false;
-  // Pre-launch: always on. Opt-out with ?dev=0 or localStorage "ewa.devTools"="0".
-  // Before shipping to real users, re-gate this to import.meta.env.DEV only.
   try {
     const url = new URL(window.location.href);
     if (url.searchParams.get("dev") === "0") return false;
@@ -164,6 +226,17 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setPayoutState = useCallback((v: DevPayoutState) => setState((s) => ({ ...s, payoutState: v })), []);
   const setPendingBalance = useCallback((v: DevPendingBalance) => setState((s) => ({ ...s, pendingBalance: v })), []);
   const setTaxDocs = useCallback((v: DevTaxDocs) => setState((s) => ({ ...s, taxDocs: v })), []);
+  const setWeekDensity = useCallback((v: DevWeekDensity) => setState((s) => ({ ...s, weekDensity: v })), []);
+  const setBlockedTime = useCallback((v: DevBlockedTime) => setState((s) => ({ ...s, blockedTime: v })), []);
+  const setAvailability = useCallback((v: DevAvailability) => setState((s) => ({ ...s, availability: v })), []);
+  const setAvailabilityOverride = useCallback(
+    (v: DevAvailabilityOverride | null) => setState((s) => ({ ...s, availabilityOverride: v })),
+    [],
+  );
+  const setRescheduleState = useCallback(
+    (v: DevRescheduleState) => setState((s) => ({ ...s, rescheduleState: v })),
+    [],
+  );
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
@@ -180,6 +253,11 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setPayoutState,
       setPendingBalance,
       setTaxDocs,
+      setWeekDensity,
+      setBlockedTime,
+      setAvailability,
+      setAvailabilityOverride,
+      setRescheduleState,
       reset,
     }),
     [
@@ -195,6 +273,11 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setPayoutState,
       setPendingBalance,
       setTaxDocs,
+      setWeekDensity,
+      setBlockedTime,
+      setAvailability,
+      setAvailabilityOverride,
+      setRescheduleState,
       reset,
     ],
   );
@@ -218,6 +301,11 @@ export function useDevState(): Ctx {
       setPayoutState: () => {},
       setPendingBalance: () => {},
       setTaxDocs: () => {},
+      setWeekDensity: () => {},
+      setBlockedTime: () => {},
+      setAvailability: () => {},
+      setAvailabilityOverride: () => {},
+      setRescheduleState: () => {},
       reset: () => {},
     };
   }

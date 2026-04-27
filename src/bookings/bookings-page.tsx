@@ -22,6 +22,7 @@ import {
   BookingTimeline,
   type TimelineEntry,
 } from "@/bookings/booking-row-card";
+import { useReschedule, formatTimeLeft } from "@/calendar/reschedule-context";
 
 const UI = HOME_SANS;
 const ORANGE = "#FF823F";
@@ -64,6 +65,7 @@ function BottomTabsForBookings() {
       onSelect={(k) => {
         if (k === "home") navigate({ to: "/home" });
         if (k === "bookings") navigate({ to: "/bookings" });
+        if (k === "calendar") navigate({ to: "/calendar" });
         if (k === "earnings") navigate({ to: "/earnings" });
       }}
     />
@@ -177,7 +179,7 @@ function UpcomingTab() {
   );
 
   const openDetail = (id: string) =>
-    navigate({ to: "/bookings/$id", params: { id } });
+    navigate({ to: "/bookings/$id", params: { id }, search: { from: "bookings", tab: "upcoming" } });
 
   const handleAccept = (id: string) =>
     setBookings((prev) =>
@@ -375,6 +377,16 @@ function pendingPropsFor(
   };
 }
 
+function pendingReschedulePropFor(
+  bookingId: string,
+  proposalFor: ReturnType<typeof useReschedule>["proposalFor"],
+  _tick: number,
+): { timeLeftLabel: string } | undefined {
+  const p = proposalFor(bookingId);
+  if (!p || p.status !== "pending") return undefined;
+  return { timeLeftLabel: formatTimeLeft(p.expiresAt.getTime() - Date.now()) };
+}
+
 function TodayHorizonGroup({
   bookings,
   onAccept,
@@ -386,6 +398,7 @@ function TodayHorizonGroup({
   onDecline: (id: string) => void;
   onOpen: (id: string) => void;
 }) {
+  const { proposalFor, tick } = useReschedule();
   if (bookings.length === 0) return null;
 
   const entries: TimelineEntry[] = bookings.map((b, i) => {
@@ -402,6 +415,7 @@ function TodayHorizonGroup({
       isNext: i === 0 && b.status === "confirmed",
       gapBefore,
       pending: pendingPropsFor(b, onAccept, onDecline),
+      pendingReschedule: pendingReschedulePropFor(b.id, proposalFor, tick),
       onOpen: () => onOpen(b.id),
     };
   });
@@ -439,6 +453,7 @@ function CollapsibleHorizonGroup({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const { text } = useHomeTheme();
+  const { proposalFor, tick } = useReschedule();
   if (bookings.length === 0) return null;
 
   return (
@@ -492,6 +507,7 @@ function CollapsibleHorizonGroup({
               key={b.id}
               booking={adaptCanonical(b)}
               pending={pendingPropsFor(b, onAccept, onDecline)}
+              pendingReschedule={pendingReschedulePropFor(b.id, proposalFor, tick)}
               onSelect={() => onOpen(b.id)}
             />
           ))}
@@ -551,7 +567,7 @@ function HistoryTab() {
   }, []);
 
   const open = (id: string) =>
-    navigate({ to: "/bookings/$id", params: { id } });
+    navigate({ to: "/bookings/$id", params: { id }, search: { from: "bookings", tab: "history" } });
 
   return (
     <div className="flex flex-col pb-6">

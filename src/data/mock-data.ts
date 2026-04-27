@@ -41,6 +41,10 @@ export interface Booking {
   distance?: string;
   avatarHue?: "blue" | "green" | "peach" | "violet" | "amber";
   startsInMin?: number;
+  /** "AM"/"PM" suffix when not embedded in startsAt. */
+  startsAtMeridiem?: "AM" | "PM";
+  /** Clock string for when the pro should leave (e.g. "12:38 PM"). */
+  scheduledDepartureAt?: string;
 }
 
 export interface BookingRequest {
@@ -77,6 +81,31 @@ export interface IncomingRequest extends BookingRequest {
   etaMin: number;
   payoutUsd: number;
   photoUrl?: string;
+}
+
+/** Smart Online toggle state. Drives StatusBar and gates intake. */
+export type OnlineToggleKind =
+  | "available"
+  | "protecting"
+  | "outside-hours"
+  | "on-booking"
+  | "manual-offline"
+  | "after-hours-online";
+
+export interface OnlineState {
+  kind: OnlineToggleKind;
+  protectingTime?: string;
+  resumesAt?: string;
+  autoOfflineBanner?: boolean;
+  workHoursEndedAt?: string;
+}
+
+/** Pending on-demand request that hijacks the Up Next slot. */
+export interface PendingOnDemand extends BookingRequest {
+  secondsLeft: number;
+  distance: string;
+  etaMin: number;
+  payoutUsd: number;
 }
 
 /* --------- Adapter --------- */
