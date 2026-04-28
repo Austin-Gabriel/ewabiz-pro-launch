@@ -1294,6 +1294,197 @@ function PencilIcon() {
   );
 }
 
+/* ---------- Identity card (main page) ---------- */
+
+function IdentityCard({
+  draft,
+  reviews,
+  onEdit,
+}: {
+  draft: ProfileDraft;
+  reviews: ProReview[];
+  onEdit: () => void;
+}) {
+  const avg = reviews.length > 0 ? averageRating(reviews) : 0;
+  return (
+    <ProfileCard>
+      <div className="flex items-center gap-4 px-5 py-5">
+        <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2
+            style={{
+              fontFamily: UI,
+              fontSize: 20,
+              fontWeight: 700,
+              color: NAVY,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.15,
+            }}
+          >
+            {draft.displayName}
+          </h2>
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: NAVY,
+              opacity: draft.headline ? 0.7 : 0.5,
+              fontStyle: draft.headline ? "normal" : "italic",
+            }}
+          >
+            {draft.headline || "Add a headline"}
+          </span>
+          <div className="mt-1 flex items-center gap-1.5">
+            <Star />
+            {reviews.length > 0 ? (
+              <>
+                <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: NAVY }}>
+                  {avg.toFixed(1)}
+                </span>
+                <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                  ({reviews.length})
+                </span>
+              </>
+            ) : (
+              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                No reviews yet
+              </span>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label="Edit profile"
+          className="flex shrink-0 items-center justify-center transition-opacity active:opacity-60"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            backgroundColor: "#FFFFFF",
+            border: "1px solid rgba(6,28,39,0.12)",
+            color: NAVY,
+          }}
+        >
+          <PencilIcon />
+        </button>
+      </div>
+    </ProfileCard>
+  );
+}
+
+/* ---------- Overview groups (main page rows) ---------- */
+
+function OverviewGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <div
+        className="px-2"
+        style={{
+          fontFamily: UI,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "currentColor",
+          opacity: 0.55,
+        }}
+      >
+        {title}
+      </div>
+      <ProfileCard>{children}</ProfileCard>
+    </section>
+  );
+}
+
+function OverviewDivider() {
+  return (
+    <div
+      aria-hidden
+      style={{ height: 1, backgroundColor: "rgba(6,28,39,0.06)", marginLeft: 60 }}
+    />
+  );
+}
+
+function OverviewRow({
+  icon,
+  title,
+  subtitle,
+  right,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle?: string;
+  right?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60"
+      style={{ background: "transparent", border: "none" }}
+    >
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: "rgba(255,130,63,0.10)",
+          color: ORANGE,
+        }}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: NAVY }}>
+          {title}
+        </span>
+        {subtitle ? (
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 12,
+              color: NAVY,
+              opacity: 0.55,
+              marginTop: 2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
+      {right ? (
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            fontWeight: 600,
+            color: ORANGE,
+            backgroundColor: "rgba(255,130,63,0.12)",
+            padding: "4px 10px",
+            borderRadius: 999,
+            flexShrink: 0,
+          }}
+        >
+          {right}
+        </span>
+      ) : (
+        <span aria-hidden style={{ color: NAVY, opacity: 0.35, flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      )}
+    </button>
+  );
+}
+
 function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string }) {
   if (avatarUrl) {
     return (
