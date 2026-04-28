@@ -194,8 +194,6 @@ export function ProfilePage() {
             onChange={(v) => updateProfileDraft({ visibility: v })}
           />
         ) : null}
-
-        <SettingsLinkRow />
       </div>
 
       <ProfileBottomTabs />
