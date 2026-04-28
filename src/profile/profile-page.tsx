@@ -84,6 +84,7 @@ export function ProfilePage() {
 
   if (proState === "mid-onboarding") return <LockedShell />;
 
+  const navigate = useNavigate();
   const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
 
@@ -103,10 +104,9 @@ export function ProfilePage() {
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [editingService, setEditingService] = useState<ProService | null>(null);
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
-  // The pencil on the header now opens a single grouped "Edit profile"
-  // sheet (Storefront / How you work / Social / Account / Support style),
-  // matching the reference layout. Individual edit sheets are launched
-  // from rows inside that sheet.
+  // Pencil icon in the page header opens a full-screen "Edit profile"
+  // sheet that holds every administrative row. The main Profile surface
+  // stays focused on storefront overview rows only.
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
@@ -145,7 +145,11 @@ export function ProfilePage() {
       <HomeShell>
         <OnlineModeStrip />
         <ActiveBookingStrip />
-        <PageHeader mode={mode} onModeChange={setMode} />
+        <PageHeader
+          mode={mode}
+          onModeChange={setMode}
+          onEdit={() => setEditSheetOpen(true)}
+        />
         <PreviewStrip onExit={() => setMode("editing")} />
         <ClientPreview
           draft={effectiveDraft}
@@ -161,29 +165,95 @@ export function ProfilePage() {
     <HomeShell>
       <OnlineModeStrip />
       <ActiveBookingStrip />
-      <PageHeader mode={mode} onModeChange={setMode} />
+      <PageHeader
+        mode={mode}
+        onModeChange={setMode}
+        onEdit={() => setEditSheetOpen(true)}
+      />
 
-      <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
+      <div className="flex flex-1 flex-col gap-5 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
         {draft.visibility === "paused" ? (
           <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
         ) : null}
 
-        <ProfileHeaderCard
+        <IdentityCard
           draft={effectiveDraft}
+          reviews={reviews}
           onEdit={() => setEditSheetOpen(true)}
         />
 
-        <ProfileCompletionCard items={checklist} />
+        <OverviewGroup title="Storefront">
+          <OverviewRow
+            icon={<ScissorsIcon />}
+            title="Services & pricing"
+            subtitle={
+              draft.services.length > 0
+                ? `${draft.services.length} ${draft.services.length === 1 ? "service" : "services"}`
+                : "Add services to get bookings"
+            }
+            onClick={() => setEditSheetOpen(true)}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<PhotoIcon />}
+            title="Portfolio"
+            subtitle={
+              draft.portfolio.length > 0
+                ? `${draft.portfolio.length} ${draft.portfolio.length === 1 ? "photo" : "photos"}`
+                : "Add photos to start"
+            }
+            onClick={() => void navigate({ to: "/profile/portfolio" })}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<StarOutlineIcon />}
+            title="Reviews"
+            subtitle={
+              reviews.length > 0
+                ? `${averageRating(reviews).toFixed(1)} · ${reviews.length} ${reviews.length === 1 ? "review" : "reviews"}`
+                : "No reviews yet"
+            }
+            onClick={() => setEditSheetOpen(true)}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<EyeIcon />}
+            title="Customer view"
+            subtitle="How clients see you"
+            onClick={() => setMode("preview")}
+          />
+        </OverviewGroup>
 
-        {/* Always show the client preview underneath so the pro sees
-         * exactly what their listing looks like to a customer. All
-         * editing happens inside the pencil sheet. */}
-        <ClientPreviewInline
-          draft={effectiveDraft}
-          portfolio={portfolio}
-          reviews={reviews}
-        />
+        <OverviewGroup title="How you work">
+          <OverviewRow
+            icon={<CalendarIcon />}
+            title="Availability"
+            subtitle={
+              draft.availabilitySummary.trim().length > 0
+                ? draft.availabilitySummary
+                : "Set your weekly schedule"
+            }
+            onClick={() => void navigate({ to: "/calendar" })}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<CardIcon />}
+            title="Payouts"
+            subtitle="Add bank account"
+            onClick={() => void navigate({ to: "/earnings" })}
+          />
+        </OverviewGroup>
+
+        <OverviewGroup title="Social">
+          <OverviewRow
+            icon={<LinkIcon />}
+            title="Connect socials"
+            subtitle="Share your work"
+            right={draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect"}
+            onClick={() => setEditSheetOpen(true)}
+          />
+        </OverviewGroup>
       </div>
 
       <ProfileBottomTabs />
@@ -195,6 +265,7 @@ export function ProfilePage() {
         draft={draft}
         certificate={certificate}
         proState={proState}
+        checklist={checklist}
         onOpenHeadline={() => { setEditSheetOpen(false); setHeadlineOpen(true); }}
         onOpenAbout={() => { setEditSheetOpen(false); setAboutOpen(true); }}
         onOpenLocation={() => { setEditSheetOpen(false); setLocationOpen(true); }}
@@ -244,9 +315,11 @@ function LockedShell() {
 function PageHeader({
   mode,
   onModeChange,
+  onEdit,
 }: {
   mode?: ProfileMode;
   onModeChange?: (m: ProfileMode) => void;
+  onEdit?: () => void;
 } = {}) {
   const { text } = useHomeTheme();
   const navigate = useNavigate();
@@ -264,28 +337,64 @@ function PageHeader({
         Profile
       </h1>
       <div className="flex items-center gap-2">
-        {mode && onModeChange ? (
-          <ModeToggle mode={mode} onChange={onModeChange} />
+        {onEdit ? (
+          <HeaderIconButton ariaLabel="Edit profile" color={text} onClick={onEdit}>
+            <PencilIcon />
+          </HeaderIconButton>
         ) : null}
-        <button
-          type="button"
-          aria-label="Settings"
+        {mode && onModeChange ? (
+          <HeaderIconButton
+            ariaLabel={mode === "preview" ? "Exit preview" : "Preview as a client"}
+            color={text}
+            onClick={() => onModeChange(mode === "preview" ? "editing" : "preview")}
+            active={mode === "preview"}
+          >
+            <EyeIcon />
+          </HeaderIconButton>
+        ) : null}
+        <HeaderIconButton
+          ariaLabel="Settings"
+          color={text}
           onClick={() => void navigate({ to: "/settings" })}
-          className="flex items-center justify-center transition-opacity active:opacity-50"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 999,
-            color: text,
-            opacity: 0.75,
-            background: "transparent",
-            border: "none",
-          }}
         >
           <SettingsIcon />
-        </button>
+        </HeaderIconButton>
       </div>
     </div>
+  );
+}
+
+function HeaderIconButton({
+  ariaLabel,
+  color,
+  onClick,
+  active,
+  children,
+}: {
+  ariaLabel: string;
+  color: string;
+  onClick: () => void;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      aria-pressed={active ? true : undefined}
+      onClick={onClick}
+      className="flex items-center justify-center transition-opacity active:opacity-50"
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 999,
+        color,
+        backgroundColor: active ? "rgba(255,130,63,0.16)" : "rgba(6,28,39,0.06)",
+        border: "none",
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -1185,6 +1294,197 @@ function PencilIcon() {
   );
 }
 
+/* ---------- Identity card (main page) ---------- */
+
+function IdentityCard({
+  draft,
+  reviews,
+  onEdit,
+}: {
+  draft: ProfileDraft;
+  reviews: ProReview[];
+  onEdit: () => void;
+}) {
+  const avg = reviews.length > 0 ? averageRating(reviews) : 0;
+  return (
+    <ProfileCard>
+      <div className="flex items-center gap-4 px-5 py-5">
+        <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2
+            style={{
+              fontFamily: UI,
+              fontSize: 20,
+              fontWeight: 700,
+              color: NAVY,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.15,
+            }}
+          >
+            {draft.displayName}
+          </h2>
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              color: NAVY,
+              opacity: draft.headline ? 0.7 : 0.5,
+              fontStyle: draft.headline ? "normal" : "italic",
+            }}
+          >
+            {draft.headline || "Add a headline"}
+          </span>
+          <div className="mt-1 flex items-center gap-1.5">
+            <Star />
+            {reviews.length > 0 ? (
+              <>
+                <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: NAVY }}>
+                  {avg.toFixed(1)}
+                </span>
+                <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                  ({reviews.length})
+                </span>
+              </>
+            ) : (
+              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                No reviews yet
+              </span>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label="Edit profile"
+          className="flex shrink-0 items-center justify-center transition-opacity active:opacity-60"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            backgroundColor: "#FFFFFF",
+            border: "1px solid rgba(6,28,39,0.12)",
+            color: NAVY,
+          }}
+        >
+          <PencilIcon />
+        </button>
+      </div>
+    </ProfileCard>
+  );
+}
+
+/* ---------- Overview groups (main page rows) ---------- */
+
+function OverviewGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <div
+        className="px-2"
+        style={{
+          fontFamily: UI,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "currentColor",
+          opacity: 0.55,
+        }}
+      >
+        {title}
+      </div>
+      <ProfileCard>{children}</ProfileCard>
+    </section>
+  );
+}
+
+function OverviewDivider() {
+  return (
+    <div
+      aria-hidden
+      style={{ height: 1, backgroundColor: "rgba(6,28,39,0.06)", marginLeft: 60 }}
+    />
+  );
+}
+
+function OverviewRow({
+  icon,
+  title,
+  subtitle,
+  right,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle?: string;
+  right?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60"
+      style={{ background: "transparent", border: "none" }}
+    >
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: "rgba(255,130,63,0.10)",
+          color: ORANGE,
+        }}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: NAVY }}>
+          {title}
+        </span>
+        {subtitle ? (
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 12,
+              color: NAVY,
+              opacity: 0.55,
+              marginTop: 2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
+      {right ? (
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            fontWeight: 600,
+            color: ORANGE,
+            backgroundColor: "rgba(255,130,63,0.12)",
+            padding: "4px 10px",
+            borderRadius: 999,
+            flexShrink: 0,
+          }}
+        >
+          {right}
+        </span>
+      ) : (
+        <span aria-hidden style={{ color: NAVY, opacity: 0.35, flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      )}
+    </button>
+  );
+}
+
 function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string }) {
   if (avatarUrl) {
     return (
@@ -1856,6 +2156,7 @@ function ProfileEditSheet({
   draft,
   certificate,
   proState,
+  checklist,
   onOpenHeadline,
   onOpenAbout,
   onOpenLocation,
@@ -1867,6 +2168,7 @@ function ProfileEditSheet({
   draft: ProfileDraft;
   certificate: CertificateStatus;
   proState: ResolvedProState;
+  checklist: ChecklistItem[];
   onOpenHeadline: () => void;
   onOpenAbout: () => void;
   onOpenLocation: () => void;
@@ -1874,6 +2176,8 @@ function ProfileEditSheet({
   onAddService: () => void;
 }) {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const close = () => onOpenChange(false);
   const go = (to: string) => {
     close();
@@ -1881,13 +2185,19 @@ function ProfileEditSheet({
   };
 
   const certMeta = certificateMeta(certificate);
-  const portfolioRight =
-    draft.portfolio.length > 0 ? `${draft.portfolio.length}` : "Add photos";
-  const servicesRight =
-    draft.services.length > 0 ? `${draft.services.length}` : "Add services";
-  const reviewsRight = "View";
   const socialsRight =
     draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect";
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await auth.reset();
+    } finally {
+      setSigningOut(false);
+      close();
+      void navigate({ to: "/login" });
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1902,7 +2212,7 @@ function ProfileEditSheet({
           flexDirection: "column",
         }}
       >
-        <SheetHeader className="px-5 pb-1 pt-5 text-left">
+        <SheetHeader className="flex flex-row items-center justify-between px-5 pb-1 pt-5 text-left">
           <SheetTitle
             style={{
               fontFamily: UI,
@@ -1914,6 +2224,24 @@ function ProfileEditSheet({
           >
             Edit profile
           </SheetTitle>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={close}
+            className="flex items-center justify-center transition-opacity active:opacity-60"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.10)",
+              color: "#FFFFFF",
+              border: "none",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-8 pt-3">
@@ -1935,6 +2263,8 @@ function ProfileEditSheet({
               }
               onClick={onOpenAbout}
             />
+            <SheetDivider />
+            <SheetCompletenessRow items={checklist} />
           </SheetGroup>
 
           <SheetGroup title="Storefront">
@@ -1946,7 +2276,6 @@ function ProfileEditSheet({
                   ? `${draft.services.length} services`
                   : "Add services to get bookings"
               }
-              right={servicesRight}
               onClick={onAddService}
             />
             <SheetDivider />
@@ -1958,7 +2287,6 @@ function ProfileEditSheet({
                   ? `${draft.portfolio.length} photos`
                   : "Add photos to start"
               }
-              right={portfolioRight}
               onClick={() => go("/profile/portfolio")}
             />
             <SheetDivider />
@@ -1966,7 +2294,6 @@ function ProfileEditSheet({
               icon={<StarOutlineIcon />}
               title="Reviews"
               subtitle="What clients are saying"
-              right={reviewsRight}
               disabled
             />
           </SheetGroup>
@@ -1975,27 +2302,75 @@ function ProfileEditSheet({
             <SheetRow
               icon={<CalendarIcon />}
               title="Availability"
-              subtitle={draft.availabilitySummary}
+              subtitle={
+                draft.availabilitySummary.trim().length > 0
+                  ? draft.availabilitySummary
+                  : "Set your weekly schedule"
+              }
               onClick={() => go("/calendar")}
             />
             <SheetDivider />
             <SheetRow
               icon={<PinIcon />}
-              title="Base location"
-              subtitle={`${draft.neighborhood} · ${draft.travelRadiusMi} mi radius`}
+              title="Service area / Base location"
+              subtitle={`${draft.neighborhood}`}
               onClick={onOpenLocation}
             />
             <SheetDivider />
             <SheetRow
-              icon={<BadgeIcon />}
-              title="Cosmetology certificate"
-              subtitle={certMeta.title}
-              right={certMeta.action}
-              onClick={onOpenCertificate}
+              icon={<ClockIcon />}
+              title="Booking rules"
+              subtitle="2 hr prep · 24 hr lead"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<ShieldIcon />}
+              title="Cancellation policy"
+              subtitle="Moderate"
+              disabled
             />
           </SheetGroup>
 
-          <SheetGroup title="Social">
+          <SheetGroup title="Account">
+            <SheetRow
+              icon={<UserIcon />}
+              title="Personal info"
+              subtitle={auth.email ?? "Name, email, phone"}
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<BadgeIcon />}
+              title="Verification"
+              subtitle={certMeta.title}
+              right={certificate === "verified" ? "Verified" : undefined}
+              onClick={onOpenCertificate}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<CardIcon />}
+              title="Payouts"
+              subtitle="Add bank account"
+              onClick={() => go("/earnings")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<DocumentIcon />}
+              title="Tax info"
+              subtitle="W-9, 1099 forms"
+              onClick={() => go("/earnings")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<BellIcon />}
+              title="Notifications"
+              subtitle="Push, email, SMS"
+              disabled
+            />
+          </SheetGroup>
+
+          <SheetGroup title="Extras">
             <SheetRow
               icon={<LinkIcon />}
               title="Connect socials"
@@ -2003,20 +2378,32 @@ function ProfileEditSheet({
               right={socialsRight}
               disabled
             />
-          </SheetGroup>
-
-          <SheetGroup title="Account">
+            <SheetDivider />
             <SheetRow
-              icon={<CardIcon />}
-              title="Payouts"
-              subtitle="Bank account and history"
-              onClick={() => go("/earnings")}
+              icon={<GiftIcon />}
+              title="Refer a pro"
+              subtitle="Earn $50 per referral"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<HelpIcon />}
+              title="Help & support"
+              subtitle="FAQs and contact"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<SunIcon />}
+              title="App appearance"
+              subtitle="System"
+              disabled
             />
             <SheetDivider />
             <SheetRow
               icon={<GearIcon />}
               title="Settings"
-              subtitle="Notifications, privacy, password"
+              subtitle="Privacy, password, more"
               onClick={() => go("/settings")}
             />
           </SheetGroup>
@@ -2058,9 +2445,90 @@ function ProfileEditSheet({
               </div>
             </SheetGroup>
           ) : null}
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="mt-2 w-full rounded-full transition-opacity active:opacity-70"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.85)",
+              backgroundColor: "transparent",
+              border: "1px solid rgba(255,255,255,0.20)",
+              padding: "13px 16px",
+            }}
+          >
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+
+          <p
+            className="pt-3 text-center"
+            style={{
+              fontFamily: UI,
+              fontSize: 11,
+              color: "#FFFFFF",
+              opacity: 0.4,
+              letterSpacing: "0.04em",
+            }}
+          >
+            Ewà Biz · v1.0.2
+          </p>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function SheetCompletenessRow({ items }: { items: ChecklistItem[] }) {
+  const done = items.filter((i) => i.done).length;
+  const total = items.length;
+  const pct = Math.round((done / total) * 100);
+  const remaining = total - done;
+  if (remaining === 0) return null;
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: "rgba(255,130,63,0.10)",
+          color: ORANGE,
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 700,
+        }}
+      >
+        {pct}%
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+          Profile completeness
+        </span>
+        <div
+          aria-hidden
+          className="overflow-hidden"
+          style={{ height: 4, borderRadius: 999, backgroundColor: "rgba(6,28,39,0.08)" }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${pct}%`,
+              backgroundColor: ORANGE,
+              borderRadius: 999,
+              transition: "width 320ms ease",
+            }}
+          />
+        </div>
+        <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+          {remaining} {remaining === 1 ? "item" : "items"} left
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -2263,6 +2731,61 @@ function UserIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
+function ClockIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+function ShieldIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z" />
+    </svg>
+  );
+}
+function DocumentIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+      <path d="M14 3v6h6M8 13h8M8 17h6" />
+    </svg>
+  );
+}
+function BellIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8a6 6 0 1 1 12 0c0 5 2 7 2 7H4s2-2 2-7" />
+      <path d="M10 21a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+function GiftIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v9h14v-9M12 8v13M12 8s-3-5-6-3 0 5 3 5M12 8s3-5 6-3-0 5-3 5" />
+    </svg>
+  );
+}
+function HelpIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .8-1.5 1.5-1.5 3M12 17h.01" />
+    </svg>
+  );
+}
+function SunIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
     </svg>
   );
 }
