@@ -150,9 +150,9 @@ export function ProfilePage() {
           <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
         ) : null}
 
-        <ProfileCompletionCard items={checklist} />
-
         <ProfileHeaderCard draft={draft} onEditHeadline={() => setHeadlineOpen(true)} />
+
+        <ProfileCompletionCard items={checklist} />
 
         <PortfolioCard photos={portfolio} />
 
