@@ -66,6 +66,18 @@ export type DevPendingBalance = "auto" | "zero" | "small" | "large";
 
 export type DevTaxDocs = "auto" | "none" | "current-year" | "multi-year";
 
+/* ---- Profile sub-axes ---- */
+
+/**
+ * Cosmetology certificate verification state. Orthogonal to proState and
+ * dataDensity — a "live" pro can have any certificate state. Drives the
+ * Licensed badge in Profile header + client preview, the Certificate card
+ * status copy, and the completion checklist item.
+ *
+ * "auto" = use whatever's persisted in the profile draft.
+ */
+export type DevCertificate = "auto" | "none" | "pending" | "verified" | "rejected";
+
 /* ---- Calendar sub-axes ---- */
 
 /**
@@ -124,6 +136,7 @@ export interface DevState {
   payoutState: DevPayoutState;
   pendingBalance: DevPendingBalance;
   taxDocs: DevTaxDocs;
+  certificate: DevCertificate;
   weekDensity: DevWeekDensity;
   blockedTime: DevBlockedTime;
   availability: DevAvailability;
@@ -142,6 +155,7 @@ const DEFAULT_STATE: DevState = {
   payoutState: "auto",
   pendingBalance: "auto",
   taxDocs: "auto",
+  certificate: "auto",
   weekDensity: "auto",
   blockedTime: "auto",
   availability: "auto",
@@ -164,6 +178,7 @@ interface Ctx {
   setPayoutState: (v: DevPayoutState) => void;
   setPendingBalance: (v: DevPendingBalance) => void;
   setTaxDocs: (v: DevTaxDocs) => void;
+  setCertificate: (v: DevCertificate) => void;
   setWeekDensity: (v: DevWeekDensity) => void;
   setBlockedTime: (v: DevBlockedTime) => void;
   setAvailability: (v: DevAvailability) => void;
@@ -226,6 +241,7 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
   const setPayoutState = useCallback((v: DevPayoutState) => setState((s) => ({ ...s, payoutState: v })), []);
   const setPendingBalance = useCallback((v: DevPendingBalance) => setState((s) => ({ ...s, pendingBalance: v })), []);
   const setTaxDocs = useCallback((v: DevTaxDocs) => setState((s) => ({ ...s, taxDocs: v })), []);
+  const setCertificate = useCallback((v: DevCertificate) => setState((s) => ({ ...s, certificate: v })), []);
   const setWeekDensity = useCallback((v: DevWeekDensity) => setState((s) => ({ ...s, weekDensity: v })), []);
   const setBlockedTime = useCallback((v: DevBlockedTime) => setState((s) => ({ ...s, blockedTime: v })), []);
   const setAvailability = useCallback((v: DevAvailability) => setState((s) => ({ ...s, availability: v })), []);
@@ -253,6 +269,7 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setPayoutState,
       setPendingBalance,
       setTaxDocs,
+      setCertificate,
       setWeekDensity,
       setBlockedTime,
       setAvailability,
@@ -273,6 +290,7 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setPayoutState,
       setPendingBalance,
       setTaxDocs,
+      setCertificate,
       setWeekDensity,
       setBlockedTime,
       setAvailability,
@@ -301,6 +319,7 @@ export function useDevState(): Ctx {
       setPayoutState: () => {},
       setPendingBalance: () => {},
       setTaxDocs: () => {},
+      setCertificate: () => {},
       setWeekDensity: () => {},
       setBlockedTime: () => {},
       setAvailability: () => {},

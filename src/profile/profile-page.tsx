@@ -81,6 +81,12 @@ export function ProfilePage() {
   const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
 
+  // Dev-state can override certificate without touching the persisted draft —
+  // lets reviewers preview every verification state from the toggle.
+  const certificate: CertificateStatus =
+    dev.certificate === "auto" ? draft.certificate : dev.certificate;
+  const effectiveDraft = dev.certificate === "auto" ? draft : { ...draft, certificate };
+
   // Mode is in-memory only — closing/reopening returns to Editing.
   const [mode, setMode] = useState<ProfileMode>("editing");
 
@@ -103,7 +109,7 @@ export function ProfilePage() {
       hasServices: draft.services.length > 0,
       hasSocial: Boolean(draft.social.instagram || draft.social.tiktok),
       hasAvailability: draft.availabilitySummary.trim().length > 0,
-      certificate: draft.certificate,
+      certificate,
     }),
     [
       draft.headline,
@@ -114,7 +120,7 @@ export function ProfilePage() {
       draft.social.instagram,
       draft.social.tiktok,
       draft.availabilitySummary,
-      draft.certificate,
+      certificate,
     ],
   );
 
@@ -131,7 +137,7 @@ export function ProfilePage() {
         <PageHeader mode={mode} onModeChange={setMode} />
         <PreviewStrip onExit={() => setMode("editing")} />
         <ClientPreview
-          draft={draft}
+          draft={effectiveDraft}
           portfolio={portfolio}
           reviews={reviews}
         />
@@ -152,7 +158,7 @@ export function ProfilePage() {
           <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
         ) : null}
 
-        <ProfileHeaderCard draft={draft} onEditHeadline={() => setHeadlineOpen(true)} />
+        <ProfileHeaderCard draft={effectiveDraft} onEditHeadline={() => setHeadlineOpen(true)} />
 
         <ProfileCompletionCard items={checklist} />
 
@@ -178,7 +184,7 @@ export function ProfilePage() {
         />
 
         <CertificateCard
-          status={draft.certificate}
+          status={certificate}
           onEdit={() => setCertificateOpen(true)}
         />
 
@@ -199,7 +205,7 @@ export function ProfilePage() {
       <AboutSheet open={aboutOpen} onOpenChange={setAboutOpen} defaultValue={draft.about} />
       <BaseLocationSheet open={locationOpen} onOpenChange={setLocationOpen} draft={draft} />
       <ServiceSheet open={serviceSheetOpen} onOpenChange={setServiceSheetOpen} service={editingService} />
-      <CertificateSheet open={certificateOpen} onOpenChange={setCertificateOpen} status={draft.certificate} />
+      <CertificateSheet open={certificateOpen} onOpenChange={setCertificateOpen} status={certificate} />
     </HomeShell>
   );
 }
@@ -760,7 +766,7 @@ function buildChecklist(input: {
   hasServices: boolean;
   hasSocial: boolean;
   hasAvailability: boolean;
-  certificate: ReturnType<typeof useDevState> extends never ? never : import("@/data/mock-pro-profile").CertificateStatus;
+  certificate: CertificateStatus;
 }): ChecklistItem[] {
   return [
     { id: "headline", label: "Add your headline", done: input.hasHeadline },
