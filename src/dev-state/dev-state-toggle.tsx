@@ -12,6 +12,7 @@ import {
   type DevPayoutState,
   type DevPendingBalance,
   type DevTaxDocs,
+  type DevCertificate,
   type DevWeekDensity,
   type DevBlockedTime,
   type DevAvailability,
@@ -137,6 +138,14 @@ const RESCHEDULE_STATES: { value: DevRescheduleState; label: string; hint: strin
   { value: "expired", label: "Expired", hint: "Proposal timed out" },
 ];
 
+const CERTIFICATES: { value: DevCertificate; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Use whatever's saved on the profile" },
+  { value: "none", label: "Not added", hint: "No certificate uploaded" },
+  { value: "pending", label: "Under review", hint: "Awaiting verification" },
+  { value: "verified", label: "Verified", hint: "Licensed badge shown to clients" },
+  { value: "rejected", label: "Rejected", hint: "Verification failed" },
+];
+
 const RESCHEDULE_FOCUS_ID = "b1";
 
 export function DevStateToggle() {
@@ -153,6 +162,7 @@ export function DevStateToggle() {
     setPayoutState,
     setPendingBalance,
     setTaxDocs,
+    setCertificate,
     setWeekDensity,
     setBlockedTime,
     setAvailability,
@@ -373,6 +383,12 @@ export function DevStateToggle() {
                   />
                 </>
               ) : null}
+              <Group
+                title="Profile · certificate"
+                value={state.certificate}
+                options={CERTIFICATES}
+                onChange={(v) => setCertificate(v as DevCertificate)}
+              />
               <Group
                 title="Density (calendar)"
                 value={state.weekDensity}
