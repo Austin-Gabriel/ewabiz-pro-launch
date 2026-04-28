@@ -21,6 +21,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   async function doSignOut() {
     setSigningOut(true);
@@ -63,8 +64,6 @@ export function SettingsPage() {
           <NavRow label="Lead time" rightLabel="2 hours" disabled />
           <DividerRow />
           <NavRow label="Cancellation window" rightLabel="24 hours" disabled />
-          <DividerRow />
-          <NavRow label="Deposit policy" rightLabel="None" disabled />
         </Group>
 
         {/* Payouts and tax (route, don't rebuild) ----------------------- */}
@@ -94,6 +93,11 @@ export function SettingsPage() {
           <NavRow label="Terms of service" disabled />
           <DividerRow />
           <NavRow label="Privacy policy" disabled />
+          <DividerRow />
+          <DangerRow
+            label="Delete account"
+            onClick={() => setConfirmDeleteOpen(true)}
+          />
         </Group>
 
         {/* Danger zone -------------------------------------------------- */}
@@ -118,6 +122,15 @@ export function SettingsPage() {
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             setConfirmOpen(false);
+            void doSignOut();
+          }}
+        />
+      ) : null}
+      {confirmDeleteOpen ? (
+        <ConfirmDeleteAccount
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => {
+            setConfirmDeleteOpen(false);
             void doSignOut();
           }}
         />
