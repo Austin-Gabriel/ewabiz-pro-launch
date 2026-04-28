@@ -84,6 +84,7 @@ export function ProfilePage() {
 
   if (proState === "mid-onboarding") return <LockedShell />;
 
+  const navigate = useNavigate();
   const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
 
