@@ -766,7 +766,7 @@ function buildChecklist(input: {
   hasServices: boolean;
   hasSocial: boolean;
   hasAvailability: boolean;
-  certificate: ReturnType<typeof useDevState> extends never ? never : import("@/data/mock-pro-profile").CertificateStatus;
+  certificate: CertificateStatus;
 }): ChecklistItem[] {
   return [
     { id: "headline", label: "Add your headline", done: input.hasHeadline },
