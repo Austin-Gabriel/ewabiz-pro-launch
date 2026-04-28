@@ -489,9 +489,15 @@ function Chevron({ open }: { open: boolean }) {
 
 /* ---------- Profile header ---------- */
 
-function ProfileHeaderCard({ certificate }: { certificate: ReturnType<typeof useDevState> extends never ? never : import("@/data/mock-pro-profile").CertificateStatus }) {
-  const p = PRO_PROFILE;
-  const showLicensedBadge = certificate === "verified";
+function ProfileHeaderCard({
+  draft,
+  onEditHeadline,
+}: {
+  draft: ProfileDraft;
+  onEditHeadline: () => void;
+}) {
+  const p = draft;
+  const showLicensedBadge = p.certificate === "verified";
 
   return (
     <ProfileCard>
@@ -502,9 +508,25 @@ function ProfileHeaderCard({ certificate }: { certificate: ReturnType<typeof use
           <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
             {p.displayName}
           </h2>
-          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
-            {p.headline}
-          </p>
+          <button
+            type="button"
+            onClick={onEditHeadline}
+            className="transition-opacity active:opacity-60"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              color: NAVY,
+              opacity: p.headline ? 0.7 : 0.55,
+              fontStyle: p.headline ? "normal" : "italic",
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+            }}
+          >
+            {p.headline || "Add a headline"}
+          </button>
+        </div>
         </div>
 
         {showLicensedBadge ? (
