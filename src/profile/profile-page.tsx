@@ -1469,6 +1469,102 @@ function BaseLocationCard({
 
 /* ---------- Visibility control ---------- */
 
+/* ---------- Certificate ---------- */
+
+function CertificateCard({
+  status,
+  onEdit,
+}: {
+  status: CertificateStatus;
+  onEdit: () => void;
+}) {
+  const meta = certificateMeta(status);
+  return (
+    <ProfileCard>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-opacity active:opacity-60"
+        style={{ background: "transparent", border: "none" }}
+      >
+        <div className="flex flex-col gap-1.5" style={{ flex: 1, minWidth: 0 }}>
+          <CardEyebrow>Cosmetology certificate</CardEyebrow>
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                backgroundColor: meta.dot,
+              }}
+            />
+            <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+              {meta.title}
+            </span>
+          </div>
+          <p style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6, marginTop: 2, lineHeight: 1.45 }}>
+            {meta.body}
+          </p>
+        </div>
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            fontWeight: 600,
+            color: status === "verified" || status === "pending" ? NAVY : ORANGE,
+            opacity: status === "verified" || status === "pending" ? 0.6 : 1,
+            flexShrink: 0,
+          }}
+        >
+          {meta.action}
+        </span>
+      </button>
+    </ProfileCard>
+  );
+}
+
+function certificateMeta(status: CertificateStatus): {
+  title: string;
+  body: string;
+  action: string;
+  dot: string;
+} {
+  switch (status) {
+    case "verified":
+      return {
+        title: "Verified",
+        body: "Clients see your Licensed cosmetologist badge.",
+        action: "Manage",
+        dot: SUCCESS,
+      };
+    case "pending":
+      return {
+        title: "Under review",
+        body: "We usually verify within 1–2 business days.",
+        action: "View",
+        dot: ORANGE,
+      };
+    case "rejected":
+      return {
+        title: "Couldn't verify",
+        body: "Try uploading a clearer copy or mark that you don't have one.",
+        action: "Fix",
+        dot: "#DC2626",
+      };
+    case "none":
+    default:
+      return {
+        title: "Not added",
+        body: "Upload your license to earn a Licensed badge on your profile.",
+        action: "Add",
+        dot: "rgba(6,28,39,0.30)",
+      };
+  }
+}
+
+/* ---------- Visibility control ---------- */
+
 function VisibilityCard({
   visibility,
   onChange,
