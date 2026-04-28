@@ -14,7 +14,9 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KycRouteImport } from './routes/kyc'
@@ -66,9 +68,19 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -210,7 +222,9 @@ export interface FileRoutesByFullPath {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
   '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
@@ -243,7 +257,9 @@ export interface FileRoutesByTo {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
   '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
@@ -277,7 +293,9 @@ export interface FileRoutesById {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
   '/signup': typeof SignupRouteWithChildren
   '/splash': typeof SplashRoute
@@ -312,7 +330,9 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/login'
     | '/onboarding'
+    | '/profile'
     | '/reset-password'
+    | '/settings'
     | '/sign-in'
     | '/signup'
     | '/splash'
@@ -345,7 +365,9 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/login'
     | '/onboarding'
+    | '/profile'
     | '/reset-password'
+    | '/settings'
     | '/sign-in'
     | '/signup'
     | '/splash'
@@ -378,7 +400,9 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/login'
     | '/onboarding'
+    | '/profile'
     | '/reset-password'
+    | '/settings'
     | '/sign-in'
     | '/signup'
     | '/splash'
@@ -412,7 +436,9 @@ export interface RootRouteChildren {
   KycRoute: typeof KycRouteWithChildren
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
   SignInRoute: typeof SignInRoute
   SignupRoute: typeof SignupRouteWithChildren
   SplashRoute: typeof SplashRoute
@@ -458,11 +484,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -737,7 +777,9 @@ const rootRouteChildren: RootRouteChildren = {
   KycRoute: KycRouteWithChildren,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
   SignInRoute: SignInRoute,
   SignupRoute: SignupRouteWithChildren,
   SplashRoute: SplashRoute,

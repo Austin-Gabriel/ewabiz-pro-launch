@@ -268,7 +268,7 @@ function CalendarPageInner() {
           if (k === "bookings") navigate({ to: "/bookings" });
           if (k === "calendar") return;
           if (k === "earnings") navigate({ to: "/earnings" });
-          if (k === "profile") navigate({ to: "/home" });
+          if (k === "profile") navigate({ to: "/profile" });
         }}
       />
 

@@ -29,7 +29,6 @@ import {
   type DevDayContext,
 } from "@/dev-state/dev-state-context";
 import { RequireAuth } from "@/auth/require-auth";
-import { ProfileSheet } from "@/home/profile-sheet";
 import { LifecycleSurface } from "@/bookings/lifecycle/lifecycle-surface";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useNavigate } from "@tanstack/react-router";
@@ -185,6 +184,10 @@ function HomePage() {
               navigate({ to: "/earnings" });
               return;
             }
+            if (k === "profile") {
+              navigate({ to: "/profile" });
+              return;
+            }
             setActiveTab(k);
           }}
           badge={
@@ -196,10 +199,6 @@ function HomePage() {
           }
         />
       ) : null}
-      <ProfileSheet
-        open={!isHardGate && !incomingTakeover && activeTab === "profile"}
-        onClose={() => setActiveTab("home")}
-      />
 
       {incomingTakeover ? <LifecycleSurface /> : null}
     </HomeShell>

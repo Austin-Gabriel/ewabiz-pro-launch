@@ -69,6 +69,7 @@ function BottomTabsForBookings() {
         if (k === "bookings") navigate({ to: "/bookings" });
         if (k === "calendar") navigate({ to: "/calendar" });
         if (k === "earnings") navigate({ to: "/earnings" });
+        if (k === "profile") navigate({ to: "/profile" });
       }}
     />
   );
