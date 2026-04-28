@@ -315,9 +315,11 @@ function LockedShell() {
 function PageHeader({
   mode,
   onModeChange,
+  onEdit,
 }: {
   mode?: ProfileMode;
   onModeChange?: (m: ProfileMode) => void;
+  onEdit?: () => void;
 } = {}) {
   const { text } = useHomeTheme();
   const navigate = useNavigate();
@@ -335,28 +337,64 @@ function PageHeader({
         Profile
       </h1>
       <div className="flex items-center gap-2">
-        {mode && onModeChange ? (
-          <ModeToggle mode={mode} onChange={onModeChange} />
+        {onEdit ? (
+          <HeaderIconButton ariaLabel="Edit profile" color={text} onClick={onEdit}>
+            <PencilIcon />
+          </HeaderIconButton>
         ) : null}
-        <button
-          type="button"
-          aria-label="Settings"
+        {mode && onModeChange ? (
+          <HeaderIconButton
+            ariaLabel={mode === "preview" ? "Exit preview" : "Preview as a client"}
+            color={text}
+            onClick={() => onModeChange(mode === "preview" ? "editing" : "preview")}
+            active={mode === "preview"}
+          >
+            <EyeIcon />
+          </HeaderIconButton>
+        ) : null}
+        <HeaderIconButton
+          ariaLabel="Settings"
+          color={text}
           onClick={() => void navigate({ to: "/settings" })}
-          className="flex items-center justify-center transition-opacity active:opacity-50"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 999,
-            color: text,
-            opacity: 0.75,
-            background: "transparent",
-            border: "none",
-          }}
         >
           <SettingsIcon />
-        </button>
+        </HeaderIconButton>
       </div>
     </div>
+  );
+}
+
+function HeaderIconButton({
+  ariaLabel,
+  color,
+  onClick,
+  active,
+  children,
+}: {
+  ariaLabel: string;
+  color: string;
+  onClick: () => void;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      aria-pressed={active ? true : undefined}
+      onClick={onClick}
+      className="flex items-center justify-center transition-opacity active:opacity-50"
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 999,
+        color,
+        backgroundColor: active ? "rgba(255,130,63,0.16)" : "rgba(6,28,39,0.06)",
+        border: "none",
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
