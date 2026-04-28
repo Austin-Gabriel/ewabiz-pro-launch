@@ -2156,6 +2156,7 @@ function ProfileEditSheet({
   draft,
   certificate,
   proState,
+  checklist,
   onOpenHeadline,
   onOpenAbout,
   onOpenLocation,
@@ -2167,6 +2168,7 @@ function ProfileEditSheet({
   draft: ProfileDraft;
   certificate: CertificateStatus;
   proState: ResolvedProState;
+  checklist: ChecklistItem[];
   onOpenHeadline: () => void;
   onOpenAbout: () => void;
   onOpenLocation: () => void;
@@ -2174,6 +2176,8 @@ function ProfileEditSheet({
   onAddService: () => void;
 }) {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const close = () => onOpenChange(false);
   const go = (to: string) => {
     close();
@@ -2181,13 +2185,19 @@ function ProfileEditSheet({
   };
 
   const certMeta = certificateMeta(certificate);
-  const portfolioRight =
-    draft.portfolio.length > 0 ? `${draft.portfolio.length}` : "Add photos";
-  const servicesRight =
-    draft.services.length > 0 ? `${draft.services.length}` : "Add services";
-  const reviewsRight = "View";
   const socialsRight =
     draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect";
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await auth.reset();
+    } finally {
+      setSigningOut(false);
+      close();
+      void navigate({ to: "/login" });
+    }
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -2202,7 +2212,7 @@ function ProfileEditSheet({
           flexDirection: "column",
         }}
       >
-        <SheetHeader className="px-5 pb-1 pt-5 text-left">
+        <SheetHeader className="flex flex-row items-center justify-between px-5 pb-1 pt-5 text-left">
           <SheetTitle
             style={{
               fontFamily: UI,
@@ -2214,6 +2224,24 @@ function ProfileEditSheet({
           >
             Edit profile
           </SheetTitle>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={close}
+            className="flex items-center justify-center transition-opacity active:opacity-60"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.10)",
+              color: "#FFFFFF",
+              border: "none",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-8 pt-3">
@@ -2235,6 +2263,8 @@ function ProfileEditSheet({
               }
               onClick={onOpenAbout}
             />
+            <SheetDivider />
+            <SheetCompletenessRow items={checklist} />
           </SheetGroup>
 
           <SheetGroup title="Storefront">
@@ -2246,7 +2276,6 @@ function ProfileEditSheet({
                   ? `${draft.services.length} services`
                   : "Add services to get bookings"
               }
-              right={servicesRight}
               onClick={onAddService}
             />
             <SheetDivider />
@@ -2258,7 +2287,6 @@ function ProfileEditSheet({
                   ? `${draft.portfolio.length} photos`
                   : "Add photos to start"
               }
-              right={portfolioRight}
               onClick={() => go("/profile/portfolio")}
             />
             <SheetDivider />
@@ -2266,7 +2294,6 @@ function ProfileEditSheet({
               icon={<StarOutlineIcon />}
               title="Reviews"
               subtitle="What clients are saying"
-              right={reviewsRight}
               disabled
             />
           </SheetGroup>
@@ -2275,27 +2302,75 @@ function ProfileEditSheet({
             <SheetRow
               icon={<CalendarIcon />}
               title="Availability"
-              subtitle={draft.availabilitySummary}
+              subtitle={
+                draft.availabilitySummary.trim().length > 0
+                  ? draft.availabilitySummary
+                  : "Set your weekly schedule"
+              }
               onClick={() => go("/calendar")}
             />
             <SheetDivider />
             <SheetRow
               icon={<PinIcon />}
-              title="Base location"
-              subtitle={`${draft.neighborhood} · ${draft.travelRadiusMi} mi radius`}
+              title="Service area / Base location"
+              subtitle={`${draft.neighborhood}`}
               onClick={onOpenLocation}
             />
             <SheetDivider />
             <SheetRow
-              icon={<BadgeIcon />}
-              title="Cosmetology certificate"
-              subtitle={certMeta.title}
-              right={certMeta.action}
-              onClick={onOpenCertificate}
+              icon={<ClockIcon />}
+              title="Booking rules"
+              subtitle="2 hr prep · 24 hr lead"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<ShieldIcon />}
+              title="Cancellation policy"
+              subtitle="Moderate"
+              disabled
             />
           </SheetGroup>
 
-          <SheetGroup title="Social">
+          <SheetGroup title="Account">
+            <SheetRow
+              icon={<UserIcon />}
+              title="Personal info"
+              subtitle={auth.email ?? "Name, email, phone"}
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<BadgeIcon />}
+              title="Verification"
+              subtitle={certMeta.title}
+              right={certificate === "verified" ? "Verified" : undefined}
+              onClick={onOpenCertificate}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<CardIcon />}
+              title="Payouts"
+              subtitle="Add bank account"
+              onClick={() => go("/earnings")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<DocumentIcon />}
+              title="Tax info"
+              subtitle="W-9, 1099 forms"
+              onClick={() => go("/earnings")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<BellIcon />}
+              title="Notifications"
+              subtitle="Push, email, SMS"
+              disabled
+            />
+          </SheetGroup>
+
+          <SheetGroup title="Extras">
             <SheetRow
               icon={<LinkIcon />}
               title="Connect socials"
@@ -2303,20 +2378,32 @@ function ProfileEditSheet({
               right={socialsRight}
               disabled
             />
-          </SheetGroup>
-
-          <SheetGroup title="Account">
+            <SheetDivider />
             <SheetRow
-              icon={<CardIcon />}
-              title="Payouts"
-              subtitle="Bank account and history"
-              onClick={() => go("/earnings")}
+              icon={<GiftIcon />}
+              title="Refer a pro"
+              subtitle="Earn $50 per referral"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<HelpIcon />}
+              title="Help & support"
+              subtitle="FAQs and contact"
+              disabled
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<SunIcon />}
+              title="App appearance"
+              subtitle="System"
+              disabled
             />
             <SheetDivider />
             <SheetRow
               icon={<GearIcon />}
               title="Settings"
-              subtitle="Notifications, privacy, password"
+              subtitle="Privacy, password, more"
               onClick={() => go("/settings")}
             />
           </SheetGroup>
@@ -2358,9 +2445,90 @@ function ProfileEditSheet({
               </div>
             </SheetGroup>
           ) : null}
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="mt-2 w-full rounded-full transition-opacity active:opacity-70"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.85)",
+              backgroundColor: "transparent",
+              border: "1px solid rgba(255,255,255,0.20)",
+              padding: "13px 16px",
+            }}
+          >
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+
+          <p
+            className="pt-3 text-center"
+            style={{
+              fontFamily: UI,
+              fontSize: 11,
+              color: "#FFFFFF",
+              opacity: 0.4,
+              letterSpacing: "0.04em",
+            }}
+          >
+            Ewà Biz · v1.0.2
+          </p>
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function SheetCompletenessRow({ items }: { items: ChecklistItem[] }) {
+  const done = items.filter((i) => i.done).length;
+  const total = items.length;
+  const pct = Math.round((done / total) * 100);
+  const remaining = total - done;
+  if (remaining === 0) return null;
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          backgroundColor: "rgba(255,130,63,0.10)",
+          color: ORANGE,
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 700,
+        }}
+      >
+        {pct}%
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+          Profile completeness
+        </span>
+        <div
+          aria-hidden
+          className="overflow-hidden"
+          style={{ height: 4, borderRadius: 999, backgroundColor: "rgba(6,28,39,0.08)" }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${pct}%`,
+              backgroundColor: ORANGE,
+              borderRadius: 999,
+              transition: "width 320ms ease",
+            }}
+          />
+        </div>
+        <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+          {remaining} {remaining === 1 ? "item" : "items"} left
+        </span>
+      </div>
+    </div>
   );
 }
 
