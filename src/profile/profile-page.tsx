@@ -1047,20 +1047,31 @@ function ProfileHeaderCard({
 
   return (
     <ProfileCard>
-      <div className="flex flex-col items-center gap-4 px-5 pb-5 pt-6 text-center">
+      {/* Horizontal identity row — avatar left, name + headline right,
+       * pencil edit button on the far right (matches the demo sheet
+       * layout the user prefers). */}
+      <div className="flex items-center gap-4 px-5 py-5">
         <Avatar initials={p.initials} avatarUrl={p.avatarUrl} />
-
-        <div className="flex flex-col items-center gap-1.5">
-          <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2
+            style={{
+              fontFamily: UI,
+              fontSize: 20,
+              fontWeight: 700,
+              color: NAVY,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.15,
+            }}
+          >
             {p.displayName}
           </h2>
           <button
             type="button"
             onClick={onEditHeadline}
-            className="transition-opacity active:opacity-60"
+            className="self-start transition-opacity active:opacity-60"
             style={{
               fontFamily: UI,
-              fontSize: 14,
+              fontSize: 13,
               color: NAVY,
               opacity: p.headline ? 0.7 : 0.55,
               fontStyle: p.headline ? "normal" : "italic",
@@ -1068,31 +1079,53 @@ function ProfileHeaderCard({
               border: "none",
               padding: 0,
               cursor: "pointer",
+              textAlign: "left",
             }}
           >
             {p.headline || "Add a headline"}
           </button>
+          {showLicensedBadge ? (
+            <div
+              className="mt-1 flex items-center gap-1.5 self-start"
+              style={{
+                padding: "3px 8px",
+                borderRadius: 999,
+                backgroundColor: "rgba(255,130,63,0.12)",
+                border: "1px solid rgba(255,130,63,0.30)",
+              }}
+            >
+              <BagelIcon />
+              <span style={{ fontFamily: UI, fontSize: 10.5, fontWeight: 600, color: ORANGE, letterSpacing: "0.02em" }}>
+                Licensed
+              </span>
+            </div>
+          ) : null}
         </div>
+        <button
+          type="button"
+          onClick={onEditHeadline}
+          aria-label="Edit profile"
+          className="flex shrink-0 items-center justify-center transition-opacity active:opacity-60"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            backgroundColor: "#FFFFFF",
+            border: "1px solid rgba(6,28,39,0.12)",
+            color: NAVY,
+          }}
+        >
+          <PencilIcon />
+        </button>
+      </div>
 
-        {showLicensedBadge ? (
-          <div
-            className="flex items-center gap-1.5"
-            style={{
-              padding: "5px 10px",
-              borderRadius: 999,
-              backgroundColor: "rgba(255,130,63,0.12)",
-              border: "1px solid rgba(255,130,63,0.30)",
-            }}
-          >
-            <BagelIcon />
-            <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: ORANGE, letterSpacing: "0.02em" }}>
-              Licensed cosmetologist
-            </span>
-          </div>
-        ) : null}
-
-        {/* Location stack — each meaningful value gets its own line. */}
-        <div className="flex flex-col items-center gap-0.5">
+      {/* Secondary row — location + specializations + socials,
+       * each on its own line per the no-middle-dots rule. */}
+      <div
+        className="flex flex-col gap-3 px-5 pb-5"
+        style={{ borderTop: "1px solid rgba(6,28,39,0.06)", paddingTop: 14 }}
+      >
+        <div className="flex flex-col gap-0.5">
           <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.75 }}>
             {p.neighborhood}
           </div>
@@ -1102,7 +1135,7 @@ function ProfileHeaderCard({
         </div>
 
         {p.specializations.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {p.specializations.map((s) => (
               <span
                 key={s}
@@ -1125,7 +1158,7 @@ function ProfileHeaderCard({
         ) : null}
 
         {(p.social.instagram || p.social.tiktok) ? (
-          <div className="flex items-center gap-3 pt-1">
+          <div className="flex items-center gap-4">
             {p.social.instagram ? (
               <SocialLink label="Instagram" handle={p.social.instagram} icon={<InstagramIcon />} />
             ) : null}
@@ -1136,6 +1169,15 @@ function ProfileHeaderCard({
         ) : null}
       </div>
     </ProfileCard>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
   );
 }
 
