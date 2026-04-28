@@ -8,19 +8,28 @@ import { useDevState } from "@/dev-state/dev-state-context";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { resolveProState, type ResolvedProState } from "@/earnings/earnings-state";
-import { PRO_PROFILE } from "@/data/mock-pro-profile";
+import { type CertificateStatus } from "@/data/mock-pro-profile";
 import {
-  portfolioForDensity,
-  type PortfolioDensity,
   type PortfolioPhoto,
 } from "@/data/mock-portfolio";
-import { PRO_SERVICES, type ProService } from "@/data/mock-services";
+import { type ProService } from "@/data/mock-services";
 import {
   reviewsForDensity,
   averageRating,
   type ReviewDensity,
   type ProReview,
 } from "@/data/mock-reviews";
+import {
+  useProfileDraft,
+  updateProfileDraft,
+  type ProfileDraft,
+} from "@/profile/profile-draft-store";
+import {
+  HeadlineSheet,
+  AboutSheet,
+  ServiceSheet,
+  BaseLocationSheet,
+} from "@/profile/edits/edit-sheets";
 
 /**
  * Profile — editorial identity surface for the pro. Phase 1: Editing mode
@@ -40,11 +49,16 @@ const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 
 /* Density mapping — derive Profile-specific densities from the existing
- * dev-state dataDensity field. Per spec, no new dev-state fields for Phase 1. */
-function portfolioDensityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"]): PortfolioDensity {
-  if (d === "empty") return "empty";
-  if (d === "sparse") return "minimum";
-  return "robust";
+ * dev-state dataDensity field. Phase 2: portfolio comes from the editable
+ * draft, but the density slider still trims/empties the displayed list so
+ * design reviewers can preview empty/minimum states without clearing data. */
+function portfolioSliceForDensity(
+  d: ReturnType<typeof useDevState>["state"]["dataDensity"],
+  full: PortfolioPhoto[],
+): PortfolioPhoto[] {
+  if (d === "empty") return [];
+  if (d === "sparse") return full.slice(0, 3);
+  return full;
 }
 function reviewDensityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"]): ReviewDensity {
   if (d === "empty") return "none";
@@ -57,29 +71,50 @@ export function ProfilePage() {
   const auth = useAuth();
   const { data: kyc } = useKyc();
   const proState: ResolvedProState = resolveProState(dev.proState, auth, kyc);
+  const draft = useProfileDraft();
 
   if (proState === "mid-onboarding") return <LockedShell />;
 
-  const portfolio = portfolioForDensity(portfolioDensityFromDev(dev.dataDensity));
+  const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
 
-  const [visibility, setVisibility] = useState(PRO_PROFILE.visibility);
+  // Sheets ----
+  const [headlineOpen, setHeadlineOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [editingService, setEditingService] = useState<ProService | null>(null);
+  const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
   // binary done / not done. No percentage scoring.
   const checklist = useMemo(
     () => buildChecklist({
-      hasHeadline: PRO_PROFILE.headline.trim().length > 0,
-      hasAvatar: Boolean(PRO_PROFILE.avatarUrl),
-      hasAbout: Boolean(PRO_PROFILE.about && PRO_PROFILE.about.trim().length > 0),
-      portfolioCount: portfolio.length,
-      hasServices: PRO_SERVICES.length > 0,
-      hasSocial: Boolean(PRO_PROFILE.social.instagram || PRO_PROFILE.social.tiktok),
-      hasAvailability: PRO_PROFILE.availabilitySummary.trim().length > 0,
-      certificate: PRO_PROFILE.certificate,
+      hasHeadline: draft.headline.trim().length > 0,
+      hasAvatar: Boolean(draft.avatarUrl),
+      hasAbout: draft.about.trim().length > 0,
+      portfolioCount: draft.portfolio.length,
+      hasServices: draft.services.length > 0,
+      hasSocial: Boolean(draft.social.instagram || draft.social.tiktok),
+      hasAvailability: draft.availabilitySummary.trim().length > 0,
+      certificate: draft.certificate,
     }),
-    [portfolio.length],
+    [
+      draft.headline,
+      draft.avatarUrl,
+      draft.about,
+      draft.portfolio.length,
+      draft.services.length,
+      draft.social.instagram,
+      draft.social.tiktok,
+      draft.availabilitySummary,
+      draft.certificate,
+    ],
   );
+
+  function openServiceSheet(service: ProService | null) {
+    setEditingService(service);
+    setServiceSheetOpen(true);
+  }
 
   return (
     <HomeShell>
@@ -89,32 +124,39 @@ export function ProfilePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
-        {visibility === "paused" ? <PausedBanner onResume={() => setVisibility("live")} /> : null}
+        {draft.visibility === "paused" ? (
+          <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
+        ) : null}
 
         <ProfileCompletionCard items={checklist} />
 
-        <ProfileHeaderCard certificate={PRO_PROFILE.certificate} />
+        <ProfileHeaderCard draft={draft} onEditHeadline={() => setHeadlineOpen(true)} />
 
         <PortfolioCard photos={portfolio} />
 
-        <ServicesCard services={PRO_SERVICES} />
+        <ServicesCard
+          services={draft.services}
+          onAdd={() => openServiceSheet(null)}
+          onEdit={(s) => openServiceSheet(s)}
+        />
 
-        <AboutCard about={PRO_PROFILE.about} />
+        <AboutCard about={draft.about} onEdit={() => setAboutOpen(true)} />
 
         <ReviewsCard reviews={reviews} />
 
-        <AvailabilityCard summary={PRO_PROFILE.availabilitySummary} />
+        <AvailabilityCard summary={draft.availabilitySummary} />
 
         <BaseLocationCard
-          neighborhood={PRO_PROFILE.neighborhood}
-          baseAddress={PRO_PROFILE.baseAddress}
-          travelRadiusMi={PRO_PROFILE.travelRadiusMi}
+          neighborhood={draft.neighborhood}
+          baseAddress={draft.baseAddress}
+          travelRadiusMi={draft.travelRadiusMi}
+          onEdit={() => setLocationOpen(true)}
         />
 
         {proState === "live" ? (
           <VisibilityCard
-            visibility={visibility}
-            onChange={setVisibility}
+            visibility={draft.visibility}
+            onChange={(v) => updateProfileDraft({ visibility: v })}
           />
         ) : null}
 
@@ -122,6 +164,12 @@ export function ProfilePage() {
       </div>
 
       <ProfileBottomTabs />
+
+      {/* Edit sheets */}
+      <HeadlineSheet open={headlineOpen} onOpenChange={setHeadlineOpen} defaultValue={draft.headline} />
+      <AboutSheet open={aboutOpen} onOpenChange={setAboutOpen} defaultValue={draft.about} />
+      <BaseLocationSheet open={locationOpen} onOpenChange={setLocationOpen} draft={draft} />
+      <ServiceSheet open={serviceSheetOpen} onOpenChange={setServiceSheetOpen} service={editingService} />
     </HomeShell>
   );
 }
