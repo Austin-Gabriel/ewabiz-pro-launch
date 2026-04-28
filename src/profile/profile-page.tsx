@@ -698,6 +698,57 @@ function CardTitle({ children }: { children: ReactNode }) {
   );
 }
 
+function CollapsibleHeader({
+  title,
+  count,
+  open,
+  onToggle,
+  rightAction,
+}: {
+  title: string;
+  count?: number;
+  open: boolean;
+  onToggle: () => void;
+  rightAction?: { label: string; onClick: () => void; accent?: boolean };
+}) {
+  return (
+    <div className="flex items-center justify-between px-5 pt-4 pb-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-2 transition-opacity active:opacity-70"
+        style={{ background: "transparent", border: "none", padding: 0 }}
+      >
+        <CardTitle>{title}</CardTitle>
+        {typeof count === "number" && count > 0 ? (
+          <span style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
+            {count}
+          </span>
+        ) : null}
+        <Chevron open={open} />
+      </button>
+      {rightAction ? (
+        <button
+          type="button"
+          onClick={rightAction.onClick}
+          className="transition-opacity active:opacity-50"
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            fontWeight: 600,
+            color: rightAction.accent ? ORANGE : NAVY,
+            opacity: rightAction.accent ? 1 : 0.6,
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          {rightAction.label}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 /* ---------- Banners ---------- */
 
 function PendingReviewBanner() {
