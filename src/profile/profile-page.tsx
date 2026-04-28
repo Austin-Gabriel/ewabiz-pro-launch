@@ -103,10 +103,9 @@ export function ProfilePage() {
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [editingService, setEditingService] = useState<ProService | null>(null);
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
-  // The pencil on the header now opens a single grouped "Edit profile"
-  // sheet (Storefront / How you work / Social / Account / Support style),
-  // matching the reference layout. Individual edit sheets are launched
-  // from rows inside that sheet.
+  // Pencil icon in the page header opens a full-screen "Edit profile"
+  // sheet that holds every administrative row. The main Profile surface
+  // stays focused on storefront overview rows only.
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
@@ -145,7 +144,11 @@ export function ProfilePage() {
       <HomeShell>
         <OnlineModeStrip />
         <ActiveBookingStrip />
-        <PageHeader mode={mode} onModeChange={setMode} />
+        <PageHeader
+          mode={mode}
+          onModeChange={setMode}
+          onEdit={() => setEditSheetOpen(true)}
+        />
         <PreviewStrip onExit={() => setMode("editing")} />
         <ClientPreview
           draft={effectiveDraft}
@@ -161,29 +164,95 @@ export function ProfilePage() {
     <HomeShell>
       <OnlineModeStrip />
       <ActiveBookingStrip />
-      <PageHeader mode={mode} onModeChange={setMode} />
+      <PageHeader
+        mode={mode}
+        onModeChange={setMode}
+        onEdit={() => setEditSheetOpen(true)}
+      />
 
-      <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
+      <div className="flex flex-1 flex-col gap-5 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
         {draft.visibility === "paused" ? (
           <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
         ) : null}
 
-        <ProfileHeaderCard
+        <IdentityCard
           draft={effectiveDraft}
+          reviews={reviews}
           onEdit={() => setEditSheetOpen(true)}
         />
 
-        <ProfileCompletionCard items={checklist} />
+        <OverviewGroup title="Storefront">
+          <OverviewRow
+            icon={<ScissorsIcon />}
+            title="Services & pricing"
+            subtitle={
+              draft.services.length > 0
+                ? `${draft.services.length} ${draft.services.length === 1 ? "service" : "services"}`
+                : "Add services to get bookings"
+            }
+            onClick={() => setEditSheetOpen(true)}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<PhotoIcon />}
+            title="Portfolio"
+            subtitle={
+              draft.portfolio.length > 0
+                ? `${draft.portfolio.length} ${draft.portfolio.length === 1 ? "photo" : "photos"}`
+                : "Add photos to start"
+            }
+            onClick={() => void navigate({ to: "/profile/portfolio" })}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<StarOutlineIcon />}
+            title="Reviews"
+            subtitle={
+              reviews.length > 0
+                ? `${averageRating(reviews).toFixed(1)} · ${reviews.length} ${reviews.length === 1 ? "review" : "reviews"}`
+                : "No reviews yet"
+            }
+            onClick={() => setEditSheetOpen(true)}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<EyeIcon />}
+            title="Customer view"
+            subtitle="How clients see you"
+            onClick={() => setMode("preview")}
+          />
+        </OverviewGroup>
 
-        {/* Always show the client preview underneath so the pro sees
-         * exactly what their listing looks like to a customer. All
-         * editing happens inside the pencil sheet. */}
-        <ClientPreviewInline
-          draft={effectiveDraft}
-          portfolio={portfolio}
-          reviews={reviews}
-        />
+        <OverviewGroup title="How you work">
+          <OverviewRow
+            icon={<CalendarIcon />}
+            title="Availability"
+            subtitle={
+              draft.availabilitySummary.trim().length > 0
+                ? draft.availabilitySummary
+                : "Set your weekly schedule"
+            }
+            onClick={() => void navigate({ to: "/calendar" })}
+          />
+          <OverviewDivider />
+          <OverviewRow
+            icon={<CardIcon />}
+            title="Payouts"
+            subtitle="Add bank account"
+            onClick={() => void navigate({ to: "/earnings" })}
+          />
+        </OverviewGroup>
+
+        <OverviewGroup title="Social">
+          <OverviewRow
+            icon={<LinkIcon />}
+            title="Connect socials"
+            subtitle="Share your work"
+            right={draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect"}
+            onClick={() => setEditSheetOpen(true)}
+          />
+        </OverviewGroup>
       </div>
 
       <ProfileBottomTabs />
@@ -195,6 +264,7 @@ export function ProfilePage() {
         draft={draft}
         certificate={certificate}
         proState={proState}
+        checklist={checklist}
         onOpenHeadline={() => { setEditSheetOpen(false); setHeadlineOpen(true); }}
         onOpenAbout={() => { setEditSheetOpen(false); setAboutOpen(true); }}
         onOpenLocation={() => { setEditSheetOpen(false); setLocationOpen(true); }}
