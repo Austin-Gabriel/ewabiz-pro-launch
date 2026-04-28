@@ -1802,3 +1802,467 @@ function SettingsIcon() {
     </svg>
   );
 }
+
+/* ---------- Inline client preview (shown directly on the editing screen) -- */
+
+function ClientPreviewInline({
+  draft,
+  portfolio,
+  reviews,
+}: {
+  draft: ProfileDraft;
+  portfolio: PortfolioPhoto[];
+  reviews: ProReview[];
+}) {
+  return (
+    <div className="flex flex-col gap-3 pt-1">
+      <div
+        style={{
+          fontFamily: UI,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.10em",
+          textTransform: "uppercase",
+          color: "currentColor",
+          opacity: 0.55,
+          paddingLeft: 4,
+        }}
+      >
+        Client preview
+      </div>
+      <PreviewHeroCard draft={draft} portfolio={portfolio} reviews={reviews} />
+      <PreviewIdentityCard draft={draft} />
+      {portfolio.length > 1 ? (
+        <PreviewRecentWorkCard photos={portfolio.slice(1, 5)} />
+      ) : null}
+      {draft.services.length > 0 ? (
+        <PreviewServicesCard services={draft.services} />
+      ) : null}
+      {draft.about.trim().length > 0 ? (
+        <PreviewAboutCard about={draft.about} />
+      ) : null}
+      {reviews.length > 0 ? (
+        <PreviewReviewsCard reviews={reviews} />
+      ) : null}
+    </div>
+  );
+}
+
+/* ---------- Profile edit sheet (opened by the header pencil) -------------- */
+
+function ProfileEditSheet({
+  open,
+  onOpenChange,
+  draft,
+  certificate,
+  proState,
+  onOpenHeadline,
+  onOpenAbout,
+  onOpenLocation,
+  onOpenCertificate,
+  onAddService,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  draft: ProfileDraft;
+  certificate: CertificateStatus;
+  proState: ResolvedProState;
+  onOpenHeadline: () => void;
+  onOpenAbout: () => void;
+  onOpenLocation: () => void;
+  onOpenCertificate: () => void;
+  onAddService: () => void;
+}) {
+  const navigate = useNavigate();
+  const close = () => onOpenChange(false);
+  const go = (to: string) => {
+    close();
+    void navigate({ to });
+  };
+
+  const certMeta = certificateMeta(certificate);
+  const portfolioRight =
+    draft.portfolio.length > 0 ? `${draft.portfolio.length}` : "Add photos";
+  const servicesRight =
+    draft.services.length > 0 ? `${draft.services.length}` : "Add services";
+  const reviewsRight = "View";
+  const socialsRight =
+    draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect";
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl border-0 p-0"
+        style={{
+          backgroundColor: NAVY,
+          color: "#FFFFFF",
+          height: "92vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <SheetHeader className="px-5 pb-1 pt-5 text-left">
+          <SheetTitle
+            style={{
+              fontFamily: UI,
+              fontSize: 18,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              letterSpacing: "-0.005em",
+            }}
+          >
+            Edit profile
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-8 pt-3">
+          <SheetGroup title="Basics">
+            <SheetRow
+              icon={<PencilIcon />}
+              title="Name and headline"
+              subtitle={draft.headline || "Add a headline"}
+              onClick={onOpenHeadline}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<UserIcon />}
+              title="About"
+              subtitle={
+                draft.about.trim().length > 0
+                  ? truncate(draft.about, 50)
+                  : "Tell clients about your craft"
+              }
+              onClick={onOpenAbout}
+            />
+          </SheetGroup>
+
+          <SheetGroup title="Storefront">
+            <SheetRow
+              icon={<ScissorsIcon />}
+              title="Services & pricing"
+              subtitle={
+                draft.services.length > 0
+                  ? `${draft.services.length} services`
+                  : "Add services to get bookings"
+              }
+              right={servicesRight}
+              onClick={onAddService}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<PhotoIcon />}
+              title="Portfolio"
+              subtitle={
+                draft.portfolio.length > 0
+                  ? `${draft.portfolio.length} photos`
+                  : "Add photos to start"
+              }
+              right={portfolioRight}
+              onClick={() => go("/profile/portfolio")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<StarOutlineIcon />}
+              title="Reviews"
+              subtitle="What clients are saying"
+              right={reviewsRight}
+              disabled
+            />
+          </SheetGroup>
+
+          <SheetGroup title="How you work">
+            <SheetRow
+              icon={<CalendarIcon />}
+              title="Availability"
+              subtitle={draft.availabilitySummary}
+              onClick={() => go("/calendar")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<PinIcon />}
+              title="Base location"
+              subtitle={`${draft.neighborhood} · ${draft.travelRadiusMi} mi radius`}
+              onClick={onOpenLocation}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<BadgeIcon />}
+              title="Cosmetology certificate"
+              subtitle={certMeta.title}
+              right={certMeta.action}
+              onClick={onOpenCertificate}
+            />
+          </SheetGroup>
+
+          <SheetGroup title="Social">
+            <SheetRow
+              icon={<LinkIcon />}
+              title="Connect socials"
+              subtitle="Share your work"
+              right={socialsRight}
+              disabled
+            />
+          </SheetGroup>
+
+          <SheetGroup title="Account">
+            <SheetRow
+              icon={<CardIcon />}
+              title="Payouts"
+              subtitle="Bank account and history"
+              onClick={() => go("/earnings")}
+            />
+            <SheetDivider />
+            <SheetRow
+              icon={<GearIcon />}
+              title="Settings"
+              subtitle="Notifications, privacy, password"
+              onClick={() => go("/settings")}
+            />
+          </SheetGroup>
+
+          {proState === "live" ? (
+            <SheetGroup title="Visibility">
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex flex-col gap-1">
+                  <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+                    {draft.visibility === "live"
+                      ? "Your profile is live"
+                      : "Your profile is paused"}
+                  </span>
+                  <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
+                    {draft.visibility === "live"
+                      ? "Clients can find and book you."
+                      : "Hidden from search and booking."}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateProfileDraft({
+                      visibility: draft.visibility === "live" ? "paused" : "live",
+                    })
+                  }
+                  className="transition-opacity active:opacity-60"
+                  style={{
+                    fontFamily: UI,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: draft.visibility === "live" ? "#DC2626" : ORANGE,
+                    background: "transparent",
+                    border: "none",
+                  }}
+                >
+                  {draft.visibility === "live" ? "Pause" : "Resume"}
+                </button>
+              </div>
+            </SheetGroup>
+          ) : null}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function truncate(s: string, n: number): string {
+  const trimmed = s.trim();
+  if (trimmed.length <= n) return trimmed;
+  return `${trimmed.slice(0, n - 1).trimEnd()}…`;
+}
+
+function SheetGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="mb-5">
+      <div
+        className="px-2 pb-2"
+        style={{
+          fontFamily: UI,
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "#FFFFFF",
+          opacity: 0.55,
+        }}
+      >
+        {title}
+      </div>
+      <div
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 16,
+          border: "1px solid rgba(255,255,255,0.06)",
+          overflow: "hidden",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SheetDivider() {
+  return (
+    <div
+      aria-hidden
+      style={{ height: 1, backgroundColor: "rgba(6,28,39,0.06)", marginLeft: 56 }}
+    />
+  );
+}
+
+function SheetRow({
+  icon,
+  title,
+  subtitle,
+  right,
+  onClick,
+  disabled,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle?: string;
+  right?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60 disabled:cursor-default"
+      style={{ background: "transparent", border: "none" }}
+    >
+      <span
+        className="flex shrink-0 items-center justify-center"
+        style={{ width: 32, height: 32, color: NAVY, opacity: 0.7 }}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: NAVY }}>
+          {title}
+        </span>
+        {subtitle ? (
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 12,
+              color: NAVY,
+              opacity: 0.55,
+              marginTop: 2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
+      {right ? (
+        <span
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            fontWeight: 600,
+            color: ORANGE,
+            flexShrink: 0,
+            paddingRight: 4,
+          }}
+        >
+          {right}
+        </span>
+      ) : (
+        <span aria-hidden style={{ color: NAVY, opacity: 0.35, flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      )}
+    </button>
+  );
+}
+
+/* Sheet row icons — kept lightweight inline so the sheet stays self-contained. */
+function ScissorsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12" />
+    </svg>
+  );
+}
+function PhotoIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="9" cy="11" r="2" />
+      <path d="M21 16l-5-5-7 8" />
+    </svg>
+  );
+}
+function StarOutlineIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2z" />
+    </svg>
+  );
+}
+function CalendarIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 9h18M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+function PinIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z" />
+      <circle cx="12" cy="9" r="2.5" />
+    </svg>
+  );
+}
+function BadgeIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="9" r="6" />
+      <path d="M8.5 14l-1.5 7 5-3 5 3-1.5-7" />
+    </svg>
+  );
+}
+function LinkIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" />
+      <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
+    </svg>
+  );
+}
+function CardIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="20" height="13" rx="2" />
+      <path d="M2 10h20" />
+    </svg>
+  );
+}
+function GearIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    </svg>
+  );
+}
+function UserIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
