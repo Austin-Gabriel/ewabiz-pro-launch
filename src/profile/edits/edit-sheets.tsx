@@ -25,6 +25,7 @@ import {
   type ProfileDraft,
 } from "@/profile/profile-draft-store";
 import type { ProService } from "@/data/mock-services";
+import type { CertificateStatus } from "@/data/mock-pro-profile";
 
 const UI = HOME_SANS;
 const NAVY = "#061C27";
@@ -476,5 +477,119 @@ export function BaseLocationSheet({
         </div>
       </div>
     </SheetShell>
+  );
+}
+
+/* ---------- Certificate ---------- */
+
+/**
+ * Cosmetology certificate sheet.
+ *
+ *  - none      : choose to upload OR mark "I don't have one"
+ *  - pending   : show "Under review" with option to replace or remove
+ *  - verified  : show verified state with option to replace or remove
+ *  - rejected  : show rejection state with option to upload again or mark none
+ *
+ * Upload is mocked (file picker → simulates pending state).
+ */
+export function CertificateSheet({
+  open,
+  onOpenChange,
+  status,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  status: CertificateStatus;
+}) {
+  function setStatus(next: CertificateStatus) {
+    updateProfileDraft({ certificate: next });
+    onOpenChange(false);
+  }
+
+  return (
+    <SheetShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Cosmetology certificate"
+      description="Upload your license or training certificate. Once verified, clients see a Licensed badge on your profile."
+      footer={
+        <GhostButton onClick={() => onOpenChange(false)}>Close</GhostButton>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        {status === "verified" ? (
+          <StatusPanel
+            tone="success"
+            title="Verified"
+            body="Your Licensed cosmetologist badge is showing on your profile."
+          />
+        ) : null}
+        {status === "pending" ? (
+          <StatusPanel
+            tone="info"
+            title="Under review"
+            body="We usually verify within 1–2 business days. Your badge appears once approved."
+          />
+        ) : null}
+        {status === "rejected" ? (
+          <StatusPanel
+            tone="danger"
+            title="We couldn't verify this"
+            body="The document was unclear or didn't match a recognized credential. Try uploading again or mark that you don't have one."
+          />
+        ) : null}
+
+        <div className="flex flex-col gap-2">
+          <PrimaryButton onClick={() => setStatus("pending")}>
+            {status === "none" || status === "rejected" ? "Upload certificate" : "Replace certificate"}
+          </PrimaryButton>
+
+          {status === "none" || status === "rejected" ? (
+            <GhostButton onClick={() => setStatus("none")}>I don't have one</GhostButton>
+          ) : (
+            <GhostButton onClick={() => setStatus("none")} danger>
+              Remove certificate
+            </GhostButton>
+          )}
+        </div>
+
+        <p style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.5, lineHeight: 1.5, marginTop: 4 }}>
+          We accept JPG, PNG, or PDF. Make sure your name and credential number are visible.
+        </p>
+      </div>
+    </SheetShell>
+  );
+}
+
+function StatusPanel({
+  tone,
+  title,
+  body,
+}: {
+  tone: "success" | "info" | "danger";
+  title: string;
+  body: string;
+}) {
+  const palette = {
+    success: { bg: "rgba(22,163,74,0.10)", border: "rgba(22,163,74,0.30)", text: "#16A34A" },
+    info: { bg: "rgba(255,130,63,0.10)", border: "rgba(255,130,63,0.30)", text: ORANGE },
+    danger: { bg: "rgba(220,38,38,0.10)", border: "rgba(220,38,38,0.30)", text: "#DC2626" },
+  }[tone];
+  return (
+    <div
+      style={{
+        borderRadius: 14,
+        padding: "12px 14px",
+        backgroundColor: palette.bg,
+        border: `1px solid ${palette.border}`,
+      }}
+    >
+      <div style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: palette.text }}>
+        {title}
+      </div>
+      <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.8, marginTop: 4, lineHeight: 1.45 }}>
+        {body}
+      </div>
+    </div>
   );
 }
