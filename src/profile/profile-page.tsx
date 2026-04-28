@@ -213,7 +213,7 @@ function LockedShell() {
           Your profile unlocks once you finish onboarding and verification.
         </p>
         <Link
-          to="/home"
+          to="/onboarding"
           className="mt-6 rounded-full px-5 py-3"
           style={{ backgroundColor: ORANGE, color: NAVY, fontWeight: 600, fontSize: 14 }}
         >
