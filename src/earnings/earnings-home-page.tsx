@@ -1027,7 +1027,7 @@ function EarningsBottomTabs() {
         if (k === "bookings") navigate({ to: "/bookings" });
         if (k === "calendar") navigate({ to: "/calendar" });
         if (k === "earnings") return;
-        if (k === "profile") navigate({ to: "/home" });
+        if (k === "profile") navigate({ to: "/profile" });
       }}
     />
   );
