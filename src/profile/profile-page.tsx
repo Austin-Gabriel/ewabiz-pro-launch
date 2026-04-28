@@ -8,19 +8,28 @@ import { useDevState } from "@/dev-state/dev-state-context";
 import { useAuth } from "@/auth/auth-context";
 import { useKyc } from "@/onboarding-states/kyc/kyc-context";
 import { resolveProState, type ResolvedProState } from "@/earnings/earnings-state";
-import { PRO_PROFILE } from "@/data/mock-pro-profile";
+import { type CertificateStatus } from "@/data/mock-pro-profile";
 import {
-  portfolioForDensity,
-  type PortfolioDensity,
   type PortfolioPhoto,
 } from "@/data/mock-portfolio";
-import { PRO_SERVICES, type ProService } from "@/data/mock-services";
+import { type ProService } from "@/data/mock-services";
 import {
   reviewsForDensity,
   averageRating,
   type ReviewDensity,
   type ProReview,
 } from "@/data/mock-reviews";
+import {
+  useProfileDraft,
+  updateProfileDraft,
+  type ProfileDraft,
+} from "@/profile/profile-draft-store";
+import {
+  HeadlineSheet,
+  AboutSheet,
+  ServiceSheet,
+  BaseLocationSheet,
+} from "@/profile/edits/edit-sheets";
 
 /**
  * Profile — editorial identity surface for the pro. Phase 1: Editing mode
@@ -40,11 +49,16 @@ const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 
 /* Density mapping — derive Profile-specific densities from the existing
- * dev-state dataDensity field. Per spec, no new dev-state fields for Phase 1. */
-function portfolioDensityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"]): PortfolioDensity {
-  if (d === "empty") return "empty";
-  if (d === "sparse") return "minimum";
-  return "robust";
+ * dev-state dataDensity field. Phase 2: portfolio comes from the editable
+ * draft, but the density slider still trims/empties the displayed list so
+ * design reviewers can preview empty/minimum states without clearing data. */
+function portfolioSliceForDensity(
+  d: ReturnType<typeof useDevState>["state"]["dataDensity"],
+  full: PortfolioPhoto[],
+): PortfolioPhoto[] {
+  if (d === "empty") return [];
+  if (d === "sparse") return full.slice(0, 3);
+  return full;
 }
 function reviewDensityFromDev(d: ReturnType<typeof useDevState>["state"]["dataDensity"]): ReviewDensity {
   if (d === "empty") return "none";
@@ -57,29 +71,50 @@ export function ProfilePage() {
   const auth = useAuth();
   const { data: kyc } = useKyc();
   const proState: ResolvedProState = resolveProState(dev.proState, auth, kyc);
+  const draft = useProfileDraft();
 
   if (proState === "mid-onboarding") return <LockedShell />;
 
-  const portfolio = portfolioForDensity(portfolioDensityFromDev(dev.dataDensity));
+  const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
 
-  const [visibility, setVisibility] = useState(PRO_PROFILE.visibility);
+  // Sheets ----
+  const [headlineOpen, setHeadlineOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [editingService, setEditingService] = useState<ProService | null>(null);
+  const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
   // binary done / not done. No percentage scoring.
   const checklist = useMemo(
     () => buildChecklist({
-      hasHeadline: PRO_PROFILE.headline.trim().length > 0,
-      hasAvatar: Boolean(PRO_PROFILE.avatarUrl),
-      hasAbout: Boolean(PRO_PROFILE.about && PRO_PROFILE.about.trim().length > 0),
-      portfolioCount: portfolio.length,
-      hasServices: PRO_SERVICES.length > 0,
-      hasSocial: Boolean(PRO_PROFILE.social.instagram || PRO_PROFILE.social.tiktok),
-      hasAvailability: PRO_PROFILE.availabilitySummary.trim().length > 0,
-      certificate: PRO_PROFILE.certificate,
+      hasHeadline: draft.headline.trim().length > 0,
+      hasAvatar: Boolean(draft.avatarUrl),
+      hasAbout: draft.about.trim().length > 0,
+      portfolioCount: draft.portfolio.length,
+      hasServices: draft.services.length > 0,
+      hasSocial: Boolean(draft.social.instagram || draft.social.tiktok),
+      hasAvailability: draft.availabilitySummary.trim().length > 0,
+      certificate: draft.certificate,
     }),
-    [portfolio.length],
+    [
+      draft.headline,
+      draft.avatarUrl,
+      draft.about,
+      draft.portfolio.length,
+      draft.services.length,
+      draft.social.instagram,
+      draft.social.tiktok,
+      draft.availabilitySummary,
+      draft.certificate,
+    ],
   );
+
+  function openServiceSheet(service: ProService | null) {
+    setEditingService(service);
+    setServiceSheetOpen(true);
+  }
 
   return (
     <HomeShell>
@@ -89,32 +124,39 @@ export function ProfilePage() {
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
-        {visibility === "paused" ? <PausedBanner onResume={() => setVisibility("live")} /> : null}
+        {draft.visibility === "paused" ? (
+          <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
+        ) : null}
 
         <ProfileCompletionCard items={checklist} />
 
-        <ProfileHeaderCard certificate={PRO_PROFILE.certificate} />
+        <ProfileHeaderCard draft={draft} onEditHeadline={() => setHeadlineOpen(true)} />
 
         <PortfolioCard photos={portfolio} />
 
-        <ServicesCard services={PRO_SERVICES} />
+        <ServicesCard
+          services={draft.services}
+          onAdd={() => openServiceSheet(null)}
+          onEdit={(s) => openServiceSheet(s)}
+        />
 
-        <AboutCard about={PRO_PROFILE.about} />
+        <AboutCard about={draft.about} onEdit={() => setAboutOpen(true)} />
 
         <ReviewsCard reviews={reviews} />
 
-        <AvailabilityCard summary={PRO_PROFILE.availabilitySummary} />
+        <AvailabilityCard summary={draft.availabilitySummary} />
 
         <BaseLocationCard
-          neighborhood={PRO_PROFILE.neighborhood}
-          baseAddress={PRO_PROFILE.baseAddress}
-          travelRadiusMi={PRO_PROFILE.travelRadiusMi}
+          neighborhood={draft.neighborhood}
+          baseAddress={draft.baseAddress}
+          travelRadiusMi={draft.travelRadiusMi}
+          onEdit={() => setLocationOpen(true)}
         />
 
         {proState === "live" ? (
           <VisibilityCard
-            visibility={visibility}
-            onChange={setVisibility}
+            visibility={draft.visibility}
+            onChange={(v) => updateProfileDraft({ visibility: v })}
           />
         ) : null}
 
@@ -122,6 +164,12 @@ export function ProfilePage() {
       </div>
 
       <ProfileBottomTabs />
+
+      {/* Edit sheets */}
+      <HeadlineSheet open={headlineOpen} onOpenChange={setHeadlineOpen} defaultValue={draft.headline} />
+      <AboutSheet open={aboutOpen} onOpenChange={setAboutOpen} defaultValue={draft.about} />
+      <BaseLocationSheet open={locationOpen} onOpenChange={setLocationOpen} draft={draft} />
+      <ServiceSheet open={serviceSheetOpen} onOpenChange={setServiceSheetOpen} service={editingService} />
     </HomeShell>
   );
 }
@@ -441,9 +489,15 @@ function Chevron({ open }: { open: boolean }) {
 
 /* ---------- Profile header ---------- */
 
-function ProfileHeaderCard({ certificate }: { certificate: ReturnType<typeof useDevState> extends never ? never : import("@/data/mock-pro-profile").CertificateStatus }) {
-  const p = PRO_PROFILE;
-  const showLicensedBadge = certificate === "verified";
+function ProfileHeaderCard({
+  draft,
+  onEditHeadline,
+}: {
+  draft: ProfileDraft;
+  onEditHeadline: () => void;
+}) {
+  const p = draft;
+  const showLicensedBadge = p.certificate === "verified";
 
   return (
     <ProfileCard>
@@ -454,9 +508,24 @@ function ProfileHeaderCard({ certificate }: { certificate: ReturnType<typeof use
           <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
             {p.displayName}
           </h2>
-          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
-            {p.headline}
-          </p>
+          <button
+            type="button"
+            onClick={onEditHeadline}
+            className="transition-opacity active:opacity-60"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              color: NAVY,
+              opacity: p.headline ? 0.7 : 0.55,
+              fontStyle: p.headline ? "normal" : "italic",
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+            }}
+          >
+            {p.headline || "Add a headline"}
+          </button>
         </div>
 
         {showLicensedBadge ? (
@@ -610,6 +679,8 @@ function TikTokIcon() {
 /* ---------- Portfolio ---------- */
 
 function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
+  const navigate = useNavigate();
+  const goManage = () => void navigate({ to: "/profile/portfolio" });
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -619,7 +690,7 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
             type="button"
             className="transition-opacity active:opacity-50"
             style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-            onClick={() => { /* Phase 2: portfolio reorder */ }}
+            onClick={goManage}
           >
             Edit
           </button>
@@ -627,13 +698,13 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
       </div>
 
       {photos.length === 0 ? (
-        <PortfolioEmpty />
+        <PortfolioEmpty onAdd={goManage} />
       ) : (
         <div className="grid grid-cols-3 gap-1.5 p-3">
           <button
             type="button"
             aria-label="Add photo"
-            onClick={() => { /* Phase 2 */ }}
+            onClick={goManage}
             className="flex aspect-square items-center justify-center rounded-xl transition-all active:scale-[0.97]"
             style={{
               border: "1.5px dashed rgba(255,130,63,0.5)",
@@ -659,7 +730,7 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
   );
 }
 
-function PortfolioEmpty() {
+function PortfolioEmpty({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
       <div
@@ -684,7 +755,7 @@ function PortfolioEmpty() {
         type="button"
         className="rounded-full px-4 py-2"
         style={{ backgroundColor: ORANGE, color: NAVY, fontFamily: UI, fontSize: 13, fontWeight: 600 }}
-        onClick={() => { /* Phase 2 */ }}
+        onClick={onAdd}
       >
         Add photos
       </button>
@@ -694,7 +765,15 @@ function PortfolioEmpty() {
 
 /* ---------- Services ---------- */
 
-function ServicesCard({ services }: { services: ProService[] }) {
+function ServicesCard({
+  services,
+  onAdd,
+  onEdit,
+}: {
+  services: ProService[];
+  onAdd: () => void;
+  onEdit: (s: ProService) => void;
+}) {
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -703,7 +782,7 @@ function ServicesCard({ services }: { services: ProService[] }) {
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: ORANGE }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onAdd}
         >
           Add
         </button>
@@ -711,9 +790,14 @@ function ServicesCard({ services }: { services: ProService[] }) {
 
       {services.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
-          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="text-left transition-opacity active:opacity-60"
+            style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.55, fontStyle: "italic", background: "none", border: "none", padding: 0 }}
+          >
             Add the services you offer with prices and durations.
-          </p>
+          </button>
         </div>
       ) : (
         <div className="px-5 pb-2 pt-2">
@@ -725,7 +809,7 @@ function ServicesCard({ services }: { services: ProService[] }) {
               style={{
                 borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)",
               }}
-              onClick={() => { /* Phase 2 */ }}
+              onClick={() => onEdit(s)}
             >
               <div className="flex flex-col gap-1" style={{ flex: 1 }}>
                 <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
@@ -756,7 +840,7 @@ function formatDuration(min: number): string {
 
 /* ---------- About ---------- */
 
-function AboutCard({ about }: { about?: string }) {
+function AboutCard({ about, onEdit }: { about?: string; onEdit: () => void }) {
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -765,7 +849,7 @@ function AboutCard({ about }: { about?: string }) {
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onEdit}
         >
           Edit
         </button>
@@ -778,7 +862,7 @@ function AboutCard({ about }: { about?: string }) {
         ) : (
           <button
             type="button"
-            onClick={() => { /* Phase 2 */ }}
+            onClick={onEdit}
             className="text-left transition-opacity active:opacity-60"
             style={{
               fontFamily: UI,
@@ -935,10 +1019,12 @@ function BaseLocationCard({
   neighborhood,
   baseAddress,
   travelRadiusMi,
+  onEdit,
 }: {
   neighborhood: string;
   baseAddress: string;
   travelRadiusMi: number;
+  onEdit: () => void;
 }) {
   return (
     <ProfileCard>
@@ -961,7 +1047,7 @@ function BaseLocationCard({
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onEdit}
         >
           Edit
         </button>
