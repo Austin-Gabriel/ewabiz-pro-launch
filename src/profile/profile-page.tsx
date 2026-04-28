@@ -1096,23 +1096,17 @@ function TikTokIcon() {
 function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
   const navigate = useNavigate();
   const goManage = () => void navigate({ to: "/profile/portfolio" });
+  const [open, setOpen] = useState(true);
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Portfolio</CardTitle>
-        {photos.length > 0 ? (
-          <button
-            type="button"
-            className="transition-opacity active:opacity-50"
-            style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-            onClick={goManage}
-          >
-            Edit
-          </button>
-        ) : null}
-      </div>
-
-      {photos.length === 0 ? (
+      <CollapsibleHeader
+        title="Portfolio"
+        count={photos.length}
+        open={open}
+        onToggle={() => setOpen((v) => !v)}
+        rightAction={photos.length > 0 ? { label: "Edit", onClick: goManage } : undefined}
+      />
+      {!open ? null : photos.length === 0 ? (
         <PortfolioEmpty onAdd={goManage} />
       ) : (
         <div className="grid grid-cols-3 gap-1.5 p-3">
@@ -1189,21 +1183,17 @@ function ServicesCard({
   onAdd: () => void;
   onEdit: (s: ProService) => void;
 }) {
+  const [open, setOpen] = useState(true);
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Services</CardTitle>
-        <button
-          type="button"
-          className="transition-opacity active:opacity-50"
-          style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: ORANGE }}
-          onClick={onAdd}
-        >
-          Add
-        </button>
-      </div>
-
-      {services.length === 0 ? (
+      <CollapsibleHeader
+        title="Services"
+        count={services.length}
+        open={open}
+        onToggle={() => setOpen((v) => !v)}
+        rightAction={{ label: "Add", onClick: onAdd, accent: true }}
+      />
+      {!open ? null : services.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
           <button
             type="button"
@@ -1300,25 +1290,37 @@ function AboutCard({ about, onEdit }: { about?: string; onEdit: () => void }) {
 function ReviewsCard({ reviews }: { reviews: ProReview[] }) {
   const visible = reviews.slice(0, 5);
   const avg = averageRating(reviews);
+  const [open, setOpen] = useState(true);
 
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Reviews</CardTitle>
-        {reviews.length > 0 ? (
-          <div className="flex items-center gap-1.5">
-            <Star />
-            <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
-              {avg.toFixed(1)}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-5 pt-4 pb-3 text-left transition-opacity active:opacity-70"
+        style={{ background: "transparent", border: "none" }}
+      >
+        <div className="flex items-center gap-2">
+          <CardTitle>Reviews</CardTitle>
+          {reviews.length > 0 ? (
+            <span style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
+              {reviews.length}
             </span>
-            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
-              ({reviews.length})
-            </span>
-          </div>
-        ) : null}
-      </div>
-
-      {reviews.length === 0 ? (
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          {reviews.length > 0 ? (
+            <div className="flex items-center gap-1">
+              <Star />
+              <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
+                {avg.toFixed(1)}
+              </span>
+            </div>
+          ) : null}
+          <Chevron open={open} />
+        </div>
+      </button>
+      {!open ? null : reviews.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
           <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.6, lineHeight: 1.5 }}>
             Reviews appear here once clients leave them.
