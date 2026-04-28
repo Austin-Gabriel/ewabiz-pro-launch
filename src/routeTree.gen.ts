@@ -30,6 +30,7 @@ import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as BiometricRouteImport } from './routes/biometric'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupServicesRouteImport } from './routes/signup.services'
+import { Route as ProfilePortfolioRouteImport } from './routes/profile.portfolio'
 import { Route as OnboardingStepRouteImport } from './routes/onboarding.$step'
 import { Route as KycRejectedRouteImport } from './routes/kyc.rejected'
 import { Route as KycPendingRouteImport } from './routes/kyc.pending'
@@ -148,6 +149,11 @@ const SignupServicesRoute = SignupServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => SignupRoute,
 } as any)
+const ProfilePortfolioRoute = ProfilePortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const OnboardingStepRoute = OnboardingStepRouteImport.update({
   id: '/$step',
   path: '/$step',
@@ -222,7 +228,7 @@ export interface FileRoutesByFullPath {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
@@ -257,7 +264,7 @@ export interface FileRoutesByTo {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
@@ -293,7 +301,7 @@ export interface FileRoutesById {
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRouteWithChildren
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/sign-in': typeof SignInRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/kyc/pending': typeof KycPendingRoute
   '/kyc/rejected': typeof KycRejectedRoute
   '/onboarding/$step': typeof OnboardingStepRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/signup/services': typeof SignupServicesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/earnings/payouts/$id': typeof EarningsPayoutsIdRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/profile/portfolio'
     | '/signup/services'
     | '/api/public/seed-demo'
     | '/earnings/payouts/$id'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/profile/portfolio'
     | '/signup/services'
     | '/api/public/seed-demo'
     | '/earnings/payouts/$id'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/kyc/pending'
     | '/kyc/rejected'
     | '/onboarding/$step'
+    | '/profile/portfolio'
     | '/signup/services'
     | '/api/public/seed-demo'
     | '/earnings/payouts/$id'
@@ -436,7 +448,7 @@ export interface RootRouteChildren {
   KycRoute: typeof KycRouteWithChildren
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
-  ProfileRoute: typeof ProfileRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignInRoute: typeof SignInRoute
@@ -596,6 +608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupServicesRouteImport
       parentRoute: typeof SignupRoute
     }
+    '/profile/portfolio': {
+      id: '/profile/portfolio'
+      path: '/portfolio'
+      fullPath: '/profile/portfolio'
+      preLoaderRoute: typeof ProfilePortfolioRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/onboarding/$step': {
       id: '/onboarding/$step'
       path: '/$step'
@@ -753,6 +772,17 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
   OnboardingRouteChildren,
 )
 
+interface ProfileRouteChildren {
+  ProfilePortfolioRoute: typeof ProfilePortfolioRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfilePortfolioRoute: ProfilePortfolioRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 interface SignupRouteChildren {
   SignupServicesRoute: typeof SignupServicesRoute
 }
@@ -777,7 +807,7 @@ const rootRouteChildren: RootRouteChildren = {
   KycRoute: KycRouteWithChildren,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
-  ProfileRoute: ProfileRoute,
+  ProfileRoute: ProfileRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignInRoute: SignInRoute,
