@@ -48,6 +48,8 @@ const NAVY = "#061C27";
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 
+type ProfileMode = "editing" | "preview";
+
 /* Density mapping — derive Profile-specific densities from the existing
  * dev-state dataDensity field. Phase 2: portfolio comes from the editable
  * draft, but the density slider still trims/empties the displayed list so
@@ -77,6 +79,9 @@ export function ProfilePage() {
 
   const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
+
+  // Mode is in-memory only — closing/reopening returns to Editing.
+  const [mode, setMode] = useState<ProfileMode>("editing");
 
   // Sheets ----
   const [headlineOpen, setHeadlineOpen] = useState(false);
@@ -116,11 +121,28 @@ export function ProfilePage() {
     setServiceSheetOpen(true);
   }
 
+  if (mode === "preview") {
+    return (
+      <HomeShell>
+        <OnlineModeStrip />
+        <ActiveBookingStrip />
+        <PageHeader mode={mode} onModeChange={setMode} />
+        <PreviewStrip onExit={() => setMode("editing")} />
+        <ClientPreview
+          draft={draft}
+          portfolio={portfolio}
+          reviews={reviews}
+        />
+        <ProfileBottomTabs />
+      </HomeShell>
+    );
+  }
+
   return (
     <HomeShell>
       <OnlineModeStrip />
       <ActiveBookingStrip />
-      <PageHeader />
+      <PageHeader mode={mode} onModeChange={setMode} />
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
