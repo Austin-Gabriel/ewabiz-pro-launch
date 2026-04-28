@@ -25,6 +25,7 @@ import {
   type ProfileDraft,
 } from "@/profile/profile-draft-store";
 import type { ProService } from "@/data/mock-services";
+import type { CertificateStatus } from "@/data/mock-pro-profile";
 
 const UI = HOME_SANS;
 const NAVY = "#061C27";
