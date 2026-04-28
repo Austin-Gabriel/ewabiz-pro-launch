@@ -1615,30 +1615,6 @@ function VisibilityCard({
   );
 }
 
-/* ---------- Settings link ---------- */
-
-function SettingsLinkRow() {
-  return (
-    <Link
-      to="/settings"
-      className="block"
-      style={{ textDecoration: "none" }}
-    >
-      <ProfileCard>
-        <div className="flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <SettingsIcon />
-            <span style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: NAVY }}>
-              Settings
-            </span>
-          </div>
-          <span aria-hidden style={{ color: NAVY, opacity: 0.4 }}>→</span>
-        </div>
-      </ProfileCard>
-    </Link>
-  );
-}
-
 function SettingsIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
