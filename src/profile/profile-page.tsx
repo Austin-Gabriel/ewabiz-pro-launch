@@ -48,6 +48,8 @@ const NAVY = "#061C27";
 const ORANGE = "#FF823F";
 const SUCCESS = "#16A34A";
 
+type ProfileMode = "editing" | "preview";
+
 /* Density mapping — derive Profile-specific densities from the existing
  * dev-state dataDensity field. Phase 2: portfolio comes from the editable
  * draft, but the density slider still trims/empties the displayed list so
@@ -77,6 +79,9 @@ export function ProfilePage() {
 
   const portfolio = portfolioSliceForDensity(dev.dataDensity, draft.portfolio);
   const reviews = reviewsForDensity(reviewDensityFromDev(dev.dataDensity));
+
+  // Mode is in-memory only — closing/reopening returns to Editing.
+  const [mode, setMode] = useState<ProfileMode>("editing");
 
   // Sheets ----
   const [headlineOpen, setHeadlineOpen] = useState(false);
@@ -116,11 +121,28 @@ export function ProfilePage() {
     setServiceSheetOpen(true);
   }
 
+  if (mode === "preview") {
+    return (
+      <HomeShell>
+        <OnlineModeStrip />
+        <ActiveBookingStrip />
+        <PageHeader mode={mode} onModeChange={setMode} />
+        <PreviewStrip onExit={() => setMode("editing")} />
+        <ClientPreview
+          draft={draft}
+          portfolio={portfolio}
+          reviews={reviews}
+        />
+        <ProfileBottomTabs />
+      </HomeShell>
+    );
+  }
+
   return (
     <HomeShell>
       <OnlineModeStrip />
       <ActiveBookingStrip />
-      <PageHeader />
+      <PageHeader mode={mode} onModeChange={setMode} />
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-2">
         {proState === "mid-pending" ? <PendingReviewBanner /> : null}
@@ -203,10 +225,17 @@ function LockedShell() {
   );
 }
 
-function PageHeader() {
+function PageHeader({
+  mode,
+  onModeChange,
+}: {
+  mode?: ProfileMode;
+  onModeChange?: (m: ProfileMode) => void;
+} = {}) {
   const { text } = useHomeTheme();
+  const navigate = useNavigate();
   return (
-    <div className="flex items-center justify-between px-5 pt-3" style={{ height: 52 }}>
+    <div className="flex items-center justify-between gap-3 px-5 pt-3" style={{ height: 52 }}>
       <h1
         style={{
           fontFamily: UI,
@@ -218,7 +247,381 @@ function PageHeader() {
       >
         Profile
       </h1>
+      <div className="flex items-center gap-2">
+        {mode && onModeChange ? (
+          <ModeToggle mode={mode} onChange={onModeChange} />
+        ) : null}
+        <button
+          type="button"
+          aria-label="Settings"
+          onClick={() => void navigate({ to: "/settings" })}
+          className="flex items-center justify-center transition-opacity active:opacity-50"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            color: text,
+            opacity: 0.75,
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          <SettingsIcon />
+        </button>
+      </div>
     </div>
+  );
+}
+
+function ModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: ProfileMode;
+  onChange: (m: ProfileMode) => void;
+}) {
+  const { text } = useHomeTheme();
+  const isPreview = mode === "preview";
+  return (
+    <div
+      role="tablist"
+      aria-label="Profile mode"
+      className="flex items-center"
+      style={{
+        padding: 3,
+        borderRadius: 999,
+        backgroundColor: "rgba(6,28,39,0.06)",
+        border: "1px solid rgba(6,28,39,0.08)",
+      }}
+    >
+      <ModePill
+        active={!isPreview}
+        label="Edit"
+        onClick={() => onChange("editing")}
+        textColor={text}
+      />
+      <ModePill
+        active={isPreview}
+        label="Preview"
+        onClick={() => onChange("preview")}
+        textColor={text}
+      />
+    </div>
+  );
+}
+
+function ModePill({
+  active,
+  label,
+  onClick,
+  textColor,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  textColor: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className="transition-all active:scale-[0.97]"
+      style={{
+        fontFamily: UI,
+        fontSize: 12,
+        fontWeight: 600,
+        letterSpacing: "0.01em",
+        padding: "5px 11px",
+        borderRadius: 999,
+        border: "none",
+        backgroundColor: active ? "#FFFFFF" : "transparent",
+        color: active ? NAVY : textColor,
+        opacity: active ? 1 : 0.6,
+        boxShadow: active
+          ? "0 1px 2px rgba(6,28,39,0.10), 0 4px 10px -6px rgba(6,28,39,0.20)"
+          : "none",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+/* ---------- Preview mode ---------- */
+
+function PreviewStrip({ onExit }: { onExit: () => void }) {
+  return (
+    <div className="px-4 pt-2">
+      <div
+        className="flex items-center justify-between gap-3"
+        style={{
+          borderRadius: 14,
+          padding: "10px 14px",
+          backgroundColor: NAVY,
+          color: "#FFFFFF",
+        }}
+      >
+        <div className="flex items-center gap-2.5" style={{ minWidth: 0 }}>
+          <EyeIcon />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, letterSpacing: "0.02em" }}>
+              Previewing as a client
+            </div>
+            <div style={{ fontFamily: UI, fontSize: 11, opacity: 0.7, marginTop: 1 }}>
+              This is what your profile looks like.
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onExit}
+          className="rounded-full transition-opacity active:opacity-70"
+          style={{
+            fontFamily: UI,
+            fontSize: 12,
+            fontWeight: 600,
+            color: NAVY,
+            backgroundColor: "#FFFFFF",
+            padding: "6px 12px",
+            border: "none",
+            flexShrink: 0,
+          }}
+        >
+          Exit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function ClientPreview({
+  draft,
+  portfolio,
+  reviews,
+}: {
+  draft: ProfileDraft;
+  portfolio: PortfolioPhoto[];
+  reviews: ProReview[];
+}) {
+  return (
+    <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-3">
+      <ClientHeaderCard draft={draft} reviews={reviews} />
+      {portfolio.length > 0 ? <ClientPortfolioCard photos={portfolio} /> : null}
+      {draft.services.length > 0 ? <ClientServicesCard services={draft.services} /> : null}
+      {draft.about.trim().length > 0 ? <ClientAboutCard about={draft.about} /> : null}
+      {reviews.length > 0 ? <ReviewsCard reviews={reviews} /> : null}
+      <ClientLocationCard
+        neighborhood={draft.neighborhood}
+        travelRadiusMi={draft.travelRadiusMi}
+      />
+    </div>
+  );
+}
+
+function ClientHeaderCard({ draft, reviews }: { draft: ProfileDraft; reviews: ProReview[] }) {
+  const showLicensedBadge = draft.certificate === "verified";
+  const avg = averageRating(reviews);
+  return (
+    <ProfileCard>
+      <div className="flex flex-col items-center gap-4 px-5 pb-5 pt-6 text-center">
+        <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+        <div className="flex flex-col items-center gap-1.5">
+          <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
+            {draft.displayName}
+          </h2>
+          {draft.headline ? (
+            <span style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
+              {draft.headline}
+            </span>
+          ) : null}
+        </div>
+        {showLicensedBadge ? (
+          <div
+            className="flex items-center gap-1.5"
+            style={{
+              padding: "5px 10px",
+              borderRadius: 999,
+              backgroundColor: "rgba(255,130,63,0.12)",
+              border: "1px solid rgba(255,130,63,0.30)",
+            }}
+          >
+            <BagelIcon />
+            <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: ORANGE, letterSpacing: "0.02em" }}>
+              Licensed cosmetologist
+            </span>
+          </div>
+        ) : null}
+        {reviews.length > 0 ? (
+          <div className="flex items-center gap-1.5">
+            <Star />
+            <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
+              {avg.toFixed(1)}
+            </span>
+            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+              ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+            </span>
+          </div>
+        ) : null}
+        <div className="flex flex-col items-center gap-0.5">
+          <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.75 }}>
+            {draft.neighborhood}
+          </div>
+          <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
+            Travels up to {draft.travelRadiusMi} mi
+          </div>
+        </div>
+        {draft.specializations.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {draft.specializations.map((s) => (
+              <span
+                key={s}
+                style={{
+                  fontFamily: UI,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: NAVY,
+                  opacity: 0.85,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  backgroundColor: "rgba(6,28,39,0.05)",
+                  border: "1px solid rgba(6,28,39,0.08)",
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {(draft.social.instagram || draft.social.tiktok) ? (
+          <div className="flex items-center gap-3 pt-1">
+            {draft.social.instagram ? (
+              <SocialLink label="Instagram" handle={draft.social.instagram} icon={<InstagramIcon />} />
+            ) : null}
+            {draft.social.tiktok ? (
+              <SocialLink label="TikTok" handle={draft.social.tiktok} icon={<TikTokIcon />} />
+            ) : null}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          disabled
+          className="mt-2 w-full rounded-full"
+          style={{
+            fontFamily: UI,
+            fontSize: 14,
+            fontWeight: 600,
+            color: NAVY,
+            backgroundColor: ORANGE,
+            padding: "12px 16px",
+            border: "none",
+            opacity: 0.95,
+            cursor: "default",
+          }}
+        >
+          Book
+        </button>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function ClientPortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
+  return (
+    <ProfileCard>
+      <div className="flex items-center justify-between px-5 pt-4">
+        <CardTitle>Portfolio</CardTitle>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 p-3">
+        {photos.map((photo) => (
+          <div
+            key={photo.id}
+            className="relative aspect-square overflow-hidden rounded-xl"
+            style={{ border: "1px solid rgba(6,28,39,0.06)" }}
+          >
+            <img src={photo.url} alt={photo.alt} className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        ))}
+      </div>
+    </ProfileCard>
+  );
+}
+
+function ClientServicesCard({ services }: { services: ProService[] }) {
+  return (
+    <ProfileCard>
+      <div className="flex items-center justify-between px-5 pt-4">
+        <CardTitle>Services</CardTitle>
+      </div>
+      <div className="px-5 pb-2 pt-2">
+        {services.map((s, i) => (
+          <div
+            key={s.id}
+            className="flex w-full items-start justify-between gap-4 py-3.5"
+            style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
+          >
+            <div className="flex flex-col gap-1" style={{ flex: 1 }}>
+              <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+                {s.name}
+              </span>
+              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
+                {formatDuration(s.durationMin)}
+              </span>
+            </div>
+            <div style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+              ${s.priceUsd}
+            </div>
+          </div>
+        ))}
+      </div>
+    </ProfileCard>
+  );
+}
+
+function ClientAboutCard({ about }: { about: string }) {
+  return (
+    <ProfileCard>
+      <div className="flex items-center justify-between px-5 pt-4">
+        <CardTitle>About</CardTitle>
+      </div>
+      <div className="px-5 pb-5 pt-2">
+        <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85, lineHeight: 1.55 }}>
+          {about}
+        </p>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function ClientLocationCard({
+  neighborhood,
+  travelRadiusMi,
+}: {
+  neighborhood: string;
+  travelRadiusMi: number;
+}) {
+  return (
+    <ProfileCard>
+      <div className="flex flex-col gap-1.5 px-5 py-4">
+        <CardEyebrow>Service area</CardEyebrow>
+        <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+          {neighborhood}
+        </span>
+        <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
+          Travels up to {travelRadiusMi} mi
+        </span>
+      </div>
+    </ProfileCard>
   );
 }
 
