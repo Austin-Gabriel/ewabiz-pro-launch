@@ -428,26 +428,30 @@ function ClientPreview({
 }) {
   return (
     <div className="flex flex-1 flex-col gap-3 px-4 pb-6 pt-3">
-      <ExploreListingCard
-        draft={draft}
-        portfolio={portfolio}
-        reviews={reviews}
-      />
+      <PreviewHeroCard draft={draft} portfolio={portfolio} reviews={reviews} />
+      <PreviewIdentityCard draft={draft} />
+      {portfolio.length > 1 ? (
+        <PreviewRecentWorkCard photos={portfolio.slice(1, 5)} />
+      ) : null}
+      {draft.services.length > 0 ? (
+        <PreviewServicesCard services={draft.services} />
+      ) : null}
+      {draft.about.trim().length > 0 ? (
+        <PreviewAboutCard about={draft.about} />
+      ) : null}
+      {reviews.length > 0 ? (
+        <PreviewReviewsCard reviews={reviews} />
+      ) : null}
+      <PreviewBookCard />
     </div>
   );
 }
 
-/**
- * ExploreListingCard — what clients actually see in their explore feed and
- * on a pro detail screen. Image-led, info-driven, no editorial chrome.
- * Matches the language of a marketplace listing (Airbnb / Fresha style):
- *   1. Hero photo (first portfolio image) with overlay name + neighborhood
- *   2. Rating row + Licensed badge
- *   3. Headline + chips
- *   4. Services list, About, Reviews — all flat sections
- *   5. Sticky-feeling Book button
- */
-function ExploreListingCard({
+/* Preview cards — split out so each section feels like its own object,
+ * matching how a real explore listing is composed of stacked cards rather
+ * than one stitched-together sheet. */
+
+function PreviewHeroCard({
   draft,
   portfolio,
   reviews,
@@ -457,13 +461,9 @@ function ExploreListingCard({
   reviews: ProReview[];
 }) {
   const hero = portfolio[0];
-  const thumbs = portfolio.slice(1, 5);
-  const showLicensed = draft.certificate === "verified";
   const avg = averageRating(reviews);
-
   return (
     <ProfileCard>
-      {/* Hero ------------------------------------------------------- */}
       <div className="relative" style={{ aspectRatio: "4 / 3", backgroundColor: "#F0EBD8" }}>
         {hero ? (
           <img src={hero.url} alt={hero.alt} className="absolute inset-0 h-full w-full object-cover" />
@@ -472,7 +472,6 @@ function ExploreListingCard({
             <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
           </div>
         )}
-        {/* gradient + overlay text */}
         <div
           aria-hidden
           className="absolute inset-x-0 bottom-0"
@@ -487,7 +486,10 @@ function ExploreListingCard({
               {draft.displayName}
             </h2>
             <span style={{ fontFamily: UI, fontSize: 12, color: "#FFFFFF", opacity: 0.85, marginTop: 2 }}>
-              {draft.neighborhood} · Travels {draft.travelRadiusMi} mi
+              {draft.neighborhood}
+            </span>
+            <span style={{ fontFamily: UI, fontSize: 12, color: "#FFFFFF", opacity: 0.7, marginTop: 1 }}>
+              Travels up to {draft.travelRadiusMi} mi
             </span>
           </div>
           {reviews.length > 0 ? (
@@ -510,9 +512,15 @@ function ExploreListingCard({
           ) : null}
         </div>
       </div>
+    </ProfileCard>
+  );
+}
 
-      {/* Headline + badges ----------------------------------------- */}
-      <div className="flex flex-col gap-3 px-5 pt-4">
+function PreviewIdentityCard({ draft }: { draft: ProfileDraft }) {
+  const showLicensed = draft.certificate === "verified";
+  return (
+    <ProfileCard>
+      <div className="flex flex-col gap-3 px-5 py-4">
         {draft.headline ? (
           <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85 }}>
             {draft.headline}
@@ -557,100 +565,118 @@ function ExploreListingCard({
           </div>
         ) : null}
       </div>
+    </ProfileCard>
+  );
+}
 
-      {/* More photos strip ---------------------------------------- */}
-      {thumbs.length > 0 ? (
-        <div className="px-5 pt-4">
-          <SectionLabel>Recent work</SectionLabel>
-          <div className="mt-2 grid grid-cols-4 gap-1.5">
-            {thumbs.map((p) => (
-              <div
-                key={p.id}
-                className="relative aspect-square overflow-hidden rounded-lg"
-                style={{ border: "1px solid rgba(6,28,39,0.06)" }}
-              >
-                <img src={p.url} alt={p.alt} className="h-full w-full object-cover" loading="lazy" />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Services -------------------------------------------------- */}
-      {draft.services.length > 0 ? (
-        <div className="px-5 pt-5">
-          <SectionLabel>Services</SectionLabel>
-          <div className="mt-1">
-            {draft.services.map((s, i) => (
-              <div
-                key={s.id}
-                className="flex items-start justify-between gap-4 py-3"
-                style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
-              >
-                <div className="flex flex-col gap-0.5" style={{ flex: 1 }}>
-                  <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: NAVY }}>
-                    {s.name}
-                  </span>
-                  <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
-                    {formatDuration(s.durationMin)}
-                  </span>
-                </div>
-                <div style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
-                  ${s.priceUsd}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* About ----------------------------------------------------- */}
-      {draft.about.trim().length > 0 ? (
-        <div className="px-5 pt-5">
-          <SectionLabel>About</SectionLabel>
-          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85, lineHeight: 1.55, marginTop: 6 }}>
-            {draft.about}
-          </p>
-        </div>
-      ) : null}
-
-      {/* Reviews preview ------------------------------------------ */}
-      {reviews.length > 0 ? (
-        <div className="px-5 pt-5">
-          <div className="flex items-center justify-between">
-            <SectionLabel>Reviews</SectionLabel>
-            <div className="flex items-center gap-1">
-              <Star />
-              <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: NAVY }}>
-                {avg.toFixed(1)}
-              </span>
-              <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.55 }}>
-                ({reviews.length})
-              </span>
+function PreviewRecentWorkCard({ photos }: { photos: PortfolioPhoto[] }) {
+  return (
+    <ProfileCard>
+      <div className="px-5 py-4">
+        <SectionLabel>Recent work</SectionLabel>
+        <div className="mt-2 grid grid-cols-4 gap-1.5">
+          {photos.map((p) => (
+            <div
+              key={p.id}
+              className="relative aspect-square overflow-hidden rounded-lg"
+              style={{ border: "1px solid rgba(6,28,39,0.06)" }}
+            >
+              <img src={p.url} alt={p.alt} className="h-full w-full object-cover" loading="lazy" />
             </div>
-          </div>
-          <div className="mt-2">
-            {reviews.slice(0, 2).map((r, i) => (
-              <div
-                key={r.id}
-                className="py-3"
-                style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
-              >
-                <Stars count={r.rating} />
-                <p style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.85, lineHeight: 1.5, marginTop: 6 }}>
-                  {r.text}
-                </p>
-                <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.5, marginTop: 4, display: "inline-block" }}>
-                  {r.clientFirstInitial}. · {formatReviewDate(r.date)}
+          ))}
+        </div>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function PreviewServicesCard({ services }: { services: ProService[] }) {
+  return (
+    <ProfileCard>
+      <div className="px-5 py-4">
+        <SectionLabel>Services</SectionLabel>
+        <div className="mt-1">
+          {services.map((s, i) => (
+            <div
+              key={s.id}
+              className="flex items-start justify-between gap-4 py-3"
+              style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
+            >
+              <div className="flex flex-col gap-0.5" style={{ flex: 1 }}>
+                <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: NAVY }}>
+                  {s.name}
+                </span>
+                <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                  {formatDuration(s.durationMin)}
                 </span>
               </div>
-            ))}
+              <div style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+                ${s.priceUsd}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function PreviewAboutCard({ about }: { about: string }) {
+  return (
+    <ProfileCard>
+      <div className="px-5 py-4">
+        <SectionLabel>About</SectionLabel>
+        <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85, lineHeight: 1.55, marginTop: 6 }}>
+          {about}
+        </p>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function PreviewReviewsCard({ reviews }: { reviews: ProReview[] }) {
+  const avg = averageRating(reviews);
+  return (
+    <ProfileCard>
+      <div className="px-5 py-4">
+        <div className="flex items-center justify-between">
+          <SectionLabel>Reviews</SectionLabel>
+          <div className="flex items-center gap-1">
+            <Star />
+            <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: NAVY }}>
+              {avg.toFixed(1)}
+            </span>
+            <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.55 }}>
+              ({reviews.length})
+            </span>
           </div>
         </div>
-      ) : null}
+        <div className="mt-2">
+          {reviews.slice(0, 2).map((r, i) => (
+            <div
+              key={r.id}
+              className="py-3"
+              style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
+            >
+              <Stars count={r.rating} />
+              <p style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.85, lineHeight: 1.5, marginTop: 6 }}>
+                {r.text}
+              </p>
+              <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.5, marginTop: 4, display: "inline-block" }}>
+                {r.clientFirstInitial}. · {formatReviewDate(r.date)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ProfileCard>
+  );
+}
 
-      {/* Book CTA -------------------------------------------------- */}
-      <div className="px-5 pb-5 pt-5">
+function PreviewBookCard() {
+  return (
+    <ProfileCard>
+      <div className="px-5 py-4">
         <button
           type="button"
           disabled
