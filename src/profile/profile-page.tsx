@@ -1041,10 +1041,10 @@ function Chevron({ open }: { open: boolean }) {
 
 function ProfileHeaderCard({
   draft,
-  onEditHeadline,
+  onEdit,
 }: {
   draft: ProfileDraft;
-  onEditHeadline: () => void;
+  onEdit: () => void;
 }) {
   const p = draft;
   const showLicensedBadge = p.certificate === "verified";
@@ -1071,7 +1071,7 @@ function ProfileHeaderCard({
           </h2>
           <button
             type="button"
-            onClick={onEditHeadline}
+            onClick={onEdit}
             className="self-start transition-opacity active:opacity-60"
             style={{
               fontFamily: UI,
@@ -1107,7 +1107,7 @@ function ProfileHeaderCard({
         </div>
         <button
           type="button"
-          onClick={onEditHeadline}
+          onClick={onEdit}
           aria-label="Edit profile"
           className="flex shrink-0 items-center justify-center transition-opacity active:opacity-60"
           style={{
