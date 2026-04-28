@@ -29,6 +29,7 @@ import {
   AboutSheet,
   ServiceSheet,
   BaseLocationSheet,
+  CertificateSheet,
 } from "@/profile/edits/edit-sheets";
 
 /**
@@ -87,6 +88,7 @@ export function ProfilePage() {
   const [headlineOpen, setHeadlineOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [certificateOpen, setCertificateOpen] = useState(false);
   const [editingService, setEditingService] = useState<ProService | null>(null);
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
 
@@ -175,6 +177,11 @@ export function ProfilePage() {
           onEdit={() => setLocationOpen(true)}
         />
 
+        <CertificateCard
+          status={draft.certificate}
+          onEdit={() => setCertificateOpen(true)}
+        />
+
         {proState === "live" ? (
           <VisibilityCard
             visibility={draft.visibility}
@@ -192,6 +199,7 @@ export function ProfilePage() {
       <AboutSheet open={aboutOpen} onOpenChange={setAboutOpen} defaultValue={draft.about} />
       <BaseLocationSheet open={locationOpen} onOpenChange={setLocationOpen} draft={draft} />
       <ServiceSheet open={serviceSheetOpen} onOpenChange={setServiceSheetOpen} service={editingService} />
+      <CertificateSheet open={certificateOpen} onOpenChange={setCertificateOpen} status={draft.certificate} />
     </HomeShell>
   );
 }
