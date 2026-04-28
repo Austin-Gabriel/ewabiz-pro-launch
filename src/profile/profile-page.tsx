@@ -31,6 +31,12 @@ import {
   BaseLocationSheet,
   CertificateSheet,
 } from "@/profile/edits/edit-sheets";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 /**
  * Profile — editorial identity surface for the pro. Phase 1: Editing mode
@@ -97,6 +103,11 @@ export function ProfilePage() {
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [editingService, setEditingService] = useState<ProService | null>(null);
   const [serviceSheetOpen, setServiceSheetOpen] = useState(false);
+  // The pencil on the header now opens a single grouped "Edit profile"
+  // sheet (Storefront / How you work / Social / Account / Support style),
+  // matching the reference layout. Individual edit sheets are launched
+  // from rows inside that sheet.
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
   // binary done / not done. No percentage scoring.
@@ -158,45 +169,38 @@ export function ProfilePage() {
           <PausedBanner onResume={() => updateProfileDraft({ visibility: "live" })} />
         ) : null}
 
-        <ProfileHeaderCard draft={effectiveDraft} onEditHeadline={() => setHeadlineOpen(true)} />
+        <ProfileHeaderCard
+          draft={effectiveDraft}
+          onEdit={() => setEditSheetOpen(true)}
+        />
 
         <ProfileCompletionCard items={checklist} />
 
-        <PortfolioCard photos={portfolio} />
-
-        <ServicesCard
-          services={draft.services}
-          onAdd={() => openServiceSheet(null)}
-          onEdit={(s) => openServiceSheet(s)}
+        {/* Always show the client preview underneath so the pro sees
+         * exactly what their listing looks like to a customer. All
+         * editing happens inside the pencil sheet. */}
+        <ClientPreviewInline
+          draft={effectiveDraft}
+          portfolio={portfolio}
+          reviews={reviews}
         />
-
-        <AboutCard about={draft.about} onEdit={() => setAboutOpen(true)} />
-
-        <ReviewsCard reviews={reviews} />
-
-        <AvailabilityCard summary={draft.availabilitySummary} />
-
-        <BaseLocationCard
-          neighborhood={draft.neighborhood}
-          baseAddress={draft.baseAddress}
-          travelRadiusMi={draft.travelRadiusMi}
-          onEdit={() => setLocationOpen(true)}
-        />
-
-        <CertificateCard
-          status={certificate}
-          onEdit={() => setCertificateOpen(true)}
-        />
-
-        {proState === "live" ? (
-          <VisibilityCard
-            visibility={draft.visibility}
-            onChange={(v) => updateProfileDraft({ visibility: v })}
-          />
-        ) : null}
       </div>
 
       <ProfileBottomTabs />
+
+      {/* Grouped edit sheet — opened by the pencil on the header card. */}
+      <ProfileEditSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        draft={draft}
+        certificate={certificate}
+        proState={proState}
+        onOpenHeadline={() => { setEditSheetOpen(false); setHeadlineOpen(true); }}
+        onOpenAbout={() => { setEditSheetOpen(false); setAboutOpen(true); }}
+        onOpenLocation={() => { setEditSheetOpen(false); setLocationOpen(true); }}
+        onOpenCertificate={() => { setEditSheetOpen(false); setCertificateOpen(true); }}
+        onAddService={() => { setEditSheetOpen(false); openServiceSheet(null); }}
+      />
 
       {/* Edit sheets */}
       <HeadlineSheet open={headlineOpen} onOpenChange={setHeadlineOpen} defaultValue={draft.headline} />
