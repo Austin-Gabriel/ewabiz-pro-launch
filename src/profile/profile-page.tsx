@@ -679,6 +679,8 @@ function TikTokIcon() {
 /* ---------- Portfolio ---------- */
 
 function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
+  const navigate = useNavigate();
+  const goManage = () => void navigate({ to: "/profile/portfolio" });
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -688,7 +690,7 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
             type="button"
             className="transition-opacity active:opacity-50"
             style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-            onClick={() => { /* Phase 2: portfolio reorder */ }}
+            onClick={goManage}
           >
             Edit
           </button>
@@ -696,13 +698,13 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
       </div>
 
       {photos.length === 0 ? (
-        <PortfolioEmpty />
+        <PortfolioEmpty onAdd={goManage} />
       ) : (
         <div className="grid grid-cols-3 gap-1.5 p-3">
           <button
             type="button"
             aria-label="Add photo"
-            onClick={() => { /* Phase 2 */ }}
+            onClick={goManage}
             className="flex aspect-square items-center justify-center rounded-xl transition-all active:scale-[0.97]"
             style={{
               border: "1.5px dashed rgba(255,130,63,0.5)",
@@ -728,7 +730,7 @@ function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
   );
 }
 
-function PortfolioEmpty() {
+function PortfolioEmpty({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
       <div
@@ -753,7 +755,7 @@ function PortfolioEmpty() {
         type="button"
         className="rounded-full px-4 py-2"
         style={{ backgroundColor: ORANGE, color: NAVY, fontFamily: UI, fontSize: 13, fontWeight: 600 }}
-        onClick={() => { /* Phase 2 */ }}
+        onClick={onAdd}
       >
         Add photos
       </button>
@@ -763,7 +765,15 @@ function PortfolioEmpty() {
 
 /* ---------- Services ---------- */
 
-function ServicesCard({ services }: { services: ProService[] }) {
+function ServicesCard({
+  services,
+  onAdd,
+  onEdit,
+}: {
+  services: ProService[];
+  onAdd: () => void;
+  onEdit: (s: ProService) => void;
+}) {
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -772,7 +782,7 @@ function ServicesCard({ services }: { services: ProService[] }) {
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: ORANGE }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onAdd}
         >
           Add
         </button>
@@ -780,9 +790,14 @@ function ServicesCard({ services }: { services: ProService[] }) {
 
       {services.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
-          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
+          <button
+            type="button"
+            onClick={onAdd}
+            className="text-left transition-opacity active:opacity-60"
+            style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.55, fontStyle: "italic", background: "none", border: "none", padding: 0 }}
+          >
             Add the services you offer with prices and durations.
-          </p>
+          </button>
         </div>
       ) : (
         <div className="px-5 pb-2 pt-2">
@@ -794,7 +809,7 @@ function ServicesCard({ services }: { services: ProService[] }) {
               style={{
                 borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)",
               }}
-              onClick={() => { /* Phase 2 */ }}
+              onClick={() => onEdit(s)}
             >
               <div className="flex flex-col gap-1" style={{ flex: 1 }}>
                 <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
@@ -825,7 +840,7 @@ function formatDuration(min: number): string {
 
 /* ---------- About ---------- */
 
-function AboutCard({ about }: { about?: string }) {
+function AboutCard({ about, onEdit }: { about?: string; onEdit: () => void }) {
   return (
     <ProfileCard>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -834,7 +849,7 @@ function AboutCard({ about }: { about?: string }) {
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onEdit}
         >
           Edit
         </button>
@@ -847,7 +862,7 @@ function AboutCard({ about }: { about?: string }) {
         ) : (
           <button
             type="button"
-            onClick={() => { /* Phase 2 */ }}
+            onClick={onEdit}
             className="text-left transition-opacity active:opacity-60"
             style={{
               fontFamily: UI,
@@ -1004,10 +1019,12 @@ function BaseLocationCard({
   neighborhood,
   baseAddress,
   travelRadiusMi,
+  onEdit,
 }: {
   neighborhood: string;
   baseAddress: string;
   travelRadiusMi: number;
+  onEdit: () => void;
 }) {
   return (
     <ProfileCard>
@@ -1030,7 +1047,7 @@ function BaseLocationCard({
           type="button"
           className="transition-opacity active:opacity-50"
           style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-          onClick={() => { /* Phase 2 */ }}
+          onClick={onEdit}
         >
           Edit
         </button>
