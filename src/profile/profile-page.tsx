@@ -527,7 +527,6 @@ function ProfileHeaderCard({
             {p.headline || "Add a headline"}
           </button>
         </div>
-        </div>
 
         {showLicensedBadge ? (
           <div
