@@ -194,8 +194,6 @@ export function ProfilePage() {
             onChange={(v) => updateProfileDraft({ visibility: v })}
           />
         ) : null}
-
-        <SettingsLinkRow />
       </div>
 
       <ProfileBottomTabs />
@@ -429,74 +427,115 @@ function ClientPreview({
   reviews: ProReview[];
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-3">
-      <ClientHeaderCard draft={draft} reviews={reviews} />
-      {portfolio.length > 0 ? <ClientPortfolioCard photos={portfolio} /> : null}
-      {draft.services.length > 0 ? <ClientServicesCard services={draft.services} /> : null}
-      {draft.about.trim().length > 0 ? <ClientAboutCard about={draft.about} /> : null}
-      {reviews.length > 0 ? <ReviewsCard reviews={reviews} /> : null}
-      <ClientLocationCard
-        neighborhood={draft.neighborhood}
-        travelRadiusMi={draft.travelRadiusMi}
+    <div className="flex flex-1 flex-col gap-3 px-4 pb-6 pt-3">
+      <ExploreListingCard
+        draft={draft}
+        portfolio={portfolio}
+        reviews={reviews}
       />
     </div>
   );
 }
 
-function ClientHeaderCard({ draft, reviews }: { draft: ProfileDraft; reviews: ProReview[] }) {
-  const showLicensedBadge = draft.certificate === "verified";
+/**
+ * ExploreListingCard — what clients actually see in their explore feed and
+ * on a pro detail screen. Image-led, info-driven, no editorial chrome.
+ * Matches the language of a marketplace listing (Airbnb / Fresha style):
+ *   1. Hero photo (first portfolio image) with overlay name + neighborhood
+ *   2. Rating row + Licensed badge
+ *   3. Headline + chips
+ *   4. Services list, About, Reviews — all flat sections
+ *   5. Sticky-feeling Book button
+ */
+function ExploreListingCard({
+  draft,
+  portfolio,
+  reviews,
+}: {
+  draft: ProfileDraft;
+  portfolio: PortfolioPhoto[];
+  reviews: ProReview[];
+}) {
+  const hero = portfolio[0];
+  const thumbs = portfolio.slice(1, 5);
+  const showLicensed = draft.certificate === "verified";
   const avg = averageRating(reviews);
+
   return (
     <ProfileCard>
-      <div className="flex flex-col items-center gap-4 px-5 pb-5 pt-6 text-center">
-        <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
-        <div className="flex flex-col items-center gap-1.5">
-          <h2 style={{ fontFamily: UI, fontSize: 22, fontWeight: 600, color: NAVY, letterSpacing: "-0.01em" }}>
-            {draft.displayName}
-          </h2>
-          {draft.headline ? (
-            <span style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.7 }}>
-              {draft.headline}
+      {/* Hero ------------------------------------------------------- */}
+      <div className="relative" style={{ aspectRatio: "4 / 3", backgroundColor: "#F0EBD8" }}>
+        {hero ? (
+          <img src={hero.url} alt={hero.alt} className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+          </div>
+        )}
+        {/* gradient + overlay text */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0"
+          style={{
+            height: "55%",
+            background: "linear-gradient(to top, rgba(6,28,39,0.78) 0%, rgba(6,28,39,0) 100%)",
+          }}
+        />
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-4 pb-3">
+          <div className="flex flex-col" style={{ minWidth: 0 }}>
+            <h2 style={{ fontFamily: UI, fontSize: 20, fontWeight: 600, color: "#FFFFFF", letterSpacing: "-0.01em", lineHeight: 1.15 }}>
+              {draft.displayName}
+            </h2>
+            <span style={{ fontFamily: UI, fontSize: 12, color: "#FFFFFF", opacity: 0.85, marginTop: 2 }}>
+              {draft.neighborhood} · Travels {draft.travelRadiusMi} mi
             </span>
+          </div>
+          {reviews.length > 0 ? (
+            <div
+              className="flex items-center gap-1"
+              style={{
+                padding: "4px 8px",
+                borderRadius: 999,
+                backgroundColor: "rgba(255,255,255,0.95)",
+              }}
+            >
+              <Star />
+              <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 700, color: NAVY }}>
+                {avg.toFixed(1)}
+              </span>
+              <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.55 }}>
+                ({reviews.length})
+              </span>
+            </div>
           ) : null}
         </div>
-        {showLicensedBadge ? (
+      </div>
+
+      {/* Headline + badges ----------------------------------------- */}
+      <div className="flex flex-col gap-3 px-5 pt-4">
+        {draft.headline ? (
+          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85 }}>
+            {draft.headline}
+          </p>
+        ) : null}
+        {showLicensed ? (
           <div
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-1.5 self-start"
             style={{
-              padding: "5px 10px",
+              padding: "4px 10px",
               borderRadius: 999,
               backgroundColor: "rgba(255,130,63,0.12)",
               border: "1px solid rgba(255,130,63,0.30)",
             }}
           >
             <BagelIcon />
-            <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: ORANGE, letterSpacing: "0.02em" }}>
+            <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600, color: ORANGE }}>
               Licensed cosmetologist
             </span>
           </div>
         ) : null}
-        {reviews.length > 0 ? (
-          <div className="flex items-center gap-1.5">
-            <Star />
-            <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
-              {avg.toFixed(1)}
-            </span>
-            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
-              ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
-            </span>
-          </div>
-        ) : null}
-        <div className="flex flex-col items-center gap-0.5">
-          <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.75 }}>
-            {draft.neighborhood}
-          </div>
-          <div style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
-            Travels up to {draft.travelRadiusMi} mi
-          </div>
-        </div>
         {draft.specializations.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {draft.specializations.map((s) => (
               <span
                 key={s}
@@ -517,29 +556,113 @@ function ClientHeaderCard({ draft, reviews }: { draft: ProfileDraft; reviews: Pr
             ))}
           </div>
         ) : null}
-        {(draft.social.instagram || draft.social.tiktok) ? (
-          <div className="flex items-center gap-3 pt-1">
-            {draft.social.instagram ? (
-              <SocialLink label="Instagram" handle={draft.social.instagram} icon={<InstagramIcon />} />
-            ) : null}
-            {draft.social.tiktok ? (
-              <SocialLink label="TikTok" handle={draft.social.tiktok} icon={<TikTokIcon />} />
-            ) : null}
+      </div>
+
+      {/* More photos strip ---------------------------------------- */}
+      {thumbs.length > 0 ? (
+        <div className="px-5 pt-4">
+          <SectionLabel>Recent work</SectionLabel>
+          <div className="mt-2 grid grid-cols-4 gap-1.5">
+            {thumbs.map((p) => (
+              <div
+                key={p.id}
+                className="relative aspect-square overflow-hidden rounded-lg"
+                style={{ border: "1px solid rgba(6,28,39,0.06)" }}
+              >
+                <img src={p.url} alt={p.alt} className="h-full w-full object-cover" loading="lazy" />
+              </div>
+            ))}
           </div>
-        ) : null}
+        </div>
+      ) : null}
+
+      {/* Services -------------------------------------------------- */}
+      {draft.services.length > 0 ? (
+        <div className="px-5 pt-5">
+          <SectionLabel>Services</SectionLabel>
+          <div className="mt-1">
+            {draft.services.map((s, i) => (
+              <div
+                key={s.id}
+                className="flex items-start justify-between gap-4 py-3"
+                style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
+              >
+                <div className="flex flex-col gap-0.5" style={{ flex: 1 }}>
+                  <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: NAVY }}>
+                    {s.name}
+                  </span>
+                  <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+                    {formatDuration(s.durationMin)}
+                  </span>
+                </div>
+                <div style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+                  ${s.priceUsd}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* About ----------------------------------------------------- */}
+      {draft.about.trim().length > 0 ? (
+        <div className="px-5 pt-5">
+          <SectionLabel>About</SectionLabel>
+          <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85, lineHeight: 1.55, marginTop: 6 }}>
+            {draft.about}
+          </p>
+        </div>
+      ) : null}
+
+      {/* Reviews preview ------------------------------------------ */}
+      {reviews.length > 0 ? (
+        <div className="px-5 pt-5">
+          <div className="flex items-center justify-between">
+            <SectionLabel>Reviews</SectionLabel>
+            <div className="flex items-center gap-1">
+              <Star />
+              <span style={{ fontFamily: UI, fontSize: 12, fontWeight: 600, color: NAVY }}>
+                {avg.toFixed(1)}
+              </span>
+              <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.55 }}>
+                ({reviews.length})
+              </span>
+            </div>
+          </div>
+          <div className="mt-2">
+            {reviews.slice(0, 2).map((r, i) => (
+              <div
+                key={r.id}
+                className="py-3"
+                style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
+              >
+                <Stars count={r.rating} />
+                <p style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.85, lineHeight: 1.5, marginTop: 6 }}>
+                  {r.text}
+                </p>
+                <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.5, marginTop: 4, display: "inline-block" }}>
+                  {r.clientFirstInitial}. · {formatReviewDate(r.date)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Book CTA -------------------------------------------------- */}
+      <div className="px-5 pb-5 pt-5">
         <button
           type="button"
           disabled
-          className="mt-2 w-full rounded-full"
+          className="w-full rounded-full"
           style={{
             fontFamily: UI,
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: 600,
             color: NAVY,
             backgroundColor: ORANGE,
-            padding: "12px 16px",
+            padding: "13px 16px",
             border: "none",
-            opacity: 0.95,
             cursor: "default",
           }}
         >
@@ -550,92 +673,21 @@ function ClientHeaderCard({ draft, reviews }: { draft: ProfileDraft; reviews: Pr
   );
 }
 
-function ClientPortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Portfolio</CardTitle>
-      </div>
-      <div className="grid grid-cols-3 gap-1.5 p-3">
-        {photos.map((photo) => (
-          <div
-            key={photo.id}
-            className="relative aspect-square overflow-hidden rounded-xl"
-            style={{ border: "1px solid rgba(6,28,39,0.06)" }}
-          >
-            <img src={photo.url} alt={photo.alt} className="h-full w-full object-cover" loading="lazy" />
-          </div>
-        ))}
-      </div>
-    </ProfileCard>
-  );
-}
-
-function ClientServicesCard({ services }: { services: ProService[] }) {
-  return (
-    <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Services</CardTitle>
-      </div>
-      <div className="px-5 pb-2 pt-2">
-        {services.map((s, i) => (
-          <div
-            key={s.id}
-            className="flex w-full items-start justify-between gap-4 py-3.5"
-            style={{ borderTop: i === 0 ? "none" : "1px solid rgba(6,28,39,0.06)" }}
-          >
-            <div className="flex flex-col gap-1" style={{ flex: 1 }}>
-              <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
-                {s.name}
-              </span>
-              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
-                {formatDuration(s.durationMin)}
-              </span>
-            </div>
-            <div style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
-              ${s.priceUsd}
-            </div>
-          </div>
-        ))}
-      </div>
-    </ProfileCard>
-  );
-}
-
-function ClientAboutCard({ about }: { about: string }) {
-  return (
-    <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>About</CardTitle>
-      </div>
-      <div className="px-5 pb-5 pt-2">
-        <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.85, lineHeight: 1.55 }}>
-          {about}
-        </p>
-      </div>
-    </ProfileCard>
-  );
-}
-
-function ClientLocationCard({
-  neighborhood,
-  travelRadiusMi,
-}: {
-  neighborhood: string;
-  travelRadiusMi: number;
-}) {
-  return (
-    <ProfileCard>
-      <div className="flex flex-col gap-1.5 px-5 py-4">
-        <CardEyebrow>Service area</CardEyebrow>
-        <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
-          {neighborhood}
-        </span>
-        <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
-          Travels up to {travelRadiusMi} mi
-        </span>
-      </div>
-    </ProfileCard>
+    <span
+      style={{
+        fontFamily: UI,
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: "0.10em",
+        textTransform: "uppercase",
+        color: NAVY,
+        opacity: 0.5,
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -697,6 +749,57 @@ function CardTitle({ children }: { children: ReactNode }) {
     <h2 style={{ fontFamily: UI, fontSize: 16, fontWeight: 600, color: NAVY, letterSpacing: "-0.005em" }}>
       {children}
     </h2>
+  );
+}
+
+function CollapsibleHeader({
+  title,
+  count,
+  open,
+  onToggle,
+  rightAction,
+}: {
+  title: string;
+  count?: number;
+  open: boolean;
+  onToggle: () => void;
+  rightAction?: { label: string; onClick: () => void; accent?: boolean };
+}) {
+  return (
+    <div className="flex items-center justify-between px-5 pt-4 pb-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-2 transition-opacity active:opacity-70"
+        style={{ background: "transparent", border: "none", padding: 0 }}
+      >
+        <CardTitle>{title}</CardTitle>
+        {typeof count === "number" && count > 0 ? (
+          <span style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
+            {count}
+          </span>
+        ) : null}
+        <Chevron open={open} />
+      </button>
+      {rightAction ? (
+        <button
+          type="button"
+          onClick={rightAction.onClick}
+          className="transition-opacity active:opacity-50"
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            fontWeight: 600,
+            color: rightAction.accent ? ORANGE : NAVY,
+            opacity: rightAction.accent ? 1 : 0.6,
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          {rightAction.label}
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -1098,23 +1201,17 @@ function TikTokIcon() {
 function PortfolioCard({ photos }: { photos: PortfolioPhoto[] }) {
   const navigate = useNavigate();
   const goManage = () => void navigate({ to: "/profile/portfolio" });
+  const [open, setOpen] = useState(true);
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Portfolio</CardTitle>
-        {photos.length > 0 ? (
-          <button
-            type="button"
-            className="transition-opacity active:opacity-50"
-            style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY, opacity: 0.6 }}
-            onClick={goManage}
-          >
-            Edit
-          </button>
-        ) : null}
-      </div>
-
-      {photos.length === 0 ? (
+      <CollapsibleHeader
+        title="Portfolio"
+        count={photos.length}
+        open={open}
+        onToggle={() => setOpen((v) => !v)}
+        rightAction={photos.length > 0 ? { label: "Edit", onClick: goManage } : undefined}
+      />
+      {!open ? null : photos.length === 0 ? (
         <PortfolioEmpty onAdd={goManage} />
       ) : (
         <div className="grid grid-cols-3 gap-1.5 p-3">
@@ -1191,21 +1288,17 @@ function ServicesCard({
   onAdd: () => void;
   onEdit: (s: ProService) => void;
 }) {
+  const [open, setOpen] = useState(true);
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Services</CardTitle>
-        <button
-          type="button"
-          className="transition-opacity active:opacity-50"
-          style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: ORANGE }}
-          onClick={onAdd}
-        >
-          Add
-        </button>
-      </div>
-
-      {services.length === 0 ? (
+      <CollapsibleHeader
+        title="Services"
+        count={services.length}
+        open={open}
+        onToggle={() => setOpen((v) => !v)}
+        rightAction={{ label: "Add", onClick: onAdd, accent: true }}
+      />
+      {!open ? null : services.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
           <button
             type="button"
@@ -1302,25 +1395,37 @@ function AboutCard({ about, onEdit }: { about?: string; onEdit: () => void }) {
 function ReviewsCard({ reviews }: { reviews: ProReview[] }) {
   const visible = reviews.slice(0, 5);
   const avg = averageRating(reviews);
+  const [open, setOpen] = useState(true);
 
   return (
     <ProfileCard>
-      <div className="flex items-center justify-between px-5 pt-4">
-        <CardTitle>Reviews</CardTitle>
-        {reviews.length > 0 ? (
-          <div className="flex items-center gap-1.5">
-            <Star />
-            <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
-              {avg.toFixed(1)}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-5 pt-4 pb-3 text-left transition-opacity active:opacity-70"
+        style={{ background: "transparent", border: "none" }}
+      >
+        <div className="flex items-center gap-2">
+          <CardTitle>Reviews</CardTitle>
+          {reviews.length > 0 ? (
+            <span style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
+              {reviews.length}
             </span>
-            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
-              ({reviews.length})
-            </span>
-          </div>
-        ) : null}
-      </div>
-
-      {reviews.length === 0 ? (
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          {reviews.length > 0 ? (
+            <div className="flex items-center gap-1">
+              <Star />
+              <span style={{ fontFamily: UI, fontSize: 13, fontWeight: 600, color: NAVY }}>
+                {avg.toFixed(1)}
+              </span>
+            </div>
+          ) : null}
+          <Chevron open={open} />
+        </div>
+      </button>
+      {!open ? null : reviews.length === 0 ? (
         <div className="px-5 pb-5 pt-3">
           <p style={{ fontFamily: UI, fontSize: 14, color: NAVY, opacity: 0.6, lineHeight: 1.5 }}>
             Reviews appear here once clients leave them.
@@ -1617,33 +1722,9 @@ function VisibilityCard({
   );
 }
 
-/* ---------- Settings link ---------- */
-
-function SettingsLinkRow() {
-  return (
-    <Link
-      to="/settings"
-      className="block"
-      style={{ textDecoration: "none" }}
-    >
-      <ProfileCard>
-        <div className="flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <SettingsIcon />
-            <span style={{ fontFamily: UI, fontSize: 15, fontWeight: 600, color: NAVY }}>
-              Settings
-            </span>
-          </div>
-          <span aria-hidden style={{ color: NAVY, opacity: 0.4 }}>→</span>
-        </div>
-      </ProfileCard>
-    </Link>
-  );
-}
-
 function SettingsIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
     </svg>

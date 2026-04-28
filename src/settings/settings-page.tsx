@@ -21,6 +21,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   async function doSignOut() {
     setSigningOut(true);
@@ -63,8 +64,6 @@ export function SettingsPage() {
           <NavRow label="Lead time" rightLabel="2 hours" disabled />
           <DividerRow />
           <NavRow label="Cancellation window" rightLabel="24 hours" disabled />
-          <DividerRow />
-          <NavRow label="Deposit policy" rightLabel="None" disabled />
         </Group>
 
         {/* Payouts and tax (route, don't rebuild) ----------------------- */}
@@ -94,6 +93,11 @@ export function SettingsPage() {
           <NavRow label="Terms of service" disabled />
           <DividerRow />
           <NavRow label="Privacy policy" disabled />
+          <DividerRow />
+          <DangerRow
+            label="Delete account"
+            onClick={() => setConfirmDeleteOpen(true)}
+          />
         </Group>
 
         {/* Danger zone -------------------------------------------------- */}
@@ -118,6 +122,15 @@ export function SettingsPage() {
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             setConfirmOpen(false);
+            void doSignOut();
+          }}
+        />
+      ) : null}
+      {confirmDeleteOpen ? (
+        <ConfirmDeleteAccount
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={() => {
+            setConfirmDeleteOpen(false);
             void doSignOut();
           }}
         />
@@ -413,6 +426,84 @@ function ConfirmSignOut({ onCancel, onConfirm }: { onCancel: () => void; onConfi
             }}
           >
             Sign out
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full rounded-full transition-opacity active:opacity-60"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+              color: NAVY,
+              backgroundColor: "transparent",
+              padding: "13px 16px",
+              border: "1px solid rgba(6,28,39,0.12)",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmDeleteAccount({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ backgroundColor: "rgba(6,28,39,0.45)" }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md"
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: "20px 20px 28px",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="mx-auto mb-4"
+          style={{ width: 36, height: 4, borderRadius: 999, backgroundColor: "rgba(6,28,39,0.15)" }}
+        />
+        <h3 style={{ fontFamily: UI, fontSize: 17, fontWeight: 600, color: NAVY, textAlign: "center" }}>
+          Delete your account?
+        </h3>
+        <p
+          style={{
+            fontFamily: UI,
+            fontSize: 13,
+            color: NAVY,
+            opacity: 0.65,
+            textAlign: "center",
+            marginTop: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          This will permanently remove your profile, bookings, and earnings history. This can&rsquo;t be undone.
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="w-full rounded-full transition-opacity active:opacity-80"
+            style={{
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              backgroundColor: DANGER,
+              padding: "13px 16px",
+              border: "none",
+            }}
+          >
+            Delete account
           </button>
           <button
             type="button"
