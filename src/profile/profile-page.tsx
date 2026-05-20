@@ -1782,50 +1782,6 @@ function SettingsIcon() {
   );
 }
 
-/* ---------- Inline client preview (shown directly on the editing screen) -- */
-
-function ClientPreviewInline({
-  draft,
-  portfolio,
-  reviews,
-}: {
-  draft: ProfileDraft;
-  portfolio: PortfolioPhoto[];
-  reviews: ProReview[];
-}) {
-  return (
-    <div className="flex flex-col gap-3 pt-1">
-      <div
-        style={{
-          fontFamily: UI,
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.10em",
-          textTransform: "uppercase",
-          color: "currentColor",
-          opacity: 0.55,
-          paddingLeft: 4,
-        }}
-      >
-        Client preview
-      </div>
-      <PreviewHeroCard draft={draft} portfolio={portfolio} reviews={reviews} />
-      <PreviewIdentityCard draft={draft} />
-      {portfolio.length > 1 ? (
-        <PreviewRecentWorkCard photos={portfolio.slice(1, 5)} />
-      ) : null}
-      {draft.services.length > 0 ? (
-        <PreviewServicesCard services={draft.services} />
-      ) : null}
-      {draft.about.trim().length > 0 ? (
-        <PreviewAboutCard about={draft.about} />
-      ) : null}
-      {reviews.length > 0 ? (
-        <PreviewReviewsCard reviews={reviews} />
-      ) : null}
-    </div>
-  );
-}
 
 /* ---------- Profile edit sheet (opened by the header pencil) -------------- */
 
