@@ -2185,8 +2185,6 @@ function ProfileEditSheet({
   };
 
   const certMeta = certificateMeta(certificate);
-  const socialsRight =
-    draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect";
 
   async function handleSignOut() {
     setSigningOut(true);
