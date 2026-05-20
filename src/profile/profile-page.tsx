@@ -1304,16 +1304,46 @@ function IdentityCard({
   draft,
   reviews,
   onEdit,
+  onAvatarTap,
 }: {
   draft: ProfileDraft;
   reviews: ProReview[];
   onEdit: () => void;
+  onAvatarTap: () => void;
 }) {
   const avg = reviews.length > 0 ? averageRating(reviews) : 0;
   return (
     <ProfileCard>
       <div className="flex items-center gap-4 px-5 py-5">
-        <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+        <button
+          type="button"
+          onClick={onAvatarTap}
+          aria-label={draft.avatarUrl ? "Change profile photo" : "Add profile photo"}
+          className="relative shrink-0 rounded-full transition-opacity active:opacity-70"
+          style={{ background: "transparent", border: "none", padding: 0 }}
+        >
+          <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+          <span
+            aria-hidden
+            className="absolute flex items-center justify-center"
+            style={{
+              right: -2,
+              bottom: -2,
+              width: 28,
+              height: 28,
+              borderRadius: 999,
+              backgroundColor: ORANGE,
+              color: NAVY,
+              border: "2px solid #FFFFFF",
+              boxShadow: "0 2px 6px rgba(6,28,39,0.15)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </span>
+        </button>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2
             style={{
