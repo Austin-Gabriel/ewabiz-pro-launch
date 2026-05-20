@@ -2585,6 +2585,7 @@ function SheetRow({
   right,
   onClick,
   disabled,
+  comingSoon,
 }: {
   icon: ReactNode;
   title: string;
@@ -2592,12 +2593,14 @@ function SheetRow({
   right?: string;
   onClick?: () => void;
   disabled?: boolean;
+  comingSoon?: boolean;
 }) {
+  const isDisabled = disabled || comingSoon;
   return (
     <button
       type="button"
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
       className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60 disabled:cursor-default"
       style={{ background: "transparent", border: "none" }}
     >
@@ -2628,7 +2631,9 @@ function SheetRow({
           </span>
         ) : null}
       </span>
-      {right ? (
+      {comingSoon ? (
+        <ComingSoonPill />
+      ) : right ? (
         <span
           style={{
             fontFamily: UI,
@@ -2649,6 +2654,29 @@ function SheetRow({
         </span>
       )}
     </button>
+  );
+}
+
+export function ComingSoonPill() {
+  return (
+    <span
+      style={{
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        color: NAVY,
+        opacity: 0.7,
+        backgroundColor: "rgba(6,28,39,0.08)",
+        padding: "3px 8px",
+        borderRadius: 999,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      Coming soon
+    </span>
   );
 }
 
