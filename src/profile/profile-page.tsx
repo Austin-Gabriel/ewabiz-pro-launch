@@ -2321,14 +2321,14 @@ function ProfileEditSheet({
               icon={<ClockIcon />}
               title="Booking rules"
               subtitle="2 hr prep · 24 hr lead"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<ShieldIcon />}
               title="Cancellation policy"
               subtitle="Moderate"
-              disabled
+              comingSoon
             />
           </SheetGroup>
 
@@ -2337,7 +2337,7 @@ function ProfileEditSheet({
               icon={<UserIcon />}
               title="Personal info"
               subtitle={auth.email ?? "Name, email, phone"}
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
@@ -2366,7 +2366,7 @@ function ProfileEditSheet({
               icon={<BellIcon />}
               title="Notifications"
               subtitle="Push, email, SMS"
-              disabled
+              comingSoon
             />
           </SheetGroup>
 
@@ -2375,29 +2375,28 @@ function ProfileEditSheet({
               icon={<LinkIcon />}
               title="Connect socials"
               subtitle="Share your work"
-              right={socialsRight}
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<GiftIcon />}
               title="Refer a pro"
               subtitle="Earn $50 per referral"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<HelpIcon />}
               title="Help & support"
               subtitle="FAQs and contact"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<SunIcon />}
               title="App appearance"
               subtitle="System"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
