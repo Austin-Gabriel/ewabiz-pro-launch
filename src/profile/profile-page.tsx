@@ -178,6 +178,7 @@ export function ProfilePage() {
           draft={effectiveDraft}
           reviews={reviews}
           onEdit={() => setEditSheetOpen(true)}
+          onAvatarTap={() => setAvatarSheetOpen(true)}
         />
 
         <OverviewGroup title="Storefront">
@@ -268,6 +269,12 @@ export function ProfilePage() {
         onOpenLocation={() => { setEditSheetOpen(false); setLocationOpen(true); }}
         onOpenCertificate={() => { setEditSheetOpen(false); setCertificateOpen(true); }}
         onAddService={() => { setEditSheetOpen(false); openServiceSheet(null); }}
+      />
+
+      <AvatarUploadSheet
+        open={avatarSheetOpen}
+        onOpenChange={setAvatarSheetOpen}
+        hasAvatar={Boolean(draft.avatarUrl)}
       />
 
       {/* Edit sheets */}
