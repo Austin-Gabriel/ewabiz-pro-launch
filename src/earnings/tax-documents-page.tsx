@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   earningsForDensity,
   formatMoney,
@@ -14,6 +14,14 @@ import {
 } from "./earnings-shell";
 import { taxYearToDate } from "./earnings-aggregates";
 import { downloadCsv } from "./csv-export";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 
 const NAVY = EARNINGS_NAVY;
 const UI = EARNINGS_UI;
@@ -57,6 +65,7 @@ const THRESHOLD = 600;
 
 export function TaxDocumentsPage() {
   const { state: dev } = useDevState();
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const events = useMemo(
     () => earningsForDensity(densityFromDev(dev.dataDensity)),
     [dev.dataDensity],
@@ -100,7 +109,12 @@ export function TaxDocumentsPage() {
         <EarningsCard>
           <div className="flex flex-col">
             {years.map((y, i) => (
-              <YearRow key={y.year} summary={y} divider={i < years.length - 1} />
+              <YearRow
+                key={y.year}
+                summary={y}
+                divider={i < years.length - 1}
+                onDownload={() => setComingSoonOpen(true)}
+              />
             ))}
           </div>
         </EarningsCard>
@@ -126,6 +140,7 @@ export function TaxDocumentsPage() {
           </div>
         </div>
       </EarningsCard>
+      <ComingSoon1099Sheet open={comingSoonOpen} onOpenChange={setComingSoonOpen} />
     </EarningsSubShell>
   );
 }
@@ -303,13 +318,21 @@ function OtherReportsCard({ events }: { events: EarningEvent[] }) {
   );
 }
 
-function YearRow({ summary, divider }: { summary: YearSummary; divider: boolean }) {
+function YearRow({
+  summary,
+  divider,
+  onDownload,
+}: {
+  summary: YearSummary;
+  divider: boolean;
+  onDownload: () => void;
+}) {
   const eligible = summary.gross >= THRESHOLD;
   return (
     <button
       type="button"
       disabled={!eligible}
-      onClick={() => downloadStub1099(summary)}
+      onClick={onDownload}
       className="flex items-center justify-between transition-colors active:bg-black/[0.03]"
       style={{
         padding: "14px 16px",
