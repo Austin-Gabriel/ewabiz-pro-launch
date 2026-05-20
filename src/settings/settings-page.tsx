@@ -4,6 +4,7 @@ import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { useAuth } from "@/auth/auth-context";
 import { useProfileDraft, updateProfileDraft } from "@/profile/profile-draft-store";
+import { ComingSoonPill } from "@/profile/profile-page";
 
 /**
  * Settings — industrial, functional account hub. Stripe-like grouped rows.
@@ -45,7 +46,7 @@ export function SettingsPage() {
           <DividerRow />
           <NavRow label="Change password" onClick={() => navigate({ to: "/login" })} />
           <DividerRow />
-          <NavRow label="Two-factor authentication" rightLabel="Off" disabled />
+          <NavRow label="Two-factor authentication" comingSoon />
         </Group>
 
         {/* Notifications ------------------------------------------------- */}
@@ -61,9 +62,9 @@ export function SettingsPage() {
 
         {/* Booking preferences ------------------------------------------ */}
         <Group title="Booking preferences">
-          <NavRow label="Lead time" rightLabel="2 hours" disabled />
+          <NavRow label="Lead time" comingSoon />
           <DividerRow />
-          <NavRow label="Cancellation window" rightLabel="24 hours" disabled />
+          <NavRow label="Cancellation window" comingSoon />
         </Group>
 
         {/* Payouts and tax (route, don't rebuild) ----------------------- */}
@@ -81,18 +82,18 @@ export function SettingsPage() {
             onChange={(on) => updateProfileDraft({ visibility: on ? "live" : "paused" })}
           />
           <DividerRow />
-          <NavRow label="Blocked clients" rightLabel="0" disabled />
+          <NavRow label="Blocked clients" comingSoon />
         </Group>
 
         {/* Support ------------------------------------------------------ */}
         <Group title="Support">
-          <NavRow label="Help center" disabled />
+          <NavRow label="Help center" comingSoon />
           <DividerRow />
-          <NavRow label="Contact support" disabled />
+          <NavRow label="Contact support" comingSoon />
           <DividerRow />
-          <NavRow label="Terms of service" disabled />
+          <NavRow label="Terms of service" comingSoon />
           <DividerRow />
-          <NavRow label="Privacy policy" disabled />
+          <NavRow label="Privacy policy" comingSoon />
           <DividerRow />
           <DangerRow
             label="Delete account"
@@ -236,33 +237,38 @@ function NavRow({
   rightLabel,
   onClick,
   disabled,
+  comingSoon,
 }: {
   label: string;
   rightLabel?: string;
   onClick?: () => void;
   disabled?: boolean;
+  comingSoon?: boolean;
 }) {
+  const isDisabled = disabled || comingSoon;
   return (
     <button
       type="button"
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
       className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60"
       style={{
         background: "transparent",
         border: "none",
-        cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.55 : 1,
+        cursor: isDisabled ? "default" : "pointer",
+        opacity: 1,
       }}
     >
       <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 500, color: NAVY }}>{label}</span>
       <div className="flex items-center gap-2">
-        {rightLabel ? (
+        {comingSoon ? (
+          <ComingSoonPill />
+        ) : rightLabel ? (
           <span style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.55 }}>
             {rightLabel}
           </span>
         ) : null}
-        <Chevron />
+        {comingSoon ? null : <Chevron />}
       </div>
     </button>
   );
