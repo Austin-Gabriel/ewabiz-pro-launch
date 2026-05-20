@@ -147,18 +147,11 @@ export function ProfilePage() {
   if (mode === "preview") {
     return (
       <HomeShell>
-        <OnlineModeStrip />
-        <ActiveBookingStrip />
-        <PageHeader
-          mode={mode}
-          onModeChange={setMode}
-          onEdit={() => setEditSheetOpen(true)}
-        />
-        <PreviewStrip onExit={() => setMode("editing")} />
         <ClientPreview
           draft={effectiveDraft}
           portfolio={portfolio}
           reviews={reviews}
+          onExit={() => setMode("editing")}
         />
         <ProfileBottomTabs />
       </HomeShell>
