@@ -822,23 +822,7 @@ function EarningsGoalInner({
         boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 16px 32px -20px rgba(6,28,39,0.25)",
       }}
     >
-      <div className="flex items-start justify-between">
-        <Eyebrow>Today</Eyebrow>
-        <button
-          type="button"
-          aria-label="Edit weekly goal"
-          className="flex items-center justify-center rounded-full transition-opacity active:opacity-60"
-          style={{
-            width: 32,
-            height: 32,
-            border: "1px solid rgba(6,28,39,0.12)",
-            color: text,
-            opacity: 0.7,
-          }}
-        >
-          <EditIcon size={13} />
-        </button>
-      </div>
+      <Eyebrow>Today</Eyebrow>
 
       <div
         className="mt-1"
