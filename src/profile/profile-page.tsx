@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
@@ -108,6 +109,9 @@ export function ProfilePage() {
   // sheet that holds every administrative row. The main Profile surface
   // stays focused on storefront overview rows only.
   const [editSheetOpen, setEditSheetOpen] = useState(false);
+  // Avatar upload action sheet — tapping the avatar in the IdentityCard
+  // opens this; choosing a source assigns a mock photo URL to the draft.
+  const [avatarSheetOpen, setAvatarSheetOpen] = useState(false);
 
   // Profile completion checklist — derived from current data. Each item is
   // binary done / not done. No percentage scoring.
