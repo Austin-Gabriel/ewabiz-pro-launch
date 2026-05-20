@@ -424,6 +424,54 @@ function EmptyState() {
   );
 }
 
+function ComingSoon1099Sheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl border-0 p-0"
+        style={{ backgroundColor: "#FFFFFF", color: NAVY }}
+      >
+        <SheetHeader className="px-5 pb-2 pt-5 text-left">
+          <SheetTitle style={{ fontFamily: UI, fontSize: 18, fontWeight: 600, color: NAVY }}>
+            Coming soon
+          </SheetTitle>
+          <SheetDescription
+            style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.7, lineHeight: 1.5 }}
+          >
+            1099 downloads will be available before tax season. We&rsquo;ll email you the moment your form is ready.
+          </SheetDescription>
+        </SheetHeader>
+        <SheetFooter
+          className="border-t px-5 py-4"
+          style={{ borderColor: "rgba(6,28,39,0.08)" }}
+        >
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="w-full rounded-full px-5 py-3 transition-opacity active:opacity-80"
+            style={{
+              backgroundColor: "#FF823F",
+              color: NAVY,
+              fontFamily: UI,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Got it
+          </button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 /* ---------- Stub PDF generation ----------
  *
  * Builds a minimal, valid single-page PDF in pure JS — no library dependency.
