@@ -2449,3 +2449,529 @@ function SunIcon() {
     </svg>
   );
 }
+
+/* ============================================================ */
+/* Client preview — mirrors the customer-facing pro profile.    */
+/* Differences from the live customer view: no Book CTA, no     */
+/* auto-accept indicator, no favorite heart, no Online/active   */
+/* booking strips, no pro PageHeader. Back chevron exits        */
+/* preview; share is functional.                                */
+/* ============================================================ */
+
+const PREVIEW_BOOKINGS_COUNT = 99;
+const PREVIEW_YEARS = 1;
+
+function ClientPreview({
+  draft,
+  portfolio,
+  reviews,
+  onExit,
+}: {
+  draft: ProfileDraft;
+  portfolio: PortfolioPhoto[];
+  reviews: ProReview[];
+  onExit: () => void;
+}) {
+  const showServicesSeeAll = draft.services.length > 3;
+  const showPortfolioSeeAll = portfolio.length > 4;
+  const showReviewsSeeAll = reviews.length > 3;
+
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const shareData = {
+      title: draft.displayName,
+      text: `${draft.displayName} on Ewà`,
+      url,
+    };
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      /* user cancelled or share failed — fall through to clipboard */
+    }
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast("Profile link copied");
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    toast("Sharing isn’t available here");
+  }
+
+  return (
+    <div className="flex flex-1 flex-col" style={{ backgroundColor: "#F0EBD8" }}>
+      <PreviewHero
+        photo={portfolio[0]}
+        onExit={onExit}
+        onShare={() => void handleShare()}
+      />
+      <div className="relative -mt-12 flex flex-col gap-5 px-4 pb-8">
+        <PreviewIdentityCard draft={draft} reviews={reviews} />
+        {draft.services.length > 0 ? (
+          <PreviewSection title="Services" seeAll={showServicesSeeAll}>
+            <div className="flex flex-col gap-2.5">
+              {draft.services.slice(0, 3).map((s) => (
+                <PreviewServiceCard key={s.id} service={s} />
+              ))}
+            </div>
+          </PreviewSection>
+        ) : null}
+        {portfolio.length > 0 ? (
+          <PreviewSection title="Portfolio" seeAll={showPortfolioSeeAll}>
+            <div className="grid grid-cols-4 gap-1.5">
+              {portfolio.slice(0, 4).map((p) => (
+                <div
+                  key={p.id}
+                  className="relative aspect-square overflow-hidden rounded-xl"
+                  style={{ border: "1px solid rgba(6,28,39,0.06)" }}
+                >
+                  <img src={p.url} alt={p.alt} className="h-full w-full object-cover" loading="lazy" />
+                </div>
+              ))}
+            </div>
+          </PreviewSection>
+        ) : null}
+        {reviews.length > 0 ? (
+          <PreviewSection title="Reviews" seeAll={showReviewsSeeAll}>
+            <div className="flex flex-col gap-2.5">
+              {reviews.slice(0, 3).map((r) => (
+                <PreviewReviewCard key={r.id} review={r} />
+              ))}
+            </div>
+          </PreviewSection>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function PreviewHero({
+  photo,
+  onExit,
+  onShare,
+}: {
+  photo?: PortfolioPhoto;
+  onExit: () => void;
+  onShare: () => void;
+}) {
+  return (
+    <div className="relative w-full" style={{ aspectRatio: "1 / 1", backgroundColor: "#F0EBD8" }}>
+      {photo ? (
+        <img src={photo.url} alt={photo.alt} className="absolute inset-0 h-full w-full object-cover" />
+      ) : null}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0"
+        style={{
+          height: "30%",
+          background: "linear-gradient(to bottom, rgba(6,28,39,0.45) 0%, rgba(6,28,39,0) 100%)",
+        }}
+      />
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 pt-4">
+        <HeroCircleButton ariaLabel="Exit preview" onClick={onExit}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </HeroCircleButton>
+        <HeroCircleButton ariaLabel="Share profile" onClick={onShare}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4" />
+          </svg>
+        </HeroCircleButton>
+      </div>
+    </div>
+  );
+}
+
+function HeroCircleButton({
+  ariaLabel,
+  onClick,
+  children,
+}: {
+  ariaLabel: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className="flex items-center justify-center transition-opacity active:opacity-70"
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 999,
+        backgroundColor: "rgba(255,255,255,0.92)",
+        color: NAVY,
+        border: "none",
+        boxShadow: "0 2px 8px rgba(6,28,39,0.18)",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PreviewIdentityCard({
+  draft,
+  reviews,
+}: {
+  draft: ProfileDraft;
+  reviews: ProReview[];
+}) {
+  const avg = reviews.length > 0 ? averageRating(reviews) : 0;
+  const handle = (draft.social.instagram || draft.displayName.toLowerCase().replace(/\s+/g, ""));
+  const specialty = draft.headline || (draft.specializations[0] ?? "Specialist");
+  const verified = draft.certificate === "verified";
+  const hashtags = draft.specializations.slice(0, 3).map((s) => `#${s.toLowerCase().replace(/\s+/g, "")}`);
+  return (
+    <ProfileCard>
+      <div className="flex flex-col gap-3 px-5 pb-5 pt-5">
+        <div className="flex items-start gap-4">
+          <div className="relative shrink-0">
+            <Avatar initials={draft.initials} avatarUrl={draft.avatarUrl} />
+            {verified ? (
+              <span
+                aria-label="Verified"
+                className="absolute flex items-center justify-center"
+                style={{
+                  right: -2,
+                  bottom: -2,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  backgroundColor: ORANGE,
+                  color: "#FFFFFF",
+                  border: "2px solid #FFFFFF",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+              </span>
+            ) : null}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h2
+              style={{
+                fontFamily: UI,
+                fontSize: 20,
+                fontWeight: 700,
+                color: NAVY,
+                letterSpacing: "-0.01em",
+                lineHeight: 1.15,
+              }}
+            >
+              {draft.displayName}
+            </h2>
+            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6 }}>
+              @{handle} — {specialty}
+            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {reviews.length > 0 ? (
+                <span className="flex items-center gap-1" style={{ fontFamily: UI, fontSize: 12, color: NAVY }}>
+                  <Star />
+                  <span style={{ fontWeight: 700 }}>{avg.toFixed(1)}</span>
+                  <span style={{ opacity: 0.55 }}>({reviews.length})</span>
+                </span>
+              ) : null}
+              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY }}>
+                <span style={{ fontWeight: 700 }}>{PREVIEW_BOOKINGS_COUNT}</span>
+                <span style={{ opacity: 0.55 }}> bookings</span>
+              </span>
+              <span style={{ fontFamily: UI, fontSize: 12, color: NAVY }}>
+                <span style={{ fontWeight: 700 }}>{PREVIEW_YEARS} yr</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        {draft.about.trim().length > 0 ? (
+          <p style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.85, lineHeight: 1.5 }}>
+            {draft.about}
+          </p>
+        ) : null}
+        {hashtags.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {hashtags.map((h) => (
+              <span key={h} style={{ fontFamily: UI, fontSize: 13, fontWeight: 500, color: ORANGE }}>
+                {h}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <div
+          className="flex items-center gap-1.5 self-start"
+          style={{
+            padding: "5px 11px",
+            borderRadius: 999,
+            backgroundColor: "rgba(6,28,39,0.85)",
+            color: "#FFFFFF",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z" />
+            <circle cx="12" cy="9" r="2.5" />
+          </svg>
+          <span style={{ fontFamily: UI, fontSize: 11, fontWeight: 600 }}>
+            {draft.neighborhood}
+          </span>
+        </div>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function PreviewSection({
+  title,
+  seeAll,
+  children,
+}: {
+  title: string;
+  seeAll: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between px-1">
+        <h3 style={{ fontFamily: UI, fontSize: 15, fontWeight: 700, color: NAVY, letterSpacing: "-0.005em" }}>
+          {title}
+        </h3>
+        {seeAll ? (
+          <span
+            aria-disabled
+            style={{
+              fontFamily: UI,
+              fontSize: 13,
+              fontWeight: 600,
+              color: ORANGE,
+            }}
+          >
+            See all
+          </span>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function PreviewServiceCard({ service }: { service: ProService }) {
+  return (
+    <ProfileCard>
+      <div className="flex items-start justify-between gap-4 px-4 py-3.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span style={{ fontFamily: UI, fontSize: 14, fontWeight: 600, color: NAVY }}>
+            {service.name}
+          </span>
+          {service.description ? (
+            <span style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.6, lineHeight: 1.4 }}>
+              {service.description}
+            </span>
+          ) : null}
+          <span className="mt-0.5 flex items-center gap-1" style={{ fontFamily: UI, fontSize: 12, color: NAVY, opacity: 0.55 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+            {formatDuration(service.durationMin)}
+          </span>
+        </div>
+        <div className="flex shrink-0 flex-col items-end">
+          <span
+            style={{
+              fontFamily: UI,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.10em",
+              textTransform: "uppercase",
+              color: NAVY,
+              opacity: 0.5,
+            }}
+          >
+            From
+          </span>
+          <span style={{ fontFamily: UI, fontSize: 16, fontWeight: 700, color: NAVY }}>
+            ${service.priceUsd}
+          </span>
+        </div>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function PreviewReviewCard({ review }: { review: ProReview }) {
+  return (
+    <ProfileCard>
+      <div className="flex flex-col gap-2 px-4 py-3.5">
+        <div className="flex items-center justify-between">
+          <Stars count={review.rating} />
+          <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.5 }}>
+            {formatReviewDate(review.date)}
+          </span>
+        </div>
+        <p style={{ fontFamily: UI, fontSize: 13, color: NAVY, opacity: 0.85, lineHeight: 1.5 }}>
+          {review.text}
+        </p>
+        <span style={{ fontFamily: UI, fontSize: 11, color: NAVY, opacity: 0.55 }}>
+          {review.clientFirstInitial}.
+        </span>
+      </div>
+    </ProfileCard>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+/* ============================================================ */
+/* Avatar upload action sheet                                   */
+/* ============================================================ */
+
+const MOCK_AVATAR_SEEDS = [
+  "studio-1", "studio-2", "studio-3", "studio-4",
+  "studio-5", "studio-6", "studio-7", "studio-8",
+];
+
+function mockAvatarUrl(): string {
+  const seed = MOCK_AVATAR_SEEDS[Math.floor(Math.random() * MOCK_AVATAR_SEEDS.length)];
+  return `https://picsum.photos/seed/${seed}-${Date.now()}/400/400`;
+}
+
+function AvatarUploadSheet({
+  open,
+  onOpenChange,
+  hasAvatar,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  hasAvatar: boolean;
+}) {
+  const cameraRef = useRef<HTMLInputElement | null>(null);
+  const libraryRef = useRef<HTMLInputElement | null>(null);
+
+  function readFileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function onPicked(files: FileList | null) {
+    const file = files?.[0];
+    if (file) {
+      try {
+        const url = await readFileToDataUrl(file);
+        updateProfileDraft({ avatarUrl: url });
+      } catch {
+        updateProfileDraft({ avatarUrl: mockAvatarUrl() });
+      }
+    } else {
+      updateProfileDraft({ avatarUrl: mockAvatarUrl() });
+    }
+    onOpenChange(false);
+  }
+
+  function remove() {
+    updateProfileDraft({ avatarUrl: undefined });
+    onOpenChange(false);
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl border-0 p-0"
+        style={{ backgroundColor: "#FFFFFF", color: NAVY }}
+      >
+        <SheetHeader className="px-5 pb-1 pt-5 text-left">
+          <SheetTitle style={{ fontFamily: UI, fontSize: 18, fontWeight: 600, color: NAVY }}>
+            Profile photo
+          </SheetTitle>
+        </SheetHeader>
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => void onPicked(e.target.files)}
+        />
+        <input
+          ref={libraryRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => void onPicked(e.target.files)}
+        />
+        <div className="flex flex-col gap-1 px-3 pb-3 pt-2">
+          <AvatarSheetRow
+            label="Take photo"
+            onClick={() => cameraRef.current?.click()}
+          />
+          <AvatarSheetRow
+            label="Choose from library"
+            onClick={() => libraryRef.current?.click()}
+          />
+          {hasAvatar ? (
+            <AvatarSheetRow
+              label="Remove photo"
+              destructive
+              onClick={remove}
+            />
+          ) : null}
+        </div>
+        <div className="border-t px-3 py-3" style={{ borderColor: "rgba(6,28,39,0.08)" }}>
+          <AvatarSheetRow
+            label="Cancel"
+            onClick={() => onOpenChange(false)}
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function AvatarSheetRow({
+  label,
+  onClick,
+  destructive,
+}: {
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-xl px-4 py-3.5 text-center transition-opacity active:opacity-60"
+      style={{
+        fontFamily: UI,
+        fontSize: 15,
+        fontWeight: 600,
+        color: destructive ? "#DC2626" : NAVY,
+        backgroundColor: "transparent",
+        border: "none",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
