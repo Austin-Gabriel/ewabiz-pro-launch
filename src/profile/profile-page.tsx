@@ -2185,8 +2185,6 @@ function ProfileEditSheet({
   };
 
   const certMeta = certificateMeta(certificate);
-  const socialsRight =
-    draft.social.instagram || draft.social.tiktok ? "Connected" : "Connect";
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -2321,14 +2319,14 @@ function ProfileEditSheet({
               icon={<ClockIcon />}
               title="Booking rules"
               subtitle="2 hr prep · 24 hr lead"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<ShieldIcon />}
               title="Cancellation policy"
               subtitle="Moderate"
-              disabled
+              comingSoon
             />
           </SheetGroup>
 
@@ -2337,7 +2335,7 @@ function ProfileEditSheet({
               icon={<UserIcon />}
               title="Personal info"
               subtitle={auth.email ?? "Name, email, phone"}
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
@@ -2366,7 +2364,7 @@ function ProfileEditSheet({
               icon={<BellIcon />}
               title="Notifications"
               subtitle="Push, email, SMS"
-              disabled
+              comingSoon
             />
           </SheetGroup>
 
@@ -2375,29 +2373,28 @@ function ProfileEditSheet({
               icon={<LinkIcon />}
               title="Connect socials"
               subtitle="Share your work"
-              right={socialsRight}
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<GiftIcon />}
               title="Refer a pro"
               subtitle="Earn $50 per referral"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<HelpIcon />}
               title="Help & support"
               subtitle="FAQs and contact"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
               icon={<SunIcon />}
               title="App appearance"
               subtitle="System"
-              disabled
+              comingSoon
             />
             <SheetDivider />
             <SheetRow
@@ -2585,6 +2582,7 @@ function SheetRow({
   right,
   onClick,
   disabled,
+  comingSoon,
 }: {
   icon: ReactNode;
   title: string;
@@ -2592,12 +2590,14 @@ function SheetRow({
   right?: string;
   onClick?: () => void;
   disabled?: boolean;
+  comingSoon?: boolean;
 }) {
+  const isDisabled = disabled || comingSoon;
   return (
     <button
       type="button"
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
       className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-opacity active:opacity-60 disabled:cursor-default"
       style={{ background: "transparent", border: "none" }}
     >
@@ -2628,7 +2628,9 @@ function SheetRow({
           </span>
         ) : null}
       </span>
-      {right ? (
+      {comingSoon ? (
+        <ComingSoonPill />
+      ) : right ? (
         <span
           style={{
             fontFamily: UI,
@@ -2649,6 +2651,29 @@ function SheetRow({
         </span>
       )}
     </button>
+  );
+}
+
+export function ComingSoonPill() {
+  return (
+    <span
+      style={{
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        color: NAVY,
+        opacity: 0.7,
+        backgroundColor: "rgba(6,28,39,0.08)",
+        padding: "3px 8px",
+        borderRadius: 999,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+      }}
+    >
+      Coming soon
+    </span>
   );
 }
 
