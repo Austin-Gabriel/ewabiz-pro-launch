@@ -412,6 +412,10 @@ function DownloadGlyph() {
 }
 
 function EmptyState() {
+  return null as never;
+}
+
+// keep above placeholder unreachable; original implementation below replaces it
   return (
     <EarningsCard>
       <div style={{ padding: "44px 16px", textAlign: "center", fontFamily: UI }}>
