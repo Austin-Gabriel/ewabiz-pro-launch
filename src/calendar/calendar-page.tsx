@@ -19,6 +19,7 @@ import { BottomTabs, type TabKey } from "@/home/bottom-tabs";
 import { ActiveBookingStrip } from "@/components/active-booking-strip";
 import { OnlineModeStrip } from "@/components/online-mode-strip";
 import { useDevState } from "@/dev-state/dev-state-context";
+import { useNotifications } from "@/notifications/use-notifications";
 import {
   CalendarEditsProvider,
   useCalendarEdits,
@@ -397,12 +398,15 @@ function Header({
   onOverflow: () => void;
 }) {
   const { text, borderCol, bg } = useHomeTheme();
+  const navigate = useNavigate();
+  const { bellUnread } = useNotifications();
   return (
     <div className="px-4 pt-2">
       <div className="flex items-center justify-between" style={{ height: 44 }}>
         <button
           type="button"
           aria-label="Notifications"
+          onClick={() => navigate({ to: "/notifications" })}
           className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
           style={{
             width: 36,
@@ -413,26 +417,20 @@ function Header({
           }}
         >
           <Bell size={16} strokeWidth={1.75} />
-          <span
-            aria-hidden
-            className="absolute flex items-center justify-center rounded-full"
-            style={{
-              top: -2,
-              right: -2,
-              minWidth: 16,
-              height: 16,
-              padding: "0 4px",
-              backgroundColor: ORANGE,
-              color: MIDNIGHT,
-              fontFamily: UI,
-              fontSize: 10,
-              fontWeight: 700,
-              lineHeight: 1,
-              border: `2px solid ${bg}`,
-            }}
-          >
-            2
-          </span>
+          {bellUnread ? (
+            <span
+              aria-hidden
+              className="absolute rounded-full"
+              style={{
+                top: 2,
+                right: 2,
+                width: 8,
+                height: 8,
+                backgroundColor: ORANGE,
+                border: `2px solid ${bg}`,
+              }}
+            />
+          ) : null}
         </button>
         <button
           type="button"
