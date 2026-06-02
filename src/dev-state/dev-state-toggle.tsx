@@ -580,3 +580,58 @@ function Group({
     </section>
   );
 }
+
+function LoyaltyCountControl({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <section className="mt-5">
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: "1.4px",
+          textTransform: "uppercase",
+          opacity: 0.55,
+          fontWeight: 700,
+          marginBottom: 8,
+        }}
+      >
+        Notifications · loyalty count
+      </div>
+      <div
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+        style={{
+          backgroundColor: "rgba(240,235,216,0.03)",
+          border: "1px solid rgba(240,235,216,0.08)",
+        }}
+      >
+        <input
+          type="range"
+          min={0}
+          max={20}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ flex: 1, accentColor: ORANGE }}
+          aria-label="Loyalty count"
+        />
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#F0EBD8",
+            fontVariantNumeric: "tabular-nums",
+            minWidth: 48,
+            textAlign: "right",
+          }}
+        >
+          {value} / 20
+        </span>
+      </div>
+    </section>
+  );
+}
