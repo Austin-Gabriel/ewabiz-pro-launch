@@ -164,6 +164,10 @@ export const ALL_BOOKINGS: Booking[] = [
     distance: "2.4 mi",
     avatarHue: "peach",
     priorBookingsWithPro: 2,
+    hairProfile: {
+      hairType: "Type 3 curly",
+      notesForPro: "Just trimmed two weeks ago — please keep the length.",
+    },
   }),
   mk({
     id: "b2",
