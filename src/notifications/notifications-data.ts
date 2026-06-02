@@ -7,9 +7,15 @@
 
 export type ActivityKind =
   | "booking-request"
+  | "booking-confirmed"
+  | "booking-reminder"
   | "cancellation"
   | "payout"
+  | "payout-initiated"
+  | "tip"
+  | "message"
   | "rating"
+  | "review-request"
   | "kyc";
 
 export interface ActivityEvent {
@@ -38,12 +44,52 @@ const ALL: ActivityEvent[] = [
     target: { to: "/bookings/$id", params: { id: "b1" } },
   },
   {
+    id: "n1b",
+    kind: "booking-confirmed",
+    title: "Booking confirmed",
+    detail: "Imani K. · Knotless braids · Sat 9:00 AM",
+    timeLabel: "38m ago",
+    target: { to: "/bookings/$id", params: { id: "b5" } },
+  },
+  {
+    id: "n1c",
+    kind: "booking-reminder",
+    title: "Upcoming appointment in 2 hours",
+    detail: "Tasha B. · Silk press · 2:00 PM",
+    timeLabel: "1h ago",
+    target: { to: "/bookings/$id", params: { id: "b2" } },
+  },
+  {
+    id: "n1d",
+    kind: "message",
+    title: "New message from Maya O.",
+    detail: "“Can I bring my daughter along?”",
+    timeLabel: "1h ago",
+    target: { to: "/bookings/$id", params: { id: "b1" } },
+  },
+  {
     id: "n2",
     kind: "rating",
     title: "5-star rating from Tasha B.",
     detail: "“Loved every minute. Booking again.”",
     timeLabel: "2h ago",
     target: { to: "/bookings/$id", params: { id: "b2" } },
+  },
+  {
+    id: "n2b",
+    kind: "tip",
+    title: "$20 tip from Tasha B.",
+    detail: "Added to your next payout",
+    timeLabel: "2h ago",
+    target: { to: "/earnings" },
+  },
+  {
+    id: "n3a",
+    kind: "payout-initiated",
+    title: "Payout on the way",
+    detail: "$486.50 to Chase ••4821 · Arrives in 1–2 days",
+    timeLabel: "5h ago",
+    target: { to: "/earnings" },
   },
   {
     id: "n3",
@@ -60,6 +106,14 @@ const ALL: ActivityEvent[] = [
     detail: "Box braids · Thu 2:00 PM · Cancellation fee applied",
     timeLabel: "Yesterday",
     target: { to: "/bookings/$id", params: { id: "b3" } },
+  },
+  {
+    id: "n4b",
+    kind: "review-request",
+    title: "Leave a review for Zara M.",
+    detail: "Help future clients know what to expect",
+    timeLabel: "2d ago",
+    target: { to: "/bookings/$id", params: { id: "b7" } },
   },
   {
     id: "n5",
@@ -87,6 +141,6 @@ const ALL: ActivityEvent[] = [
 
 export function activityForDensity(density: "empty" | "few" | "lots"): ActivityEvent[] {
   if (density === "empty") return [];
-  if (density === "few") return ALL.slice(0, 3);
+  if (density === "few") return ALL.slice(0, 4);
   return ALL;
 }
