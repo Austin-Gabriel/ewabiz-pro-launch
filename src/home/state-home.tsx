@@ -6,6 +6,7 @@ import { type Booking, formatUsd } from "@/data/mock-data";
 import type { DevDayContext, DevMode } from "@/dev-state/dev-state-context";
 import { useDevState } from "@/dev-state/dev-state-context";
 import { LIFECYCLE_BOOKING } from "@/bookings/lifecycle/lifecycle-data";
+import { useNotifications } from "@/notifications/use-notifications";
 
 /**
  * Home as two distinct top-level variants — Offline and Online — driven by
@@ -125,12 +126,16 @@ export function StateHome(props: StateHomeProps) {
 
 function Header({ unreadCount }: { unreadCount: number }) {
   const { text, borderCol, bg, surface } = useHomeTheme();
+  const navigate = useNavigate();
+  const { bellUnread } = useNotifications();
+  void unreadCount;
   return (
     <div className="flex items-center justify-between" style={{ height: 48 }}>
       <EwaMark size={26} />
       <button
         type="button"
-        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+        aria-label={bellUnread ? "Notifications, unread" : "Notifications"}
+        onClick={() => navigate({ to: "/notifications" })}
         className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
         style={{
           width: 36,
@@ -141,27 +146,19 @@ function Header({ unreadCount }: { unreadCount: number }) {
         }}
       >
         <BellIcon />
-        {unreadCount > 0 ? (
+        {bellUnread ? (
           <span
             aria-hidden
-            className="absolute flex items-center justify-center rounded-full"
+            className="absolute rounded-full"
             style={{
-              top: -2,
-              right: -2,
-              minWidth: 16,
-              height: 16,
-              padding: "0 4px",
+              top: 2,
+              right: 2,
+              width: 8,
+              height: 8,
               backgroundColor: ORANGE,
-              color: "#061C27",
-              fontFamily: UI,
-              fontSize: 10,
-              fontWeight: 700,
-              lineHeight: 1,
               border: `2px solid ${bg}`,
             }}
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
+          />
         ) : null}
       </button>
     </div>
