@@ -39,6 +39,21 @@ export type BookingStatus =
   | "completed"
   | "cancelled";
 
+/* --------- Client hair profile --------- */
+
+/**
+ * Hair profile is owned by the customer (set in their own app) and
+ * surfaced to the pro on booking detail. All fields are optional — the
+ * pro UI hides the entire card when every field is empty, and hides
+ * individual rows for empty fields.
+ */
+export interface HairProfile {
+  hairType?: string;
+  allergies?: string;
+  productSensitivities?: string;
+  notesForPro?: string;
+}
+
 /* --------- Booking model --------- */
 
 export interface Booking {
@@ -63,6 +78,8 @@ export interface Booking {
 
   /** Optional client note attached at booking time. */
   note?: string;
+  /** Hair profile authored by the client on their side. */
+  hairProfile?: HairProfile;
   /** History count, used on detail page client card. 0 for first-time. */
   priorBookingsWithPro?: number;
   /** When this client last booked with the pro before today's appointment. */
