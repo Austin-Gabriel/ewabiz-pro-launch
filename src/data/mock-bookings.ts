@@ -222,6 +222,10 @@ export const ALL_BOOKINGS: Booking[] = [
     avatarHue: "amber",
     expiresAt: inHours(6),
     note: "Have a wedding tomorrow morning — could really use you.",
+    hairProfile: {
+      hairType: "Type 2 wavy, fine density",
+      notesForPro: "Color-treated — please avoid high heat if possible.",
+    },
   }),
   mk({
     id: "b4",
@@ -236,6 +240,11 @@ export const ALL_BOOKINGS: Booking[] = [
     distance: "3.1 mi",
     avatarHue: "violet",
     priorBookingsWithPro: 1,
+    hairProfile: {
+      hairType: "4B, thick",
+      productSensitivities: "Tea tree oil",
+      notesForPro: "Medium tension please — last set was too tight at the edges.",
+    },
   }),
   mk({
     id: "p2",
@@ -250,6 +259,9 @@ export const ALL_BOOKINGS: Booking[] = [
     distance: "2.4 mi",
     avatarHue: "blue",
     expiresAt: new Date(Date.now() + 23 * 60 * 1000),
+    hairProfile: {
+      hairType: "4A",
+    },
   }),
 
   // ------- THIS MONTH -------
@@ -266,6 +278,11 @@ export const ALL_BOOKINGS: Booking[] = [
     distance: "5.8 mi",
     avatarHue: "green",
     priorBookingsWithPro: 3,
+    hairProfile: {
+      hairType: "4C, high density",
+      allergies: "Latex",
+      notesForPro: "Prefer parts on the smaller side.",
+    },
   }),
   mk({
     id: "b6",
@@ -281,6 +298,10 @@ export const ALL_BOOKINGS: Booking[] = [
     avatarHue: "amber",
     priorBookingsWithPro: 0,
     isNewClient: true,
+    hairProfile: {
+      hairType: "3C",
+      productSensitivities: "Heavy butters weigh my hair down",
+    },
   }),
 
   // ------- NEXT MONTH -------
@@ -314,6 +335,12 @@ export const ALL_BOOKINGS: Booking[] = [
     distance: "4.2 mi",
     avatarHue: "blue",
     priorBookingsWithPro: 4,
+    hairProfile: {
+      hairType: "Type 3B",
+      allergies: "PPD (in some dyes)",
+      productSensitivities: "Ammonia-based color",
+      notesForPro: "Going one shade darker this time — keeping warm tones.",
+    },
   }),
 ];
 
