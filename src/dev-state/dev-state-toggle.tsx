@@ -17,6 +17,9 @@ import {
   type DevBlockedTime,
   type DevAvailability,
   type DevRescheduleState,
+  type DevPromoState,
+  type DevRecentActivity,
+  type DevBellUnread,
 } from "@/dev-state/dev-state-context";
 import { useReschedule } from "@/calendar/reschedule-context";
 import { ALL_BOOKINGS } from "@/data/mock-bookings";
@@ -146,6 +149,27 @@ const CERTIFICATES: { value: DevCertificate; label: string; hint: string }[] = [
   { value: "rejected", label: "Rejected", hint: "Verification failed" },
 ];
 
+const PROMO_STATES: { value: DevPromoState; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Derive from loyalty count" },
+  { value: "welcome", label: "Welcome bonus", hint: "Brand-new pro, no completed bookings" },
+  { value: "loyalty", label: "Loyalty progress", hint: "Working toward weekly bonus" },
+  { value: "bonus-earned", label: "Bonus earned", hint: "Pending on next payout" },
+  { value: "none", label: "No promo", hint: "Hide promotions section card" },
+];
+
+const RECENT_ACTIVITIES: { value: DevRecentActivity; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "A few items" },
+  { value: "empty", label: "Empty", hint: "Show \"Nothing new\"" },
+  { value: "few", label: "A few items", hint: "3 recent events" },
+  { value: "lots", label: "Lots", hint: "Full recent activity list" },
+];
+
+const BELL_UNREAD: { value: DevBellUnread; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Unread when activity present" },
+  { value: "read", label: "Read", hint: "No dot on bell" },
+  { value: "unread", label: "Unread", hint: "Bagel dot on bell" },
+];
+
 const RESCHEDULE_FOCUS_ID = "b1";
 
 export function DevStateToggle() {
@@ -167,6 +191,10 @@ export function DevStateToggle() {
     setBlockedTime,
     setAvailability,
     setRescheduleState,
+    setPromoState,
+    setLoyaltyCount,
+    setRecentActivity,
+    setBellUnread,
     reset,
   } = useDevState();
   const reschedule = useReschedule();
@@ -412,6 +440,27 @@ export function DevStateToggle() {
                 value={state.rescheduleState}
                 options={RESCHEDULE_STATES}
                 onChange={(v) => setRescheduleState(v as DevRescheduleState)}
+              />
+              <Group
+                title="Notifications · promo state"
+                value={state.promoState}
+                options={PROMO_STATES}
+                onChange={(v) => setPromoState(v as DevPromoState)}
+              />
+              {state.promoState === "loyalty" || state.promoState === "auto" ? (
+                <LoyaltyCountControl value={state.loyaltyCount} onChange={setLoyaltyCount} />
+              ) : null}
+              <Group
+                title="Notifications · recent activity"
+                value={state.recentActivity}
+                options={RECENT_ACTIVITIES}
+                onChange={(v) => setRecentActivity(v as DevRecentActivity)}
+              />
+              <Group
+                title="Notifications · bell unread"
+                value={state.bellUnread}
+                options={BELL_UNREAD}
+                onChange={(v) => setBellUnread(v as DevBellUnread)}
               />
               <Group
                 title="Theme override"
