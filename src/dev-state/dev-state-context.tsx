@@ -125,6 +125,27 @@ export type DevRescheduleState =
   | "declined"
   | "expired";
 
+/* ---- Notifications sub-axes ---- */
+
+/**
+ * Promo card shown at the top of the Notifications screen. Drives BOTH the
+ * Notifications screen and the Earnings payout-detail "Bonus" line item
+ * (when set to "bonus-earned"). "auto" resolves to "loyalty" unless the pro
+ * has zero completed bookings (welcome) or has just hit the weekly target.
+ */
+export type DevPromoState =
+  | "auto"
+  | "welcome"
+  | "loyalty"
+  | "bonus-earned"
+  | "none";
+
+/** Recent-activity list density for the Notifications screen. */
+export type DevRecentActivity = "auto" | "empty" | "few" | "lots";
+
+/** Bell icon unread indicator override. */
+export type DevBellUnread = "auto" | "read" | "unread";
+
 export interface DevState {
   proState: DevProState;
   dataDensity: DevDataDensity;
@@ -142,6 +163,11 @@ export interface DevState {
   availability: DevAvailability;
   availabilityOverride: DevAvailabilityOverride | null;
   rescheduleState: DevRescheduleState;
+  promoState: DevPromoState;
+  /** Current loyalty count toward the weekly target (0–20). */
+  loyaltyCount: number;
+  recentActivity: DevRecentActivity;
+  bellUnread: DevBellUnread;
 }
 
 const DEFAULT_STATE: DevState = {
@@ -161,6 +187,10 @@ const DEFAULT_STATE: DevState = {
   availability: "auto",
   availabilityOverride: null,
   rescheduleState: "none",
+  promoState: "auto",
+  loyaltyCount: 7,
+  recentActivity: "auto",
+  bellUnread: "auto",
 };
 
 const STORAGE_KEY = "ewa.devState.v1";
@@ -184,6 +214,10 @@ interface Ctx {
   setAvailability: (v: DevAvailability) => void;
   setAvailabilityOverride: (v: DevAvailabilityOverride | null) => void;
   setRescheduleState: (v: DevRescheduleState) => void;
+  setPromoState: (v: DevPromoState) => void;
+  setLoyaltyCount: (v: number) => void;
+  setRecentActivity: (v: DevRecentActivity) => void;
+  setBellUnread: (v: DevBellUnread) => void;
   reset: () => void;
 }
 
@@ -253,6 +287,13 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
     (v: DevRescheduleState) => setState((s) => ({ ...s, rescheduleState: v })),
     [],
   );
+  const setPromoState = useCallback((v: DevPromoState) => setState((s) => ({ ...s, promoState: v })), []);
+  const setLoyaltyCount = useCallback(
+    (v: number) => setState((s) => ({ ...s, loyaltyCount: Math.max(0, Math.min(20, v)) })),
+    [],
+  );
+  const setRecentActivity = useCallback((v: DevRecentActivity) => setState((s) => ({ ...s, recentActivity: v })), []);
+  const setBellUnread = useCallback((v: DevBellUnread) => setState((s) => ({ ...s, bellUnread: v })), []);
   const reset = useCallback(() => setState(DEFAULT_STATE), []);
 
   const value = useMemo<Ctx>(
@@ -275,6 +316,10 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setAvailability,
       setAvailabilityOverride,
       setRescheduleState,
+      setPromoState,
+      setLoyaltyCount,
+      setRecentActivity,
+      setBellUnread,
       reset,
     }),
     [
@@ -296,6 +341,10 @@ export function DevStateProvider({ children }: { children: ReactNode }) {
       setAvailability,
       setAvailabilityOverride,
       setRescheduleState,
+      setPromoState,
+      setLoyaltyCount,
+      setRecentActivity,
+      setBellUnread,
       reset,
     ],
   );
@@ -325,6 +374,10 @@ export function useDevState(): Ctx {
       setAvailability: () => {},
       setAvailabilityOverride: () => {},
       setRescheduleState: () => {},
+      setPromoState: () => {},
+      setLoyaltyCount: () => {},
+      setRecentActivity: () => {},
+      setBellUnread: () => {},
       reset: () => {},
     };
   }

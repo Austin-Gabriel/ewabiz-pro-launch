@@ -17,6 +17,9 @@ import {
   type DevBlockedTime,
   type DevAvailability,
   type DevRescheduleState,
+  type DevPromoState,
+  type DevRecentActivity,
+  type DevBellUnread,
 } from "@/dev-state/dev-state-context";
 import { useReschedule } from "@/calendar/reschedule-context";
 import { ALL_BOOKINGS } from "@/data/mock-bookings";
@@ -146,6 +149,27 @@ const CERTIFICATES: { value: DevCertificate; label: string; hint: string }[] = [
   { value: "rejected", label: "Rejected", hint: "Verification failed" },
 ];
 
+const PROMO_STATES: { value: DevPromoState; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Derive from loyalty count" },
+  { value: "welcome", label: "Welcome bonus", hint: "Brand-new pro, no completed bookings" },
+  { value: "loyalty", label: "Loyalty progress", hint: "Working toward weekly bonus" },
+  { value: "bonus-earned", label: "Bonus earned", hint: "Pending on next payout" },
+  { value: "none", label: "No promo", hint: "Hide promotions section card" },
+];
+
+const RECENT_ACTIVITIES: { value: DevRecentActivity; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "A few items" },
+  { value: "empty", label: "Empty", hint: "Show \"Nothing new\"" },
+  { value: "few", label: "A few items", hint: "3 recent events" },
+  { value: "lots", label: "Lots", hint: "Full recent activity list" },
+];
+
+const BELL_UNREAD: { value: DevBellUnread; label: string; hint: string }[] = [
+  { value: "auto", label: "Auto", hint: "Unread when activity present" },
+  { value: "read", label: "Read", hint: "No dot on bell" },
+  { value: "unread", label: "Unread", hint: "Bagel dot on bell" },
+];
+
 const RESCHEDULE_FOCUS_ID = "b1";
 
 export function DevStateToggle() {
@@ -167,6 +191,10 @@ export function DevStateToggle() {
     setBlockedTime,
     setAvailability,
     setRescheduleState,
+    setPromoState,
+    setLoyaltyCount,
+    setRecentActivity,
+    setBellUnread,
     reset,
   } = useDevState();
   const reschedule = useReschedule();
@@ -414,6 +442,27 @@ export function DevStateToggle() {
                 onChange={(v) => setRescheduleState(v as DevRescheduleState)}
               />
               <Group
+                title="Notifications · promo state"
+                value={state.promoState}
+                options={PROMO_STATES}
+                onChange={(v) => setPromoState(v as DevPromoState)}
+              />
+              {state.promoState === "loyalty" || state.promoState === "auto" ? (
+                <LoyaltyCountControl value={state.loyaltyCount} onChange={setLoyaltyCount} />
+              ) : null}
+              <Group
+                title="Notifications · recent activity"
+                value={state.recentActivity}
+                options={RECENT_ACTIVITIES}
+                onChange={(v) => setRecentActivity(v as DevRecentActivity)}
+              />
+              <Group
+                title="Notifications · bell unread"
+                value={state.bellUnread}
+                options={BELL_UNREAD}
+                onChange={(v) => setBellUnread(v as DevBellUnread)}
+              />
+              <Group
                 title="Theme override"
                 value={state.theme}
                 options={THEMES.map((t) => ({ ...t, hint: "" }))}
@@ -527,6 +576,61 @@ function Group({
             </button>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+function LoyaltyCountControl({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <section className="mt-5">
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: "1.4px",
+          textTransform: "uppercase",
+          opacity: 0.55,
+          fontWeight: 700,
+          marginBottom: 8,
+        }}
+      >
+        Notifications · loyalty count
+      </div>
+      <div
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+        style={{
+          backgroundColor: "rgba(240,235,216,0.03)",
+          border: "1px solid rgba(240,235,216,0.08)",
+        }}
+      >
+        <input
+          type="range"
+          min={0}
+          max={20}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ flex: 1, accentColor: ORANGE }}
+          aria-label="Loyalty count"
+        />
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#F0EBD8",
+            fontVariantNumeric: "tabular-nums",
+            minWidth: 48,
+            textAlign: "right",
+          }}
+        >
+          {value} / 20
+        </span>
       </div>
     </section>
   );

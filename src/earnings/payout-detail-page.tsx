@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { earningsForPayout, findPayoutById } from "@/data/mock-payouts";
 import { formatMoney, type EarningEvent } from "@/data/mock-earnings";
 import { findBookingById } from "@/data/mock-bookings";
+import { useNotifications, LOYALTY_BONUS_AMOUNT } from "@/notifications/use-notifications";
 import {
   EARNINGS_NAVY,
   EARNINGS_UI,
@@ -17,6 +18,7 @@ const UI = EARNINGS_UI;
 
 export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
   const payout = findPayoutById(payoutId);
+  const { promo } = useNotifications();
   if (!payout) {
     return (
       <EarningsSubShell title="Payout" backTo="/earnings/payouts">
@@ -37,6 +39,12 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
   const tips = items.reduce((s, e) => s + e.tip, 0);
   const fees = items.reduce((s, e) => s + e.fee, 0);
   const clientPaid = gross + tips;
+  // Bonus appears on the NEXT (in-transit) payout when the pro has hit the
+  // weekly target. Once paid out, the bonus card disappears in Notifications
+  // and the breakdown drops back to normal.
+  const showBonus = promo === "bonus-earned" && payout.status === "in-transit";
+  const bonus = showBonus ? LOYALTY_BONUS_AMOUNT : 0;
+  const totalPayout = payout.amount + bonus;
 
   return (
     <EarningsSubShell title="Payout" backTo="/earnings/payouts">
@@ -58,7 +66,7 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
               lineHeight: 1.05,
             }}
           >
-            {formatMoney(payout.amount)}
+            {formatMoney(totalPayout)}
           </div>
           <DetailRow
             label={
@@ -95,8 +103,11 @@ export function PayoutDetailPage({ payoutId }: { payoutId: string }) {
           <EarningsCardEyebrow>Breakdown</EarningsCardEyebrow>
           <div className="mt-3 flex flex-col" style={{ gap: 8 }}>
             <BreakdownLine label="Clients paid" value={formatMoney(clientPaid)} />
+            {showBonus ? (
+              <BonusLine label="Bonus — Weekly target" value={`+ ${formatMoney(bonus)}`} />
+            ) : null}
             <div style={{ height: 1, backgroundColor: "rgba(6,28,39,0.08)", margin: "6px 0" }} />
-            <BreakdownLine label="Your earnings" value={formatMoney(payout.amount)} bold />
+            <BreakdownLine label="Your earnings" value={formatMoney(totalPayout)} bold />
             {tips > 0 ? (
               <div style={{ fontSize: 12, color: NAVY, opacity: 0.6, fontVariantNumeric: "tabular-nums" }}>
                 Includes {formatMoney(tips)} in tips
@@ -240,6 +251,21 @@ function BreakdownLine({ label, value, bold }: { label: string; value: string; b
     <div className="flex items-baseline justify-between" style={{ fontSize: 14, color: NAVY }}>
       <span style={{ opacity: bold ? 1 : 0.7, fontWeight: bold ? 600 : 400 }}>{label}</span>
       <span style={{ fontWeight: bold ? 700 : 500, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+    </div>
+  );
+}
+
+function BonusLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="flex items-baseline justify-between"
+      style={{
+        fontSize: 14,
+        color: "#B8531C",
+      }}
+    >
+      <span style={{ fontWeight: 600 }}>{label}</span>
+      <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
     </div>
   );
 }

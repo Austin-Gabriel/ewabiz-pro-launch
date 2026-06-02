@@ -18,6 +18,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KycRouteImport } from './routes/kyc'
 import { Route as JoinRouteImport } from './routes/join'
@@ -87,6 +88,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/kyc': typeof KycRouteWithChildren
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/kyc'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/kyc'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/kyc'
     | '/login'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
@@ -447,6 +459,7 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   KycRoute: typeof KycRouteWithChildren
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   ProfileRoute: typeof ProfileRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -522,6 +535,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -806,6 +826,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   KycRoute: KycRouteWithChildren,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   ProfileRoute: ProfileRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
