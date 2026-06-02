@@ -363,6 +363,20 @@ function ActivityIcon({ kind }: { kind: ActivityEvent["kind"] }) {
             <path d="M3 10h18M8 3v4M16 3v4" />
           </>
         );
+      case "booking-confirmed":
+        return (
+          <>
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4" />
+          </>
+        );
+      case "booking-reminder":
+        return (
+          <>
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l3 2M9 3l-3 2M15 3l3 2" />
+          </>
+        );
       case "cancellation":
         return (
           <>
@@ -377,8 +391,33 @@ function ActivityIcon({ kind }: { kind: ActivityEvent["kind"] }) {
             <path d="M3 10h18M7 15h4" />
           </>
         );
+      case "payout-initiated":
+        return (
+          <>
+            <rect x="3" y="6" width="18" height="13" rx="2" />
+            <path d="M3 10h18M14 15l3-2-3-2" />
+          </>
+        );
+      case "tip":
+        return (
+          <>
+            <path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </>
+        );
+      case "message":
+        return (
+          <>
+            <path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.6A8 8 0 1 1 21 12z" />
+          </>
+        );
       case "rating":
         return <path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6L12 16.8 6.6 19.6l1-6L3.3 9.4l6-.9z" />;
+      case "review-request":
+        return (
+          <>
+            <path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6L12 16.8 6.6 19.6l1-6L3.3 9.4l6-.9z" />
+          </>
+        );
       case "kyc":
         return (
           <>
