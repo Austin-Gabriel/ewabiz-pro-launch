@@ -1016,6 +1016,50 @@ function NotesCard({ note }: { note: string }) {
   );
 }
 
+function HairProfileCard({ booking }: { booking: Booking }) {
+  const hp = booking.hairProfile;
+  if (!hp) return null;
+  const rows: Array<{ label: string; value: string }> = [];
+  if (hp.hairType) rows.push({ label: "Hair type", value: hp.hairType });
+  if (hp.allergies) rows.push({ label: "Allergies", value: hp.allergies });
+  if (hp.productSensitivities)
+    rows.push({ label: "Product sensitivities", value: hp.productSensitivities });
+  if (hp.notesForPro) rows.push({ label: "Notes for your pro", value: hp.notesForPro });
+  if (rows.length === 0) return null;
+  return (
+    <DetailCard>
+      <CardLabel>Client hair profile</CardLabel>
+      <div className="flex flex-col gap-2.5">
+        {rows.map((r) => (
+          <div key={r.label} className="flex flex-col gap-1">
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 13,
+                color: MIDNIGHT,
+                opacity: 0.7,
+              }}
+            >
+              {r.label}
+            </span>
+            <span
+              style={{
+                fontFamily: UI,
+                fontSize: 14,
+                color: MIDNIGHT,
+                lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {r.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </DetailCard>
+  );
+}
+
 function ChatBubbleIcon({ size = 15 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
