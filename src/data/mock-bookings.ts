@@ -180,6 +180,13 @@ export const ALL_BOOKINGS: Booking[] = [
     avatarHue: "blue",
     priorBookingsWithPro: 0,
     note: "First time — looking forward to it!",
+    hairProfile: {
+      hairType: "4C",
+      allergies: "Sulfates, lanolin",
+      productSensitivities: "Strong scents, alcohol-based products",
+      notesForPro:
+        "Scalp is sensitive around the edges — please go gentle on the perimeter. I prefer medium tension, not tight.",
+    },
   }),
   mk({
     id: "b3",
