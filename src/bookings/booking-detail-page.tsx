@@ -148,6 +148,7 @@ export function BookingDetailPage({ bookingId }: { bookingId: string }) {
         />
         <ServiceCard booking={booking} dimmed={status === "cancelled"} />
         <LocationCard booking={booking} revealAddress={false} />
+        <HairProfileCard booking={booking} />
         {status === "cancelled" ? (
           <CancellationCard booking={booking} />
         ) : (
