@@ -131,6 +131,37 @@ function ActivitySubcopy({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ActivityHeader() {
+  const { text } = useHomeTheme();
+  return (
+    <div style={{ paddingLeft: 4, marginTop: 10, marginBottom: 4 }}>
+      <div
+        style={{
+          fontFamily: DISPLAY,
+          fontSize: 26,
+          fontWeight: 600,
+          letterSpacing: "-0.015em",
+          lineHeight: 1.1,
+          color: text,
+        }}
+      >
+        Recent activity
+      </div>
+      <div
+        style={{
+          marginTop: 4,
+          fontFamily: UI,
+          fontSize: 13,
+          color: text,
+          opacity: 0.6,
+        }}
+      >
+        Updates from your bookings and clients
+      </div>
+    </div>
+  );
+}
+
 function BucketLabel({ children }: { children: React.ReactNode }) {
   const { text } = useHomeTheme();
   return (
@@ -372,92 +403,231 @@ function Eyebrow({ children, tone }: { children: React.ReactNode; tone: "navy" |
 function ActivityRow({ event }: { event: ActivityEvent }) {
   const navigate = useNavigate();
   const routable = !!event.target;
+  const isUnread = !!event.unread;
+  const go = () => {
+    if (!event.target) return;
+    if (event.target.to === "/bookings/$id") {
+      navigate({ to: "/bookings/$id", params: event.target.params });
+    } else if (event.target.to === "/earnings/payouts/$id") {
+      navigate({ to: "/earnings/payouts/$id", params: event.target.params });
+    } else {
+      navigate({ to: "/earnings" });
+    }
+  };
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (!event.target) return;
-        if (event.target.to === "/bookings/$id") {
-          navigate({ to: "/bookings/$id", params: event.target.params });
-        } else if (event.target.to === "/earnings/payouts/$id") {
-          navigate({ to: "/earnings/payouts/$id", params: event.target.params });
-        } else {
-          navigate({ to: "/earnings" });
-        }
-      }}
-      className="flex w-full items-start gap-3 text-left transition-colors active:bg-black/[0.03]"
+    <div
+      role={routable ? "button" : undefined}
+      tabIndex={routable ? 0 : -1}
+      onClick={routable ? go : undefined}
+      onKeyDown={
+        routable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                go();
+              }
+            }
+          : undefined
+      }
+      className="relative w-full text-left transition-colors active:bg-black/[0.03]"
       style={{
         padding: "14px 16px",
-        backgroundColor: "#FFFFFF",
-        border: "1px solid rgba(6,28,39,0.10)",
+        backgroundColor: isUnread ? UNREAD_BG : "#FFFFFF",
+        border: `1px solid ${isUnread ? UNREAD_BORDER : "rgba(6,28,39,0.10)"}`,
         borderRadius: 16,
         boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
         fontFamily: UI,
         cursor: routable ? "pointer" : "default",
       }}
     >
-      {event.actor ? <ActorAvatar actor={event.actor} /> : <ActivityIcon kind={event.kind} />}
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.35 }}>{event.title}</div>
-        {event.detail ? (
-          <div style={{ marginTop: 2, fontSize: 12.5, color: NAVY, opacity: 0.62, lineHeight: 1.45 }}>
-            {event.detail}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-2" style={{ marginTop: 8 }}>
-          {event.pill ? <Pill label={event.pill.label} tone={event.pill.tone} /> : null}
-          <span
-            style={{
-              fontSize: 11,
-              color: NAVY,
-              opacity: 0.5,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {event.timeLabel}
-          </span>
-        </div>
-      </div>
-      {routable ? (
-        <svg
+      {isUnread ? (
+        <span
           aria-hidden
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={NAVY}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ opacity: 0.3, marginTop: 4, flexShrink: 0 }}
-        >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+          style={{
+            position: "absolute",
+            top: 14,
+            left: 6,
+            width: 6,
+            height: 6,
+            borderRadius: 999,
+            backgroundColor: ORANGE,
+          }}
+        />
       ) : null}
-    </button>
+      <div className="flex items-start gap-3">
+        {event.actor ? (
+          <ActorAvatar actor={event.actor} badge={event.avatarBadge} />
+        ) : (
+          <ActivityIcon kind={event.kind} />
+        )}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.35 }}>
+            {event.title}
+          </div>
+          {event.detail ? (
+            <div style={{ marginTop: 2, fontSize: 12.5, color: NAVY, opacity: 0.62, lineHeight: 1.45 }}>
+              {event.detail}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2" style={{ marginTop: 8 }}>
+            {event.pill ? <Pill label={event.pill.label} tone={event.pill.tone} /> : null}
+            <span
+              style={{
+                fontSize: 11,
+                color: NAVY,
+                opacity: 0.5,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {event.timeLabel}
+            </span>
+          </div>
+          {event.action ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                go();
+              }}
+              style={{
+                marginTop: 12,
+                backgroundColor: ORANGE,
+                color: NAVY,
+                fontFamily: UI,
+                fontSize: 13,
+                fontWeight: 600,
+                padding: "9px 16px",
+                borderRadius: 999,
+                boxShadow: "0 6px 18px -10px rgba(255,130,63,0.65)",
+              }}
+              className="transition-opacity active:opacity-80"
+            >
+              {event.action.label}
+            </button>
+          ) : null}
+        </div>
+        {event.thumbnailUrl ? (
+          <img
+            src={event.thumbnailUrl}
+            alt=""
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 12,
+              objectFit: "cover",
+              flexShrink: 0,
+            }}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-function ActorAvatar({ actor }: { actor: ActivityActor }) {
+function ActorAvatar({
+  actor,
+  badge,
+}: {
+  actor: ActivityActor;
+  badge?: ActivityEvent["avatarBadge"];
+}) {
   const palette = AVATAR_TINTS[actor.tint];
+  return (
+    <div className="relative" style={{ flexShrink: 0 }}>
+      <div
+        aria-hidden
+        className="flex items-center justify-center"
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 999,
+          backgroundColor: palette.bg,
+          color: palette.fg,
+          fontFamily: UI,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: "0.02em",
+        }}
+      >
+        {actor.initials}
+      </div>
+      {badge ? <AvatarBadge kind={badge} /> : null}
+    </div>
+  );
+}
+
+function AvatarBadge({ kind }: { kind: NonNullable<ActivityEvent["avatarBadge"]> }) {
+  const tone = (() => {
+    switch (kind) {
+      case "x":
+        return { bg: "#9A2E2E", fg: "#FFFFFF" };
+      case "check":
+      case "dollar":
+        return { bg: ORANGE_DEEP, fg: "#FFFFFF" };
+      case "star":
+        return { bg: NAVY, fg: "#FFFFFF" };
+      default:
+        return { bg: ORANGE, fg: NAVY };
+    }
+  })();
+  const icon = (() => {
+    switch (kind) {
+      case "clock":
+        return (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </>
+        );
+      case "check":
+        return <path d="M5 12l5 5L20 7" />;
+      case "x":
+        return (
+          <>
+            <path d="M6 6l12 12" />
+            <path d="M18 6L6 18" />
+          </>
+        );
+      case "star":
+        return <path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6L12 16.8 6.6 19.6l1-6L3.3 9.4l6-.9z" />;
+      case "dollar":
+        return <path d="M12 4v16M16 8H10a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H7" />;
+      case "calendar":
+        return (
+          <>
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M3 10h18M8 3v4M16 3v4" />
+          </>
+        );
+    }
+  })();
   return (
     <div
       aria-hidden
-      className="flex items-center justify-center"
+      className="absolute flex items-center justify-center"
       style={{
-        width: 36,
-        height: 36,
+        right: -2,
+        bottom: -2,
+        width: 18,
+        height: 18,
         borderRadius: 999,
-        backgroundColor: palette.bg,
-        color: palette.fg,
-        flexShrink: 0,
-        fontFamily: UI,
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: "0.02em",
+        backgroundColor: tone.bg,
+        color: tone.fg,
+        border: "2px solid #FFFFFF",
       }}
     >
-      {actor.initials}
+      <svg
+        width="10"
+        height="10"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {icon}
+      </svg>
     </div>
   );
 }
