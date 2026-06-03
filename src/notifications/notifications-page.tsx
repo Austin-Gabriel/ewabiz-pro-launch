@@ -2,13 +2,34 @@ import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
 import { useNotifications, type PromoKind } from "./use-notifications";
-import type { ActivityEvent } from "./notifications-data";
+import {
+  BUCKET_LABEL,
+  BUCKET_ORDER,
+  type ActivityActor,
+  type ActivityBucket,
+  type ActivityEvent,
+  type PillTone,
+} from "./notifications-data";
 
 const UI = HOME_SANS;
 const NAVY = "#061C27";
 const ORANGE = "#FF823F";
 const ORANGE_SOFT = "rgba(255,130,63,0.14)";
 const ORANGE_DEEP = "#B8531C";
+
+const AVATAR_TINTS: Record<ActivityActor["tint"], { bg: string; fg: string }> = {
+  peach: { bg: "#F8D7C2", fg: "#7A3B1A" },
+  lilac: { bg: "#D9DCF2", fg: "#3D3E76" },
+  sage: { bg: "#CFE3D3", fg: "#2E5A3A" },
+  sand: { bg: "#EADFC8", fg: "#6B4F22" },
+};
+
+const PILL_TONES: Record<PillTone, { bg: string; fg: string }> = {
+  orange: { bg: "rgba(255,130,63,0.14)", fg: "#B8531C" },
+  rose: { bg: "rgba(214,68,68,0.12)", fg: "#9A2E2E" },
+  navy: { bg: "rgba(6,28,39,0.08)", fg: NAVY },
+  mint: { bg: "rgba(46,138,86,0.14)", fg: "#226B43" },
+};
 
 /**
  * Notifications screen. Reachable from the bell icon on Home and Calendar.
@@ -36,17 +57,8 @@ export function NotificationsPage() {
         />
 
         <SectionLabel className="mt-2">Recent activity</SectionLabel>
-        {view.activity.length === 0 ? (
-          <EmptyActivity />
-        ) : (
-          <CardTheme>
-            <div className="flex flex-col gap-2">
-              {view.activity.map((e) => (
-                <ActivityRow key={e.id} event={e} />
-              ))}
-            </div>
-          </CardTheme>
-        )}
+        <ActivitySubcopy>Updates from your bookings and clients</ActivitySubcopy>
+        {view.activity.length === 0 ? <EmptyActivity /> : <ActivityGroups events={view.activity} />}
       </div>
     </HomeShell>
   );
@@ -96,6 +108,73 @@ function SectionLabel({ children, className = "" }: { children: React.ReactNode;
     >
       {children}
     </div>
+  );
+}
+
+function ActivitySubcopy({ children }: { children: React.ReactNode }) {
+  const { text } = useHomeTheme();
+  return (
+    <div
+      style={{
+        fontFamily: UI,
+        fontSize: 12.5,
+        color: text,
+        opacity: 0.55,
+        paddingLeft: 4,
+        marginTop: -4,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function BucketLabel({ children }: { children: React.ReactNode }) {
+  const { text } = useHomeTheme();
+  return (
+    <div
+      style={{
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        color: text,
+        opacity: 0.45,
+        paddingLeft: 4,
+        marginTop: 6,
+        marginBottom: 2,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ActivityGroups({ events }: { events: ActivityEvent[] }) {
+  const grouped = new Map<ActivityBucket, ActivityEvent[]>();
+  for (const e of events) {
+    const list = grouped.get(e.bucket) ?? [];
+    list.push(e);
+    grouped.set(e.bucket, list);
+  }
+  return (
+    <CardTheme>
+      <div className="flex flex-col gap-1">
+        {BUCKET_ORDER.map((bucket) => {
+          const rows = grouped.get(bucket);
+          if (!rows || rows.length === 0) return null;
+          return (
+            <div key={bucket} className="flex flex-col gap-2">
+              <BucketLabel>{BUCKET_LABEL[bucket]}</BucketLabel>
+              {rows.map((e) => (
+                <ActivityRow key={e.id} event={e} />
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </CardTheme>
   );
 }
 
@@ -296,7 +375,6 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
       type="button"
       onClick={() => {
         if (!event.target) return;
-        // Disambiguate by `to` literal to satisfy the typed router union.
         if (event.target.to === "/bookings/$id") {
           navigate({ to: "/bookings/$id", params: event.target.params });
         } else if (event.target.to === "/earnings/payouts/$id") {
@@ -316,7 +394,7 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
         cursor: routable ? "pointer" : "default",
       }}
     >
-      <ActivityIcon kind={event.kind} />
+      {event.actor ? <ActorAvatar actor={event.actor} /> : <ActivityIcon kind={event.kind} />}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, lineHeight: 1.35 }}>{event.title}</div>
         {event.detail ? (
@@ -324,8 +402,18 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
             {event.detail}
           </div>
         ) : null}
-        <div style={{ marginTop: 4, fontSize: 11, color: NAVY, opacity: 0.5, fontVariantNumeric: "tabular-nums" }}>
-          {event.timeLabel}
+        <div className="flex flex-wrap items-center gap-2" style={{ marginTop: 8 }}>
+          {event.pill ? <Pill label={event.pill.label} tone={event.pill.tone} /> : null}
+          <span
+            style={{
+              fontSize: 11,
+              color: NAVY,
+              opacity: 0.5,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {event.timeLabel}
+          </span>
         </div>
       </div>
       {routable ? (
@@ -345,6 +433,53 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
         </svg>
       ) : null}
     </button>
+  );
+}
+
+function ActorAvatar({ actor }: { actor: ActivityActor }) {
+  const palette = AVATAR_TINTS[actor.tint];
+  return (
+    <div
+      aria-hidden
+      className="flex items-center justify-center"
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 999,
+        backgroundColor: palette.bg,
+        color: palette.fg,
+        flexShrink: 0,
+        fontFamily: UI,
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: "0.02em",
+      }}
+    >
+      {actor.initials}
+    </div>
+  );
+}
+
+function Pill({ label, tone }: { label: string; tone: PillTone }) {
+  const palette = PILL_TONES[tone];
+  return (
+    <span
+      style={{
+        backgroundColor: palette.bg,
+        color: palette.fg,
+        fontFamily: UI,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        padding: "3px 8px",
+        borderRadius: 999,
+        lineHeight: 1.2,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
@@ -420,6 +555,16 @@ function ActivityIcon({ kind }: { kind: ActivityEvent["kind"] }) {
             <path d="M9 12l2 2 4-4" />
           </>
         );
+      case "portfolio":
+        return (
+          <>
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="M3 15l5-5 4 4 3-3 6 6" />
+            <circle cx="8.5" cy="9.5" r="1.2" />
+          </>
+        );
+      default:
+        return <circle cx="12" cy="12" r="9" />;
     }
   })();
   return (
