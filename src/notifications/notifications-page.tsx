@@ -40,17 +40,9 @@ export function NotificationsPage() {
           <EmptyActivity />
         ) : (
           <CardTheme>
-            <div
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid rgba(6,28,39,0.10)",
-                borderRadius: 16,
-                boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
-                overflow: "hidden",
-              }}
-            >
-              {view.activity.map((e, i) => (
-                <ActivityRow key={e.id} event={e} divider={i < view.activity.length - 1} />
+            <div className="flex flex-col gap-2">
+              {view.activity.map((e) => (
+                <ActivityRow key={e.id} event={e} />
               ))}
             </div>
           </CardTheme>
@@ -296,7 +288,7 @@ function Eyebrow({ children, tone }: { children: React.ReactNode; tone: "navy" |
 
 /* ---------------- Activity ---------------- */
 
-function ActivityRow({ event, divider }: { event: ActivityEvent; divider: boolean }) {
+function ActivityRow({ event }: { event: ActivityEvent }) {
   const navigate = useNavigate();
   const routable = !!event.target;
   return (
@@ -316,7 +308,10 @@ function ActivityRow({ event, divider }: { event: ActivityEvent; divider: boolea
       className="flex w-full items-start gap-3 text-left transition-colors active:bg-black/[0.03]"
       style={{
         padding: "14px 16px",
-        borderBottom: divider ? "1px solid rgba(6,28,39,0.08)" : "none",
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(6,28,39,0.10)",
+        borderRadius: 16,
+        boxShadow: "0 1px 2px rgba(6,28,39,0.06), 0 8px 24px -12px rgba(6,28,39,0.18)",
         fontFamily: UI,
         cursor: routable ? "pointer" : "default",
       }}
