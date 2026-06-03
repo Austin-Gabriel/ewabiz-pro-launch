@@ -113,24 +113,6 @@ function SectionLabel({ children, className = "" }: { children: React.ReactNode;
   );
 }
 
-function ActivitySubcopy({ children }: { children: React.ReactNode }) {
-  const { text } = useHomeTheme();
-  return (
-    <div
-      style={{
-        fontFamily: UI,
-        fontSize: 12.5,
-        color: text,
-        opacity: 0.55,
-        paddingLeft: 4,
-        marginTop: -4,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function ActivityHeader() {
   const { text } = useHomeTheme();
   return (
