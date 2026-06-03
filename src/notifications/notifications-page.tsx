@@ -119,11 +119,11 @@ function ActivityHeader() {
     <div style={{ paddingLeft: 4, marginTop: 10, marginBottom: 4 }}>
       <div
         style={{
-          fontFamily: DISPLAY,
+          fontFamily: UI,
           fontSize: 26,
-          fontWeight: 600,
-          letterSpacing: "-0.015em",
-          lineHeight: 1.1,
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          lineHeight: 1.15,
           color: text,
         }}
       >
