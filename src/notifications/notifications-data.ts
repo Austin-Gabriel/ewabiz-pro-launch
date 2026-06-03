@@ -52,6 +52,14 @@ export interface ActivityEvent {
   actor?: ActivityActor;
   /** Status pill shown next to the time. */
   pill?: { label: string; tone: PillTone };
+  /** Unread → peach card tint + orange dot indicator. */
+  unread?: boolean;
+  /** Small status glyph layered on the avatar (clock / check / x / star). */
+  avatarBadge?: "clock" | "check" | "x" | "star" | "dollar" | "calendar";
+  /** Inline CTA button rendered below the meta row. */
+  action?: { label: string };
+  /** Thumbnail image rendered to the right of the row (e.g. portfolio post). */
+  thumbnailUrl?: string;
   /** Route target on tap. Omitted = non-routable row. */
   target?:
     | { to: "/bookings/$id"; params: { id: string } }
@@ -70,6 +78,8 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Tasha Brooks", initials: "TB", tint: "peach" },
     pill: { label: "ON THE WAY", tone: "orange" },
+    unread: true,
+    avatarBadge: "clock",
     target: { to: "/bookings/$id", params: { id: "b2" } },
   },
   {
@@ -81,6 +91,9 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Maya Okonkwo", initials: "MO", tint: "lilac" },
     pill: { label: "NEW REQUEST", tone: "orange" },
+    unread: true,
+    avatarBadge: "calendar",
+    action: { label: "Review request" },
     target: { to: "/bookings/$id", params: { id: "b1" } },
   },
   {
@@ -92,6 +105,8 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Imani Kone", initials: "IK", tint: "sage" },
     pill: { label: "CONFIRMED", tone: "mint" },
+    unread: true,
+    avatarBadge: "check",
     target: { to: "/bookings/$id", params: { id: "b5" } },
   },
   {
@@ -113,6 +128,7 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Tasha Brooks", initials: "TB", tint: "peach" },
     pill: { label: "STARTS SOON", tone: "orange" },
+    avatarBadge: "clock",
     target: { to: "/bookings/$id", params: { id: "b2" } },
   },
   {
@@ -124,6 +140,7 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Tasha Brooks", initials: "TB", tint: "peach" },
     pill: { label: "+$20 TIP", tone: "mint" },
+    avatarBadge: "dollar",
     target: { to: "/earnings" },
   },
   {
@@ -135,6 +152,7 @@ const ALL: ActivityEvent[] = [
     bucket: "today",
     actor: { name: "Tasha Brooks", initials: "TB", tint: "peach" },
     pill: { label: "★ 5.0", tone: "navy" },
+    avatarBadge: "star",
     target: { to: "/bookings/$id", params: { id: "b2" } },
   },
 
@@ -148,6 +166,8 @@ const ALL: ActivityEvent[] = [
     bucket: "yesterday",
     actor: { name: "Renée Garcia", initials: "RG", tint: "sand" },
     pill: { label: "DECLINED", tone: "rose" },
+    avatarBadge: "x",
+    action: { label: "Find another time" },
     target: { to: "/bookings/$id", params: { id: "b3" } },
   },
   {
@@ -180,6 +200,8 @@ const ALL: ActivityEvent[] = [
     bucket: "yesterday",
     actor: { name: "Aaliyah Johnson", initials: "AJ", tint: "lilac" },
     pill: { label: "ACTION NEEDED", tone: "orange" },
+    avatarBadge: "calendar",
+    action: { label: "Review reschedule" },
     target: { to: "/bookings/$id", params: { id: "b4" } },
   },
 
