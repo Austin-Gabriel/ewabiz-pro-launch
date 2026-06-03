@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { HomeShell, useHomeTheme, HOME_SANS, CardTheme } from "@/home/home-shell";
+import { HomeShell, useHomeTheme, HOME_SANS, HOME_SERIF, CardTheme } from "@/home/home-shell";
 import { useNotifications, type PromoKind } from "./use-notifications";
 import {
   BUCKET_LABEL,
@@ -12,10 +12,13 @@ import {
 } from "./notifications-data";
 
 const UI = HOME_SANS;
+const DISPLAY = HOME_SERIF;
 const NAVY = "#061C27";
 const ORANGE = "#FF823F";
 const ORANGE_SOFT = "rgba(255,130,63,0.14)";
 const ORANGE_DEEP = "#B8531C";
+const UNREAD_BG = "#FBEADD";
+const UNREAD_BORDER = "rgba(255,130,63,0.22)";
 
 const AVATAR_TINTS: Record<ActivityActor["tint"], { bg: string; fg: string }> = {
   peach: { bg: "#F8D7C2", fg: "#7A3B1A" },
@@ -56,8 +59,7 @@ export function NotificationsPage() {
           bonusAmount={view.bonusAmount}
         />
 
-        <SectionLabel className="mt-2">Recent activity</SectionLabel>
-        <ActivitySubcopy>Updates from your bookings and clients</ActivitySubcopy>
+        <ActivityHeader />
         {view.activity.length === 0 ? <EmptyActivity /> : <ActivityGroups events={view.activity} />}
       </div>
     </HomeShell>
