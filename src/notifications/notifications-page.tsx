@@ -555,6 +555,16 @@ function ActivityIcon({ kind }: { kind: ActivityEvent["kind"] }) {
             <path d="M9 12l2 2 4-4" />
           </>
         );
+      case "portfolio":
+        return (
+          <>
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="M3 15l5-5 4 4 3-3 6 6" />
+            <circle cx="8.5" cy="9.5" r="1.2" />
+          </>
+        );
+      default:
+        return <circle cx="12" cy="12" r="9" />;
     }
   })();
   return (
